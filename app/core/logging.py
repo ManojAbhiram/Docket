@@ -2,11 +2,28 @@
 
 import logging
 import sys
+from typing import TextIO
 
 import structlog
 from structlog.typing import Processor
 
 from app.core.config import LogFormat, LogLevel
+
+
+class _CurrentStdoutHandler(logging.StreamHandler[TextIO]):
+    """Write to whatever `sys.stdout` is at emit time.
+
+    A handler bound to the stream that existed at configuration time writes to a
+    closed file once a test runner or a supervisor swaps stdout.
+    """
+
+    @property
+    def stream(self) -> TextIO:
+        return sys.stdout
+
+    @stream.setter
+    def stream(self, value: TextIO) -> None:
+        """Ignore the stream the base class constructor offers."""
 
 
 def configure_logging(level: LogLevel, fmt: LogFormat) -> None:
@@ -37,7 +54,7 @@ def configure_logging(level: LogLevel, fmt: LogFormat) -> None:
         ],
         foreign_pre_chain=shared,
     )
-    handler = logging.StreamHandler(sys.stdout)
+    handler = _CurrentStdoutHandler()
     handler.setFormatter(formatter)
     root = logging.getLogger()
     root.handlers.clear()
