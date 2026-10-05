@@ -14,7 +14,13 @@ from pathlib import Path
 from seed.dataset import Dataset, applications_csv, build_dataset, cases_jsonl, labels_json
 from seed.pages import render_html
 
-_VIEWPORT = "800 1100"
+# Page height by document type, so a photo frames the content and the shadow crosses the text.
+_PAGE_HEIGHT = {
+    "10th_marksheet": 600,
+    "12th_marksheet": 600,
+    "id_proof": 340,
+    "transfer_certificate": 340,
+}
 
 
 def main() -> int:
@@ -54,18 +60,26 @@ def write_data(dataset: Dataset, out: Path) -> None:
         stem = f"{doc.application_id}_{doc.doc_type}"
         page = render_html(doc, apps[doc.application_id])
         (html_dir / f"{stem}.html").write_text(page, encoding="utf-8")
-        commands.append(f'$PW goto "file://$PWD/{out}/html/{stem}.html"')
+        commands.append(f"$PW resize 800 {_PAGE_HEIGHT[doc.doc_type]}")
+        commands.append(f'$PW goto "http://127.0.0.1:$PORT/{stem}.html"')
         commands.append(f'$PW screenshot --filename="{out}/clean/{stem}.png"')
     script = [
         "#!/usr/bin/env bash",
         "# Screenshots every synthetic page with playwright-cli. Run from the repository root.",
         "# Needs playwright-cli (npm install -g @playwright/cli@latest),",
         "# or set PW='npx playwright cli' to use a local install.",
+        "# The default browser is chrome; set BROWSER=firefox (or webkit, msedge) if missing.",
+        "# playwright-cli blocks file: URLs, so the pages are served from 127.0.0.1 meanwhile.",
         "set -euo pipefail",
         'PW="${PW:-playwright-cli}"',
+        'PORT="${PORT:-8765}"',
         f'mkdir -p "{out}/clean"',
-        "$PW open",
-        f"$PW resize {_VIEWPORT}",
+        f'python3 -m http.server "$PORT" --bind 127.0.0.1 --directory "{out}/html" '
+        ">/dev/null 2>&1 &",
+        "SERVER=$!",
+        "trap 'kill $SERVER 2>/dev/null || true' EXIT",
+        "sleep 1",
+        '$PW open --browser="${BROWSER:-chrome}"',
         *commands,
         "$PW close",
         "",

@@ -5,6 +5,7 @@ deliverables/
 .bearing/state/
 .claude/settings.local.json
 .claude/worktrees/
+.playwright-cli/
 # 0-byte placeholders the Claude Code sandbox holds while a command runs
 /.bashrc
 /.bash_profile
