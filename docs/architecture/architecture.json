@@ -1,0 +1,104 @@
+{
+  "project": "Docket",
+  "version": 1,
+  "system_diagram": {
+    "tiers": [
+      {
+        "name": "Client applications",
+        "groups": [
+          {
+            "name": "Staff and verifier browser",
+            "kind": "client",
+            "nodes": [
+              {
+                "id": "browser",
+                "name": "Browser",
+                "kind": "app",
+                "tech": "Docket Web bundle: React 19, Vite, TanStack",
+                "modules": ["Sign in", "Import", "Upload", "Review queue", "Dashboard"],
+                "owns_store": false
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "name": "Edge",
+        "groups": [
+          {
+            "name": "Web container",
+            "kind": "gateway",
+            "nodes": [
+              {
+                "id": "web",
+                "name": "Docket Web",
+                "kind": "service",
+                "tech": "nginx-unprivileged 1.28, port 8080",
+                "modules": ["Static assets", "API proxy (planned)"],
+                "owns_store": false
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "name": "Services",
+        "groups": [
+          {
+            "name": "API container",
+            "kind": "services",
+            "nodes": [
+              {
+                "id": "api",
+                "name": "Docket API",
+                "kind": "service",
+                "tech": "Python 3.14, FastAPI, gunicorn with one worker (proposed)",
+                "modules": ["Auth and roles", "Import", "Upload", "Comparison and status", "Decisions", "OCR gateway", "Processing loop"],
+                "owns_store": false
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "name": "Data and third parties",
+        "groups": [
+          {
+            "name": "Database",
+            "kind": "data",
+            "nodes": [
+              {
+                "id": "db",
+                "name": "PostgreSQL 16",
+                "kind": "store",
+                "tech": "postgres:16, twelve tables, image bytes in document_blobs",
+                "modules": [],
+                "owns_store": true
+              }
+            ]
+          },
+          {
+            "name": "Build and first run",
+            "kind": "external",
+            "nodes": [
+              {
+                "id": "models",
+                "name": "Model download host",
+                "kind": "external",
+                "tech": "RapidOCR model files, HTTPS",
+                "modules": [],
+                "owns_store": false
+              }
+            ]
+          }
+        ]
+      }
+    ],
+    "links": [
+      {"from": "browser", "to": "web", "label": "Static assets over HTTP", "kind": "sync"},
+      {"from": "web", "to": "api", "label": "Same-origin /api requests, JSON, multipart and CSV, session cookie", "kind": "sync", "unconfirmed": true},
+      {"from": "api", "to": "db", "label": "SQL reads and writes, image bytes, call log", "kind": "sync"},
+      {"from": "api", "to": "models", "label": "Model files on first use (to be baked into the image)", "kind": "bulk", "unconfirmed": true}
+    ]
+  }
+}

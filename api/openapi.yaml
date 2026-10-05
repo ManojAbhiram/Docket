@@ -1,0 +1,892 @@
+openapi: 3.1.0
+info:
+  title: Docket API
+  version: 1.0.0
+  description: |
+    The API behind Docket, an admissions document verification tool. Staff import applications from a CSV and upload scanned documents, the service reads each document and compares it with the application, and verifiers decide the applications that are flagged. It is called by one first-party React frontend. Every example uses synthetic data.
+    Serves: US-00-001, US-00-002, US-00-003, US-00-004, US-00-005, US-00-006, US-00-007, US-00-008, US-00-009, US-00-011, US-02-001. Style: docs/api/README.md.
+    This spec is a design: no route except the two health routes exists yet.
+  contact:
+    name: backend lead rotation
+  x-api-style: REST with JSON bodies, plus multipart uploads and one CSV download; one service, no GraphQL.
+  x-versioning: >-
+    The path carries no major version: the API has one client, built and deployed with it, so nothing installed needs to keep working.
+    X-API-Version is accepted on every operation for dated behaviour changes and the server default is the newest.
+    A second client would reopen this and add /v1.
+  x-authentication: >-
+    A server-side cookie session (docket_session, ADR-0006) on every operation except those marked security: [] (sign-in and health).
+    State-changing requests also need an anti-forgery token. A role that is not allowed gets 403 and an id that does not exist gets 404.
+  x-conventions:
+    - rule: "No /v1 in the path."
+      why: "One first-party client deployed with the API, so there is no installed client to protect (deviation from the style reference, revisit when a second client exists)."
+    - rule: "The error details field is an object, not an array."
+      why: "app/core/errors.py already returns an object and tests pin it; the style reference's array shape would be a breaking change to existing code."
+    - rule: "A request that fails validation returns 422 validation_error."
+      why: "That is what the existing handler does (app/core/errors.py:94); the style reference reserves 422 for content rules and 400 for malformed requests."
+servers:
+  - url: /api
+    description: Same origin as the frontend (ADR-0004, ADR-0006)
+security:
+  - cookieAuth: []
+tags:
+  - name: auth
+    description: Sign in, sign out and who am I.
+  - name: imports
+    description: Load applications from a CSV file.
+  - name: applications
+    description: Applications, their status, and the review queue.
+  - name: documents
+    description: Uploaded scans, what was read from them and their image.
+  - name: decisions
+    description: Verifier decisions on flagged applications.
+  - name: reports
+    description: Dashboard counts and the verified export.
+  - name: health
+    description: Liveness and readiness.
+
+paths:
+  /auth/login:
+    post:
+      operationId: loginUser
+      summary: Sign in with a username and password
+      description: Sets the docket_session cookie. An unknown user and a wrong password return the same 401 and take comparable time.
+      tags: [auth]
+      security: []
+      x-story-ids: [US-00-011]
+      parameters:
+        - $ref: '#/components/parameters/ApiVersion'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/LoginRequest' }
+            example: { username: staff.demo, password: "one-time-password-shown-once" }
+      responses:
+        '200':
+          description: Signed in; the session cookie is set
+          headers:
+            Set-Cookie:
+              description: docket_session, HttpOnly, Secure, SameSite=Lax, Path=/
+              schema: { type: string }
+            X-Request-Id: { $ref: '#/components/headers/XRequestId' }
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/User' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '422': { $ref: '#/components/responses/ValidationFailed' }
+        '429': { $ref: '#/components/responses/TooManyRequests' }
+        '500': { $ref: '#/components/responses/InternalError' }
+
+  /auth/logout:
+    post:
+      operationId: logoutUser
+      summary: Sign out and end this session
+      tags: [auth]
+      x-story-ids: [US-00-011]
+      parameters:
+        - $ref: '#/components/parameters/ApiVersion'
+        - $ref: '#/components/parameters/CsrfToken'
+      responses:
+        '204':
+          description: Signed out; the session is revoked on the server
+          headers:
+            X-Request-Id: { $ref: '#/components/headers/XRequestId' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '500': { $ref: '#/components/responses/InternalError' }
+
+  /auth/me:
+    get:
+      operationId: getCurrentUser
+      summary: Get the signed-in user and role
+      tags: [auth]
+      x-story-ids: [US-00-011]
+      parameters:
+        - $ref: '#/components/parameters/ApiVersion'
+      responses:
+        '200':
+          description: The signed-in user
+          headers:
+            X-Request-Id: { $ref: '#/components/headers/XRequestId' }
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/User' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '500': { $ref: '#/components/responses/InternalError' }
+
+  /imports:
+    post:
+      operationId: createImport
+      summary: Import applications from a CSV file
+      description: >-
+        Staff role only. Rows that pass are created; rows that fail are listed with a row number, a column and a reason code,
+        never the value. A file over the size cap is refused with 413.
+      tags: [imports]
+      x-story-ids: [US-00-001]
+      parameters:
+        - $ref: '#/components/parameters/ApiVersion'
+        - $ref: '#/components/parameters/IdempotencyKey'
+        - $ref: '#/components/parameters/CsrfToken'
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required: [file]
+              properties:
+                file:
+                  type: string
+                  format: binary
+                  description: A CSV with the columns application_id, name, father_name, date_of_birth, board, roll_number, marks_by_subject, category.
+            encoding:
+              file: { contentType: text/csv }
+      responses:
+        '201':
+          description: The import ran; see the counts and the refused rows
+          headers:
+            Location: { schema: { type: string, format: uri } }
+            X-Request-Id: { $ref: '#/components/headers/XRequestId' }
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ImportResult' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '409': { $ref: '#/components/responses/IdempotencyConflict' }
+        '413': { $ref: '#/components/responses/PayloadTooLarge' }
+        '415': { $ref: '#/components/responses/UnsupportedMediaType' }
+        '422': { $ref: '#/components/responses/ValidationFailed' }
+        '500': { $ref: '#/components/responses/InternalError' }
+
+  /applications:
+    get:
+      operationId: listApplications
+      summary: List applications, optionally only the review queue
+      description: >-
+        Newest change first. The review queue is filter[status]=needs_review with filter[rejected]=false. Erased applications are never listed.
+      tags: [applications]
+      x-story-ids: [US-00-006, US-00-008]
+      parameters:
+        - $ref: '#/components/parameters/ApiVersion'
+        - $ref: '#/components/parameters/Cursor'
+        - $ref: '#/components/parameters/Limit'
+        - name: filter[status]
+          in: query
+          description: Only applications with this status.
+          schema: { type: string, enum: [verified, needs_review, missing_documents] }
+        - name: filter[rejected]
+          in: query
+          description: With needs_review, false is the queue and true is the rejected ones.
+          schema: { type: boolean }
+      responses:
+        '200':
+          description: One page
+          headers:
+            X-Request-Id: { $ref: '#/components/headers/XRequestId' }
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data, page]
+                properties:
+                  data:
+                    type: array
+                    items: { $ref: '#/components/schemas/Application' }
+                  page: { $ref: '#/components/schemas/Page' }
+              example:
+                data:
+                  - id: 0192b1c2-7f3a-7c4e-9a1b-2c3d4e5f6a7b
+                    application_ref: SYN-APP-004
+                    full_name: Latha Sharma
+                    father_name: Salim Sharma
+                    date_of_birth: 2006-12-10
+                    board: Karnataka State Board
+                    roll_number: SYN0945957
+                    marks: { English: 59, Hindi: 77, Mathematics: 87, Science: 74, Social Science: 56 }
+                    category: General
+                    status: needs_review
+                    rejected: false
+                    created_at: 2026-10-05T09:00:00Z
+                    updated_at: 2026-10-05T09:12:41Z
+                page: { next_cursor: eyJ1IjoiMjAyNiJ9, has_more: false }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '422': { $ref: '#/components/responses/ValidationFailed' }
+        '500': { $ref: '#/components/responses/InternalError' }
+
+  /applications/{id}:
+    parameters:
+      - name: id
+        in: path
+        required: true
+        schema: { type: string, format: uuid }
+    get:
+      operationId: getApplication
+      summary: Get one application with its documents and per-field comparison
+      description: Shows each document beside the application value, field by field, and which fields sent the application to review.
+      tags: [applications]
+      x-story-ids: [US-00-006]
+      parameters:
+        - $ref: '#/components/parameters/ApiVersion'
+      responses:
+        '200':
+          description: The application
+          headers:
+            X-Request-Id: { $ref: '#/components/headers/XRequestId' }
+            ETag: { schema: { type: string }, description: "Version of the application (its updated_at). Send it as If-Match on a decision." }
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ApplicationDetail' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '500': { $ref: '#/components/responses/InternalError' }
+
+  /applications/{id}/documents:
+    parameters:
+      - name: id
+        in: path
+        required: true
+        schema: { type: string, format: uuid }
+    get:
+      operationId: listDocuments
+      summary: List an application's documents
+      tags: [documents]
+      x-story-ids: [US-00-002, US-00-003]
+      parameters:
+        - $ref: '#/components/parameters/ApiVersion'
+        - $ref: '#/components/parameters/Cursor'
+        - $ref: '#/components/parameters/Limit'
+      responses:
+        '200':
+          description: One page, newest first
+          headers:
+            X-Request-Id: { $ref: '#/components/headers/XRequestId' }
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data, page]
+                properties:
+                  data:
+                    type: array
+                    items: { $ref: '#/components/schemas/Document' }
+                  page: { $ref: '#/components/schemas/Page' }
+              example:
+                data:
+                  - id: 0192b1c3-1a2b-7c4e-9a1b-2c3d4e5f6a7c
+                    application_id: 0192b1c2-7f3a-7c4e-9a1b-2c3d4e5f6a7b
+                    detected_type: 10th_marksheet
+                    status: read
+                    failure_reason: null
+                    is_current: true
+                    created_at: 2026-10-05T09:05:00Z
+                page: { next_cursor: null, has_more: false }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '500': { $ref: '#/components/responses/InternalError' }
+    post:
+      operationId: uploadDocument
+      summary: Upload one scanned document for an application
+      description: >-
+        Staff role only. JPEG, PNG or PDF up to 8 MiB, checked by declared type and by the first bytes of the file.
+        The file is stored and read in the background. Identical bytes already stored for this application return 200 with the existing document.
+      tags: [documents]
+      x-story-ids: [US-00-002]
+      parameters:
+        - $ref: '#/components/parameters/ApiVersion'
+        - $ref: '#/components/parameters/IdempotencyKey'
+        - $ref: '#/components/parameters/CsrfToken'
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required: [file]
+              properties:
+                file:
+                  type: string
+                  format: binary
+                  description: The scan or photo.
+            encoding:
+              file: { contentType: "image/jpeg, image/png, application/pdf" }
+      responses:
+        '200':
+          description: The same bytes were already stored for this application
+          headers:
+            X-Request-Id: { $ref: '#/components/headers/XRequestId' }
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Document' }
+        '202':
+          description: Stored; reading has been queued
+          headers:
+            Location: { schema: { type: string, format: uri } }
+            X-Request-Id: { $ref: '#/components/headers/XRequestId' }
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Document' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '409': { $ref: '#/components/responses/IdempotencyConflict' }
+        '413': { $ref: '#/components/responses/PayloadTooLarge' }
+        '415': { $ref: '#/components/responses/UnsupportedMediaType' }
+        '422': { $ref: '#/components/responses/ValidationFailed' }
+        '500': { $ref: '#/components/responses/InternalError' }
+
+  /applications/{id}/decisions:
+    parameters:
+      - name: id
+        in: path
+        required: true
+        schema: { type: string, format: uuid }
+    get:
+      operationId: listDecisions
+      summary: Read an application's decision log
+      description: Newest first. Both roles may read the log and neither may change it (AC-US-00-007-5).
+      tags: [decisions]
+      x-story-ids: [US-00-007]
+      parameters:
+        - $ref: '#/components/parameters/ApiVersion'
+        - $ref: '#/components/parameters/Cursor'
+        - $ref: '#/components/parameters/Limit'
+      responses:
+        '200':
+          description: One page of decisions
+          headers:
+            X-Request-Id: { $ref: '#/components/headers/XRequestId' }
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data, page]
+                properties:
+                  data:
+                    type: array
+                    items: { $ref: '#/components/schemas/Decision' }
+                  page: { $ref: '#/components/schemas/Page' }
+              example:
+                data:
+                  - id: 0192b1c4-9999-7c4e-9a1b-2c3d4e5f6a7b
+                    application_id: 0192b1c2-7f3a-7c4e-9a1b-2c3d4e5f6a7b
+                    action: reject
+                    reason: "Name on the marksheet does not match the application."
+                    extracted_field_id: null
+                    decided_by: Demo Verifier
+                    created_at: 2026-10-05T10:01:00Z
+                    application_status: needs_review
+                page: { next_cursor: null, has_more: false }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '500': { $ref: '#/components/responses/InternalError' }
+    post:
+      operationId: createDecision
+      summary: Approve, correct or reject an application
+      description: >-
+        Verifier role only. A reject needs a reason. A correct names the extracted field it changes and the new value, and the comparison runs again.
+        Every decision is logged with who, when, what and why.
+      tags: [decisions]
+      x-story-ids: [US-00-007, US-00-005]
+      parameters:
+        - $ref: '#/components/parameters/ApiVersion'
+        - $ref: '#/components/parameters/IdempotencyKey'
+        - $ref: '#/components/parameters/CsrfToken'
+        - name: If-Match
+          in: header
+          required: true
+          description: The ETag the verifier saw on getApplication. A decision on an application that changed since, or is no longer in Needs review, is refused with 409.
+          schema: { type: string }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/DecisionCreate' }
+            example: { action: reject, reason: "Name on the marksheet does not match the application." }
+      responses:
+        '201':
+          description: The decision is logged
+          headers:
+            Location: { schema: { type: string, format: uri } }
+            X-Request-Id: { $ref: '#/components/headers/XRequestId' }
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Decision' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '409': { $ref: '#/components/responses/IdempotencyConflict' }
+        '422': { $ref: '#/components/responses/ValidationFailed' }
+        '500': { $ref: '#/components/responses/InternalError' }
+
+  /documents/{id}/reprocess:
+    parameters:
+      - name: id
+        in: path
+        required: true
+        schema: { type: string, format: uuid }
+    post:
+      operationId: reprocessDocument
+      summary: Queue a failed document to be read again
+      description: >-
+        Staff role only. A document that is failed becomes uploaded and is read again with a new gateway call row.
+        Any other status is refused with 409, so a document that is already being read is never read twice at once.
+      tags: [documents]
+      x-story-ids: [US-00-003]
+      parameters:
+        - $ref: '#/components/parameters/ApiVersion'
+        - $ref: '#/components/parameters/CsrfToken'
+      responses:
+        '202':
+          description: The document is queued again
+          headers:
+            X-Request-Id: { $ref: '#/components/headers/XRequestId' }
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Document' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '409': { $ref: '#/components/responses/IdempotencyConflict' }
+        '500': { $ref: '#/components/responses/InternalError' }
+
+  /documents/{id}/image:
+    parameters:
+      - name: id
+        in: path
+        required: true
+        schema: { type: string, format: uuid }
+    get:
+      operationId: getDocumentImage
+      summary: Get the stored image of a document
+      description: Always a re-encoded JPEG or PNG with a fixed content type, Cache-Control private no-store and X-Content-Type-Options nosniff. A PDF is never served.
+      tags: [documents]
+      x-story-ids: [US-00-006]
+      parameters:
+        - $ref: '#/components/parameters/ApiVersion'
+      responses:
+        '200':
+          description: The image bytes
+          headers:
+            X-Request-Id: { $ref: '#/components/headers/XRequestId' }
+            Cache-Control: { schema: { type: string, example: "private, no-store" } }
+            X-Content-Type-Options: { schema: { type: string, example: nosniff } }
+          content:
+            image/jpeg:
+              schema: { type: string, format: binary }
+            image/png:
+              schema: { type: string, format: binary }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '500': { $ref: '#/components/responses/InternalError' }
+
+  /dashboard:
+    get:
+      operationId: getDashboard
+      summary: Counts of applications by status
+      description: Counts only, no personal data. Erased applications are not counted.
+      tags: [reports]
+      x-story-ids: [US-00-008]
+      parameters:
+        - $ref: '#/components/parameters/ApiVersion'
+      responses:
+        '200':
+          description: The counts
+          headers:
+            X-Request-Id: { $ref: '#/components/headers/XRequestId' }
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Dashboard' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '500': { $ref: '#/components/responses/InternalError' }
+
+  /exports/verified.csv:
+    get:
+      operationId: exportVerified
+      summary: Download the verified applications as CSV
+      description: >-
+        Staff role only. One row per verified application: application_id, name and decision (assumption Q-011). A cell that starts with =, +, - or @ is prefixed so a spreadsheet shows it as text.
+        Every export writes an audit entry.
+      tags: [reports]
+      x-story-ids: [US-00-009]
+      parameters:
+        - $ref: '#/components/parameters/ApiVersion'
+      responses:
+        '200':
+          description: The CSV file
+          headers:
+            X-Request-Id: { $ref: '#/components/headers/XRequestId' }
+            Content-Disposition: { schema: { type: string, example: 'attachment; filename="verified.csv"' } }
+          content:
+            text/csv:
+              schema: { type: string }
+              example: "application_id,name,decision\nSYN-APP-004,Latha Sharma,auto_verified\n"
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '500': { $ref: '#/components/responses/InternalError' }
+
+  /healthz:
+    servers:
+      - url: /
+        description: Health routes are at the root, outside /api (app/api/health/router.py:34)
+    get:
+      operationId: getHealth
+      summary: Liveness
+      description: The process is up and serving. No dependency is checked.
+      tags: [health]
+      security: []
+      x-story-ids: [US-02-001]
+      parameters:
+        - $ref: '#/components/parameters/ApiVersion'
+      responses:
+        '200':
+          description: Alive
+          headers:
+            X-Request-Id: { $ref: '#/components/headers/XRequestId' }
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Health' }
+        '500': { $ref: '#/components/responses/InternalError' }
+
+  /readyz:
+    servers:
+      - url: /
+        description: Health routes are at the root, outside /api (app/api/health/router.py:40)
+    get:
+      operationId: getReadiness
+      summary: Readiness
+      description: The database answers. 503 with the failed check otherwise.
+      tags: [health]
+      security: []
+      x-story-ids: [US-02-001]
+      parameters:
+        - $ref: '#/components/parameters/ApiVersion'
+      responses:
+        '200':
+          description: Every dependency is reachable
+          headers:
+            X-Request-Id: { $ref: '#/components/headers/XRequestId' }
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Ready' }
+        '500': { $ref: '#/components/responses/InternalError' }
+        '503': { $ref: '#/components/responses/ServiceUnavailable' }
+
+components:
+  securitySchemes:
+    cookieAuth:
+      type: apiKey
+      in: cookie
+      name: docket_session
+  parameters:
+    ApiVersion:
+      name: X-API-Version
+      in: header
+      required: false
+      description: Date version, for example 2026-10-05. Missing means the server default, the newest.
+      schema: { type: string, pattern: '^\d{4}-\d{2}-\d{2}$' }
+    IdempotencyKey:
+      name: Idempotency-Key
+      in: header
+      required: true
+      description: Client UUID made once per logical operation and reused on every retry of it. The same key and body replays the first result for 24 hours, a different body under the same key is refused with 409 idempotency_conflict (stored in idempotency_keys).
+      schema: { type: string, format: uuid }
+    CsrfToken:
+      name: X-CSRF-Token
+      in: header
+      required: true
+      description: Anti-forgery token for a state-changing request with a cookie session. The mechanism is a pending story (threat T-03).
+      schema: { type: string }
+    Cursor:
+      name: cursor
+      in: query
+      description: Opaque cursor from the previous page.
+      schema: { type: string }
+    Limit:
+      name: limit
+      in: query
+      description: Page size, at most 100.
+      schema: { type: integer, minimum: 1, maximum: 100, default: 20 }
+  headers:
+    XRequestId:
+      schema: { type: string }
+      description: Echoed or generated request id; quote it in support tickets.
+  schemas:
+    Error:
+      type: object
+      required: [error]
+      description: >-
+        The one envelope for every non-2xx response (app/core/errors.py:53). The code is stable, the message is for people.
+      x-error-codes:
+        - { code: bad_request, status: 400, meaning: "Malformed request." }
+        - { code: unauthorized, status: 401, meaning: "No session, an expired one, a revoked one or a wrong password." }
+        - { code: forbidden, status: 403, meaning: "Signed in, but this role may not do this." }
+        - { code: not_found, status: 404, meaning: "No such record, or the route does not exist." }
+        - { code: conflict, status: 409, meaning: "The request conflicts with the current state." }
+        - { code: idempotency_conflict, status: 409, meaning: "Idempotency-Key reused with a different body." }
+        - { code: payload_too_large, status: 413, meaning: "The file is over the size cap." }
+        - { code: unsupported_media_type, status: 415, meaning: "The declared type is not allowed or does not match the file." }
+        - { code: validation_error, status: 422, meaning: "The request failed validation, or the content breaks a rule (details names it)." }
+        - { code: rate_limited, status: 429, meaning: "Too many attempts; wait Retry-After seconds." }
+        - { code: internal, status: 500, meaning: "Unexpected failure; quote request_id." }
+        - { code: service_unavailable, status: 503, meaning: "A dependency the request needs is not reachable." }
+      properties:
+        error:
+          type: object
+          required: [code, message, details]
+          properties:
+            code: { type: string, example: validation_error }
+            message: { type: string, example: request failed validation }
+            details:
+              type: object
+              additionalProperties: true
+              description: Structured detail. For validation_error it holds an errors list with loc, msg and type, never the submitted value.
+              example: { errors: [{ loc: [body, reason], msg: "Field required", type: missing }] }
+            request_id:
+              type: [string, 'null']
+              example: 4f1c0a8e3b7d4a0c9b6e2d1f5a7c8e90
+    Page:
+      type: object
+      required: [has_more]
+      properties:
+        next_cursor: { type: [string, 'null'] }
+        has_more: { type: boolean }
+      example: { next_cursor: eyJ1IjoiMjAyNiJ9, has_more: false }
+    Health:
+      type: object
+      required: [status, version]
+      properties:
+        status: { type: string, example: ok }
+        version: { type: string, example: 0.1.0 }
+      example: { status: ok, version: 0.1.0 }
+    Ready:
+      type: object
+      required: [status, checks]
+      properties:
+        status: { type: string, example: ok }
+        checks: { type: object, additionalProperties: { type: string }, example: { database: ok } }
+      example: { status: ok, checks: { database: ok } }
+    LoginRequest:
+      type: object
+      required: [username, password]
+      properties:
+        username: { type: string, maxLength: 64 }
+        password: { type: string, maxLength: 256 }
+      example: { username: staff.demo, password: "one-time-password-shown-once" }
+    User:
+      type: object
+      required: [id, display_name, role]
+      properties:
+        id: { type: string, format: uuid }
+        display_name: { type: string }
+        role: { type: string, enum: [staff, verifier] }
+      example: { id: 0192b1c0-aaaa-7c4e-9a1b-2c3d4e5f6a7b, display_name: Demo Verifier, role: verifier }
+    ImportRowError:
+      type: object
+      required: [row_number, reason_code]
+      properties:
+        row_number: { type: integer, minimum: 1 }
+        column_name: { type: [string, 'null'] }
+        reason_code: { type: string, enum: [missing_value, bad_date, bad_marks, duplicate_application_ref, too_long, out_of_range, malformed_row] }
+      example: { row_number: 7, column_name: date_of_birth, reason_code: bad_date }
+    ImportResult:
+      type: object
+      required: [id, rows_read, rows_created, rows_rejected, errors]
+      properties:
+        id: { type: string, format: uuid }
+        rows_read: { type: integer }
+        rows_created: { type: integer }
+        rows_rejected: { type: integer }
+        errors:
+          type: array
+          items: { $ref: '#/components/schemas/ImportRowError' }
+      example:
+        id: 0192b1c1-1111-7c4e-9a1b-2c3d4e5f6a7b
+        rows_read: 20
+        rows_created: 19
+        rows_rejected: 1
+        errors: [{ row_number: 7, column_name: date_of_birth, reason_code: bad_date }]
+    Application:
+      type: object
+      required: [id, application_ref, full_name, father_name, date_of_birth, board, roll_number, marks, category, status, rejected, created_at, updated_at]
+      properties:
+        id: { type: string, format: uuid }
+        application_ref: { type: string, maxLength: 40 }
+        full_name: { type: string }
+        father_name: { type: string }
+        date_of_birth: { type: string, format: date }
+        board: { type: string }
+        roll_number: { type: string }
+        marks: { type: object, additionalProperties: { type: integer, minimum: 0, maximum: 100 } }
+        category: { type: string }
+        status: { type: string, enum: [verified, needs_review, missing_documents] }
+        rejected: { type: boolean, description: "True when a verifier rejected it. It stays needs_review but leaves the queue." }
+        created_at: { type: string, format: date-time }
+        updated_at: { type: string, format: date-time }
+      example:
+        id: 0192b1c2-7f3a-7c4e-9a1b-2c3d4e5f6a7b
+        application_ref: SYN-APP-004
+        full_name: Latha Sharma
+        father_name: Salim Sharma
+        date_of_birth: 2006-12-10
+        board: Karnataka State Board
+        roll_number: SYN0945957
+        marks: { English: 59, Hindi: 77, Mathematics: 87, Science: 74, Social Science: 56 }
+        category: General
+        status: needs_review
+        rejected: false
+        created_at: 2026-10-05T09:00:00Z
+        updated_at: 2026-10-05T09:12:41Z
+    ExtractedField:
+      type: object
+      required: [id, field_name, value, needs_review]
+      properties:
+        id: { type: integer, format: int64 }
+        field_name: { type: string, enum: [name, father_name, dob, board, roll_number, marks, document_number] }
+        subject: { type: [string, 'null'], description: "The subject for a marks row." }
+        value: { type: string }
+        confidence: { type: [number, 'null'], minimum: 0, maximum: 1 }
+        box:
+          type: [array, 'null']
+          description: Four numbers, x, y, width and height in pixels of the stored image.
+          items: { type: number }
+        match_result: { type: [string, 'null'], enum: [match, mismatch, skipped, null] }
+        needs_review: { type: boolean }
+        review_reason: { type: [string, 'null'], enum: [low_confidence, format_invalid, mismatch, not_extracted, null] }
+      example:
+        id: 4012
+        field_name: marks
+        subject: Mathematics
+        value: "87"
+        confidence: 0.9971
+        box: [320, 372, 40, 22]
+        match_result: match
+        needs_review: false
+        review_reason: null
+    Document:
+      type: object
+      required: [id, application_id, status, is_current, created_at]
+      properties:
+        id: { type: string, format: uuid }
+        application_id: { type: string, format: uuid }
+        detected_type: { type: [string, 'null'], enum: [10th_marksheet, 12th_marksheet, id_proof, transfer_certificate, unknown, null] }
+        status: { type: string, enum: [uploaded, processing, read, failed] }
+        failure_reason: { type: [string, 'null'], description: "A short reason code, never document content." }
+        is_current: { type: boolean }
+        created_at: { type: string, format: date-time }
+        fields:
+          type: array
+          description: Present on the application detail, empty until the document is read.
+          items: { $ref: '#/components/schemas/ExtractedField' }
+      example:
+        id: 0192b1c3-1a2b-7c4e-9a1b-2c3d4e5f6a7c
+        application_id: 0192b1c2-7f3a-7c4e-9a1b-2c3d4e5f6a7b
+        detected_type: 10th_marksheet
+        status: read
+        failure_reason: null
+        is_current: true
+        created_at: 2026-10-05T09:05:00Z
+    ApplicationDetail:
+      allOf:
+        - $ref: '#/components/schemas/Application'
+        - type: object
+          required: [documents]
+          properties:
+            documents:
+              type: array
+              items: { $ref: '#/components/schemas/Document' }
+      example:
+        id: 0192b1c2-7f3a-7c4e-9a1b-2c3d4e5f6a7b
+        application_ref: SYN-APP-004
+        full_name: Latha Sharma
+        father_name: Salim Sharma
+        date_of_birth: 2006-12-10
+        board: Karnataka State Board
+        roll_number: SYN0945957
+        marks: { English: 59, Hindi: 77, Mathematics: 87, Science: 74, Social Science: 56 }
+        category: General
+        status: needs_review
+        rejected: false
+        created_at: 2026-10-05T09:00:00Z
+        updated_at: 2026-10-05T09:12:41Z
+        documents:
+          - id: 0192b1c3-1a2b-7c4e-9a1b-2c3d4e5f6a7c
+            application_id: 0192b1c2-7f3a-7c4e-9a1b-2c3d4e5f6a7b
+            detected_type: 10th_marksheet
+            status: read
+            failure_reason: null
+            is_current: true
+            created_at: 2026-10-05T09:05:00Z
+            fields:
+              - { id: 4012, field_name: marks, subject: Mathematics, value: "87", confidence: 0.9971, box: [320, 372, 40, 22], match_result: match, needs_review: false, review_reason: null }
+    DecisionCreate:
+      type: object
+      required: [action]
+      properties:
+        action: { type: string, enum: [approve, correct, reject] }
+        reason: { type: string, maxLength: 1000, description: "Required for reject." }
+        extracted_field_id: { type: integer, format: int64, description: "Required for correct: the field being changed." }
+        new_value: { type: string, maxLength: 200, description: "Required for correct." }
+      example: { action: reject, reason: "Name on the marksheet does not match the application." }
+    Decision:
+      type: object
+      required: [id, application_id, action, decided_by, created_at, application_status]
+      properties:
+        id: { type: string, format: uuid }
+        application_id: { type: string, format: uuid }
+        action: { type: string, enum: [approve, correct, reject] }
+        reason: { type: [string, 'null'] }
+        extracted_field_id: { type: [integer, 'null'], format: int64 }
+        decided_by: { type: string, description: "Display name of the verifier." }
+        created_at: { type: string, format: date-time }
+        application_status: { type: string, enum: [verified, needs_review, missing_documents], description: "The status after this decision." }
+      example:
+        id: 0192b1c4-9999-7c4e-9a1b-2c3d4e5f6a7b
+        application_id: 0192b1c2-7f3a-7c4e-9a1b-2c3d4e5f6a7b
+        action: reject
+        reason: "Name on the marksheet does not match the application."
+        extracted_field_id: null
+        decided_by: Demo Verifier
+        created_at: 2026-10-05T10:01:00Z
+        application_status: needs_review
+    Dashboard:
+      type: object
+      required: [verified, needs_review, missing_documents, rejected]
+      properties:
+        verified: { type: integer, minimum: 0 }
+        needs_review: { type: integer, minimum: 0, description: "Includes the rejected ones." }
+        missing_documents: { type: integer, minimum: 0 }
+        rejected: { type: integer, minimum: 0, description: "A subset of needs_review." }
+      example: { verified: 12, needs_review: 3, missing_documents: 5, rejected: 1 }
+  responses:
+    Unauthorized:
+      description: No session, an invalid or expired one, or a wrong password
+      content: { application/json: { schema: { $ref: '#/components/schemas/Error' } } }
+    Forbidden:
+      description: Signed in, but this role may not do this
+      content: { application/json: { schema: { $ref: '#/components/schemas/Error' } } }
+    NotFound:
+      description: No such record
+      content: { application/json: { schema: { $ref: '#/components/schemas/Error' } } }
+    IdempotencyConflict:
+      description: Conflict. The Idempotency-Key was reused with a different body (code idempotency_conflict), or the record is not in the state this call needs, for example an application that changed since the If-Match version or a document that is not failed (code conflict)
+      content: { application/json: { schema: { $ref: '#/components/schemas/Error' } } }
+    PayloadTooLarge:
+      description: The file is over the size cap
+      content: { application/json: { schema: { $ref: '#/components/schemas/Error' } } }
+    UnsupportedMediaType:
+      description: The type is not allowed or does not match the file
+      content: { application/json: { schema: { $ref: '#/components/schemas/Error' } } }
+    ValidationFailed:
+      description: The request failed validation or breaks a rule
+      content: { application/json: { schema: { $ref: '#/components/schemas/Error' } } }
+    TooManyRequests:
+      description: Too many attempts; see Retry-After
+      headers:
+        Retry-After: { schema: { type: integer } }
+      content: { application/json: { schema: { $ref: '#/components/schemas/Error' } } }
+    InternalError:
+      description: Unexpected failure; request_id is in the body
+      content: { application/json: { schema: { $ref: '#/components/schemas/Error' } } }
+    ServiceUnavailable:
+      description: A dependency is not reachable
+      content: { application/json: { schema: { $ref: '#/components/schemas/Error' } } }

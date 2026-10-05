@@ -1,0 +1,22 @@
+{
+  "project": "Docket",
+  "group": "Docket",
+  "repos": [
+    {
+      "name": "DocketApi",
+      "git_path": "Docket/Server/DocketApi",
+      "path": ".",
+      "stack": "python-api",
+      "tech": "Python 3.14, FastAPI, Pydantic v2, SQLAlchemy 2 async, Alembic, structlog, OpenTelemetry, RapidOCR, OpenCV, uv",
+      "responsibility": "The one backend service: sessions and roles, import, upload, the OCR gateway and processing loop, comparison, decisions, dashboard and export; owns the PostgreSQL database"
+    },
+    {
+      "name": "DocketWeb",
+      "git_path": "Docket/Client/DocketWeb",
+      "path": "frontend",
+      "stack": "react-web",
+      "tech": "React 19, TypeScript, Vite, TanStack Query and Router, Zustand, Zod, Tailwind v4, pnpm",
+      "responsibility": "The staff and verifier screens over the one REST API"
+    }
+  ]
+}
