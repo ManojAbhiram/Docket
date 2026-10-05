@@ -255,7 +255,7 @@ The call cap is a configured value (US-02-001). A call refused at the cap marks 
 - Local `docker compose`, no managed containers (compute, ADR-0004): sign-off pending.
 - Image bytes in a Postgres table (database, ADR-0007): the catalogue default is the cloud's object store; sign-off pending.
 - `python-multipart`, `pdf2image` with poppler and OpenCV as a runtime dependency (ADR-0008, ADR-0010, Proposed): not in `pyproject.toml` (OpenCV is only a dev dependency); sign-off pending and a `dependency-audit` run is needed first.
-- `rapidocr` and `onnxruntime` as runtime dependencies of the API (ADR-0001): in `evals/requirements-ocr.txt` only, not in `pyproject.toml`, and unchecked on Python 3.14 (section 16); sign-off pending.
+- `rapidocr` and `onnxruntime` as runtime dependencies of the API (ADR-0001): in `evals/requirements-ocr.txt` only, unpinned, not in `pyproject.toml`. PyPI shows 3.14 wheels for onnxruntime 1.30.0, pyclipper 1.4.0, Shapely 2.1.2 and a stable-ABI opencv-python-headless, and rapidocr 3.9.2 is pure Python (section 16), but no install was run on 3.14. rapidocr depends on `opencv_python` (the non-headless build), which needs the system library `libGL` in the slim image (assumption). Sign-off pending.
 - An argon2id library (ADR-0006): not chosen and not in `pyproject.toml`; to be recorded when US-00-011 is built, sign-off pending.
 - No Sentry and no Grafana stack (observability): the catalogue default is OpenTelemetry with Grafana plus Sentry; only OpenTelemetry is wired, sign-off pending.
 
@@ -284,7 +284,17 @@ Conflicts with: ADR-0011, ADR-0001, ADR-0004, sections 3 and 8, DEBT-006.
 
 Fix: run `uv pip install --dry-run --python 3.14 rapidocr onnxruntime opencv-python-headless`. If it fails, write an ADR choosing a 3.12 or 3.13 API or a separate worker image, which overturns ADR-0011. If it resolves, re-measure peak RSS and seconds per page under 3.14 inside the API and cite the run in section 8.
 
-Status: open. It needs a command that cannot run in this session, and the answer can change ADR-0011. Section 8 now says every number is for 3.12.
+Status: partly resolved, still open. Checked on 2026-10-05 against the PyPI per-release JSON (`https://pypi.org/pypi/<package>/<version>/json`, file names quoted verbatim by the fetch tool; a summarising fetch of the project-wide pages was unreliable and is not used):
+
+| Package | Release | Linux x86_64 wheel for CPython 3.14 |
+| --- | --- | --- |
+| onnxruntime | 1.30.0 | yes: `onnxruntime-1.30.0-cp314-cp314-manylinux_2_28_x86_64.whl` |
+| pyclipper | 1.4.0 | yes: `pyclipper-1.4.0-cp314-cp314-manylinux2014_x86_64.manylinux_2_17_x86_64.whl` |
+| Shapely | 2.1.2 | yes: `shapely-2.1.2-cp314-cp314-manylinux_2_17_x86_64.manylinux2014_x86_64.whl` |
+| opencv-python-headless | 5.0.0.93 | yes, stable ABI: `opencv_python_headless-5.0.0.93-cp37-abi3-manylinux_2_28_x86_64.whl`; the repository's dev group already installs it on 3.14 (the seed and noise tests pass in `make check`) |
+| rapidocr | 3.9.2 | pure Python: `rapidocr-3.9.2-py3-none-any.whl`, `requires_python <4,>=3.8` |
+
+So the native libraries have 3.14 wheels. The dry run was then run by the engineer (`uv pip install --dry-run --python 3.14 rapidocr onnxruntime opencv-python-headless`): it resolved 22 packages in 0.7 s and would install 13, with these versions: rapidocr 3.9.2, onnxruntime 1.30.0, opencv-python 5.0.0.93, pyclipper 1.4.0, shapely 2.1.2, omegaconf 2.3.1, antlr4-python3-runtime 4.9.3, flatbuffers 25.12.19, colorlog 6.12.0, requests 2.34.2, charset-normalizer 3.5.2, six 1.17.0, tqdm 4.70.1. So resolution on 3.14 is proven. A dry run does not build or import anything: `antlr4-python3-runtime` 4.9.3 is a source package (not checked: it builds at install time), and the resolver pulled in `opencv-python` (the non-headless build) beside the headless one, two packages that both provide the `cv2` module (a known conflict, to be settled by installing rapidocr with its OpenCV dependency removed or by using the non-headless build alone). What stays open: (1) a real install and an import of the engine on 3.14, which the benchmark rerun will show; (2) rapidocr requires `opencv_python`, not the headless build (PyPI `requires_dist`), which imports `libGL` and is likely to fail in `python:3.14-slim` unless a system package is added (assumption, not run; recorded in section 13); (3) every number in section 8 is still a 3.12 measurement, and `evals/requirements-ocr.txt` leaves `rapidocr` and `onnxruntime` unpinned, so the measured versions are not recorded. Section 8 keeps saying every number is for 3.12. The BLOCKER closes when the dry run passes and the benchmark is repeated under 3.14 with versions recorded.
 
 ### BLOCKER: Idempotency-Key is required by the contract and stored nowhere
 

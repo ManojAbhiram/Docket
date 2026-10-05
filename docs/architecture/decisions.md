@@ -97,10 +97,11 @@ Titles, status and reversibility of ADR-0001 to ADR-0005 come from `docs/decisio
 
 **Why.** The in-process layout is only buildable if the wheels exist, and every number in the HLD is for 3.12 until then.
 
-**Settled by:** open (engineer, after running the check).
+**Settled by:** open (engineer, after running the check). Evidence so far: a PyPI check on 2026-10-05 found 3.14 Linux x86_64 wheels for onnxruntime, pyclipper, Shapely and opencv-python-headless, and rapidocr is pure Python (HLD section 16). The engineer's `uv pip install --dry-run` on 3.14 then resolved 22 packages (rapidocr 3.9.2, onnxruntime 1.30.0, opencv-python 5.0.0.93). A real install and the benchmark on 3.14 have not been run.
 
 **What now has to change to match:**
-- ADR-0011 is superseded if the wheels are missing.
+- ADR-0011 is superseded if the install fails or the 3.14 measurement breaks the memory budget.
+- `evals/requirements-ocr.txt` pins `rapidocr` and `onnxruntime` and records the versions of the 3.12 run.
 - HLD sections 3 and 8 cite the 3.14 measurement when it exists.
 
 ### Where idempotency keys are stored
