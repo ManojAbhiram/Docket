@@ -4,6 +4,7 @@ Services raise `DomainError` subclasses. Routers never build an error body;
 `register_exception_handlers` turns every failure into the same shape.
 """
 
+import traceback
 from collections.abc import Mapping
 
 import structlog
@@ -103,12 +104,23 @@ def register_exception_handlers(app: FastAPI) -> None:
         return error_response(exc.status_code, "http_error", str(exc.detail))
 
 
+def _frames(exc: BaseException) -> list[str]:
+    """Where an error was raised, without its message or any values.
+
+    A database error message can carry the offending value (a unique violation
+    names the key), and the rows here are about minors, so the message is never
+    logged. The innermost eight frames are enough to find the code.
+    """
+    summary = traceback.extract_tb(exc.__traceback__)
+    return [f"{frame.filename}:{frame.lineno} {frame.name}" for frame in summary][-8:]
+
+
 def unhandled_response(exc: Exception) -> JSONResponse:
-    """Log the traceback once and hide it from the client.
+    """Log the error class and its frames once and hide the rest from the client.
 
     Called from `RequestIdMiddleware`, not registered on the app: Starlette's
     own server-error layer sits outside every middleware, so a handler there
     would answer after the request id and its log context are gone.
     """
-    log.exception("unhandled error", error_type=type(exc).__name__)
+    log.error("unhandled error", error_type=type(exc).__name__, frames=_frames(exc))
     return error_response(500, "internal", "internal error")

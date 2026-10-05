@@ -4,6 +4,7 @@ from typing import Annotated
 
 from fastapi import FastAPI, Query
 from httpx import AsyncClient
+from structlog.testing import capture_logs
 
 from app.core.errors import NotFoundError
 
@@ -59,3 +60,21 @@ async def test_unhandled_error_is_500_without_detail(app: FastAPI, client: Async
         "details": {},
         "request_id": response.headers["x-request-id"],
     }
+
+
+async def test_unhandled_error_log_keeps_the_class_but_not_the_message(
+    app: FastAPI, client: AsyncClient
+) -> None:
+    """A database error message can carry a key value; applicants are minors."""
+
+    @app.get("/leak")
+    async def leak() -> dict[str, str]:
+        raise ValueError("Key (application_ref)=(APP-7) already exists")
+
+    with capture_logs() as logs:
+        await client.get("/leak")
+
+    entries = [entry for entry in logs if entry["event"] == "unhandled error"]
+    assert len(entries) == 1
+    assert entries[0]["error_type"] == "ValueError"
+    assert "APP-7" not in str(logs)
