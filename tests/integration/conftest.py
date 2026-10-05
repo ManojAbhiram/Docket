@@ -32,3 +32,10 @@ def factory(connection: AsyncConnection) -> async_sessionmaker[AsyncSession]:
     return async_sessionmaker(
         bind=connection, join_transaction_mode="create_savepoint", expire_on_commit=False
     )
+
+
+@pytest.fixture
+async def session(factory: async_sessionmaker[AsyncSession]) -> AsyncIterator[AsyncSession]:
+    """One session inside the test's transaction, for tests that use the ORM."""
+    async with factory() as active:
+        yield active

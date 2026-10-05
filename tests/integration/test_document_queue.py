@@ -4,6 +4,7 @@ Needs `make db` and `make migrate` (migration 0002, the copy of docs/design/sche
 runs in a transaction that is rolled back.
 """
 
+from datetime import UTC, datetime
 from uuid import UUID
 
 import pytest
@@ -17,6 +18,8 @@ from app.jobs.worker import ProcessedDocument
 
 pytestmark = pytest.mark.integration
 
+OLDER = datetime(2026, 10, 4, tzinfo=UTC)
+NEWER = datetime(2026, 10, 5, tzinfo=UTC)
 PNG = b"\x89PNG\r\n\x1a\n" + b"x" * 40
 SHA = "a" * 64
 
@@ -44,7 +47,7 @@ async def seed_application(connection: AsyncConnection, ref: str = "SYN-APP-001"
 
 
 async def seed_document(
-    connection: AsyncConnection, user: UUID, application: UUID, created_at: str = "2026-10-05"
+    connection: AsyncConnection, user: UUID, application: UUID, created_at: datetime | None = None
 ) -> UUID:
     row = await connection.execute(
         text(
@@ -52,7 +55,7 @@ async def seed_document(
             "size_bytes, created_at) VALUES (:app, :user, 'image/png', :sha, 48, :created) "
             "RETURNING id"
         ),
-        {"app": application, "user": user, "sha": SHA, "created": created_at},
+        {"app": application, "user": user, "sha": SHA, "created": created_at or NEWER},
     )
     document = UUID(str(row.scalar_one()))
     await connection.execute(
@@ -81,8 +84,8 @@ async def test_a_claim_takes_the_oldest_uploaded_document_and_its_image(
     connection: AsyncConnection, factory: async_sessionmaker[AsyncSession]
 ) -> None:
     user, application = await seed_user(connection), await seed_application(connection)
-    older = await seed_document(connection, user, application, "2026-10-04")
-    await seed_document(connection, user, application, "2026-10-05")
+    older = await seed_document(connection, user, application, OLDER)
+    await seed_document(connection, user, application, NEWER)
 
     claimed = await SqlDocumentStore(factory).claim_next()
 
@@ -121,8 +124,8 @@ async def test_a_newer_upload_of_the_same_type_becomes_current_and_the_older_is_
     connection: AsyncConnection, factory: async_sessionmaker[AsyncSession]
 ) -> None:
     user, application = await seed_user(connection), await seed_application(connection)
-    first = await seed_document(connection, user, application, "2026-10-04")
-    second = await seed_document(connection, user, application, "2026-10-05")
+    first = await seed_document(connection, user, application, OLDER)
+    second = await seed_document(connection, user, application, NEWER)
     store = SqlDocumentStore(factory)
     await store.claim_next()
     await store.complete(first, processed())
