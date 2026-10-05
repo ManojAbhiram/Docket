@@ -1,0 +1,88 @@
+/* Direction 3, ledger. Serves the admissions lead who reads counts and exports the verified list, and
+   anyone who prints a page: ruled rows, right-aligned figures, one deep green for the primary action
+   and the current position. Neutral ink on grey paper. Hex so contrast.py can check it. Faces are
+   Fontsource families, self-hosted (CSP font-src 'self'), proposed and not installed, so the
+   fallbacks render until they are. */
+
+:root[data-variant="3-ledger"] {
+  --font-display: "Spectral", Georgia, serif;
+  --font-sans: "Work Sans", system-ui, sans-serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, monospace;
+  --type-ratio: 1.25;
+  --radius: 0.125rem;
+  --ease-out: cubic-bezier(0.4, 0, 0.2, 1);
+  --motion-duration: 600ms;
+
+  --background: #f2f2f0;
+  --foreground: #1a1c1a;
+  --card: #ffffff;
+  --card-foreground: #1a1c1a;
+  --popover: #ffffff;
+  --popover-foreground: #1a1c1a;
+  --primary: #1d5c3a;
+  --primary-foreground: #ffffff;
+  --secondary: #e4e5e2;
+  --secondary-foreground: #1a1c1a;
+  --muted: #e4e5e2;
+  --muted-foreground: #51554f;
+  --accent: #dcdfda;
+  --accent-foreground: #1a1c1a;
+  --destructive: #9e2b25;
+  --border: #cfd1cc;
+  --input: #7a7f78;
+  --ring: #1d5c3a;
+  --sidebar: #e4e5e2;
+  --sidebar-foreground: #1a1c1a;
+  --sidebar-primary: #1d5c3a;
+  --sidebar-primary-foreground: #ffffff;
+  --sidebar-accent: #dcdfda;
+  --sidebar-accent-foreground: #1a1c1a;
+  --sidebar-border: #cfd1cc;
+  --sidebar-ring: #1d5c3a;
+}
+
+:root[data-variant="3-ledger"]:is(.dark, [data-theme="dark"]) {
+  --background: #141614;
+  --foreground: #e9ebe7;
+  --card: #1d201d;
+  --card-foreground: #e9ebe7;
+  --popover: #1d201d;
+  --popover-foreground: #e9ebe7;
+  --primary: #7cc79b;
+  --primary-foreground: #141614;
+  --secondary: #272a27;
+  --secondary-foreground: #e9ebe7;
+  --muted: #272a27;
+  --muted-foreground: #a6aba3;
+  --accent: #313531;
+  --accent-foreground: #e9ebe7;
+  --destructive: #ee8c84;
+  --border: #343834;
+  --input: #717870;
+  --ring: #7cc79b;
+  --sidebar: #1d201d;
+  --sidebar-foreground: #e9ebe7;
+  --sidebar-primary: #7cc79b;
+  --sidebar-primary-foreground: #141614;
+  --sidebar-accent: #313531;
+  --sidebar-accent-foreground: #e9ebe7;
+  --sidebar-border: #343834;
+  --sidebar-ring: #7cc79b;
+}
+
+:root[data-variant="3-ledger"] :is(h1, h2, h3, [data-slot="card-title"]) {
+  font-family: var(--font-display);
+  font-weight: 600;
+  line-height: 1.2;
+  text-wrap: balance;
+}
+
+/* Figures sit on the right edge of their column so a column of numbers adds up by eye. */
+:root[data-variant="3-ledger"] :is(td, th)[data-numeric] {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+:root[data-variant="3-ledger"] :is(tr, [data-slot="table-row"]) {
+  border-bottom: 1px solid var(--border);
+}

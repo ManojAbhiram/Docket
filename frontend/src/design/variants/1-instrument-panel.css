@@ -1,0 +1,85 @@
+/* Direction 1, instrument panel. Serves the verifier at a desk all day: dense rows, tabular figures,
+   a status rail. Cool graphite surfaces, one blue that means "the primary action or where you are".
+   Colours are hex so contrast.py can check them. Faces are Fontsource families, self-hosted
+   (CSP font-src 'self'); they are proposed and not installed, so the fallbacks render until they are. */
+
+:root[data-variant="1-instrument-panel"] {
+  --font-display: "IBM Plex Sans Condensed", "Arial Narrow", sans-serif;
+  --font-sans: "IBM Plex Sans", system-ui, sans-serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, monospace;
+  --type-ratio: 1.25;
+  --radius: 0.25rem;
+  --ease-out: cubic-bezier(0.2, 0.8, 0.2, 1);
+  --motion-duration: 320ms;
+
+  --background: #f3f5f7;
+  --foreground: #14181d;
+  --card: #ffffff;
+  --card-foreground: #14181d;
+  --popover: #ffffff;
+  --popover-foreground: #14181d;
+  --primary: #0b6fa4;
+  --primary-foreground: #ffffff;
+  --secondary: #e6eaee;
+  --secondary-foreground: #14181d;
+  --muted: #e6eaee;
+  --muted-foreground: #4a5560;
+  --accent: #dbe6ee;
+  --accent-foreground: #14181d;
+  --destructive: #b3261e;
+  --border: #d3d9df;
+  --input: #7c8896;
+  --ring: #0b6fa4;
+  --sidebar: #e6eaee;
+  --sidebar-foreground: #14181d;
+  --sidebar-primary: #0b6fa4;
+  --sidebar-primary-foreground: #ffffff;
+  --sidebar-accent: #dbe6ee;
+  --sidebar-accent-foreground: #14181d;
+  --sidebar-border: #d3d9df;
+  --sidebar-ring: #0b6fa4;
+}
+
+:root[data-variant="1-instrument-panel"]:is(.dark, [data-theme="dark"]) {
+  --background: #0f1318;
+  --foreground: #e8ecf0;
+  --card: #171d24;
+  --card-foreground: #e8ecf0;
+  --popover: #171d24;
+  --popover-foreground: #e8ecf0;
+  --primary: #5bb4e5;
+  --primary-foreground: #0f1318;
+  --secondary: #1f2730;
+  --secondary-foreground: #e8ecf0;
+  --muted: #1f2730;
+  --muted-foreground: #a3afbb;
+  --accent: #26323e;
+  --accent-foreground: #e8ecf0;
+  --destructive: #f0857d;
+  --border: #2a343f;
+  --input: #6b7886;
+  --ring: #5bb4e5;
+  --sidebar: #171d24;
+  --sidebar-foreground: #e8ecf0;
+  --sidebar-primary: #5bb4e5;
+  --sidebar-primary-foreground: #0f1318;
+  --sidebar-accent: #26323e;
+  --sidebar-accent-foreground: #e8ecf0;
+  --sidebar-border: #2a343f;
+  --sidebar-ring: #5bb4e5;
+}
+
+:root[data-variant="1-instrument-panel"] :is(h1, h2, h3, [data-slot="card-title"]) {
+  font-family: var(--font-display);
+  font-weight: 600;
+  line-height: 1.15;
+  text-wrap: balance;
+}
+
+:root[data-variant="1-instrument-panel"] :is(table, [data-slot="table"], [data-numeric]) {
+  font-variant-numeric: tabular-nums;
+}
+
+:root[data-variant="1-instrument-panel"] :where(code, kbd, [data-part="value"]) {
+  font-family: var(--font-mono);
+}

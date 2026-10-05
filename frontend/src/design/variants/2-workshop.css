@@ -1,0 +1,86 @@
+/* Direction 2, workshop. Serves the staff member doing intake, at a desk or on a phone: one task per
+   band, large targets, generous margins. Warm bone surfaces, steel for structure, ochre for the one
+   primary action. Hex so contrast.py can check it. Faces are Fontsource families, self-hosted
+   (CSP font-src 'self'), proposed and not installed, so the fallbacks render until they are. */
+
+:root[data-variant="2-workshop"] {
+  --font-display: "Bricolage Grotesque", "Trebuchet MS", sans-serif;
+  --font-sans: "Public Sans", system-ui, sans-serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, monospace;
+  --type-ratio: 1.333;
+  --radius: 0.875rem;
+  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+  --motion-duration: 480ms;
+
+  --background: #f4f1ec;
+  --foreground: #231f1a;
+  --card: #fbf9f6;
+  --card-foreground: #231f1a;
+  --popover: #fbf9f6;
+  --popover-foreground: #231f1a;
+  --primary: #8f5b00;
+  --primary-foreground: #ffffff;
+  --secondary: #3d5a73;
+  --secondary-foreground: #ffffff;
+  --muted: #ece6dc;
+  --muted-foreground: #5c5348;
+  --accent: #e4ddd0;
+  --accent-foreground: #231f1a;
+  --destructive: #a8321f;
+  --border: #ddd5c8;
+  --input: #8a7f70;
+  --ring: #3d5a73;
+  --sidebar: #ece6dc;
+  --sidebar-foreground: #231f1a;
+  --sidebar-primary: #8f5b00;
+  --sidebar-primary-foreground: #ffffff;
+  --sidebar-accent: #e4ddd0;
+  --sidebar-accent-foreground: #231f1a;
+  --sidebar-border: #ddd5c8;
+  --sidebar-ring: #3d5a73;
+}
+
+:root[data-variant="2-workshop"]:is(.dark, [data-theme="dark"]) {
+  --background: #1b1814;
+  --foreground: #f1ebe0;
+  --card: #26221c;
+  --card-foreground: #f1ebe0;
+  --popover: #26221c;
+  --popover-foreground: #f1ebe0;
+  --primary: #e0a32e;
+  --primary-foreground: #1b1814;
+  --secondary: #a9c1d6;
+  --secondary-foreground: #1b1814;
+  --muted: #302b24;
+  --muted-foreground: #b5aa9a;
+  --accent: #3a342b;
+  --accent-foreground: #f1ebe0;
+  --destructive: #f08a7a;
+  --border: #3c362d;
+  --input: #8c8170;
+  --ring: #e0a32e;
+  --sidebar: #26221c;
+  --sidebar-foreground: #f1ebe0;
+  --sidebar-primary: #e0a32e;
+  --sidebar-primary-foreground: #1b1814;
+  --sidebar-accent: #3a342b;
+  --sidebar-accent-foreground: #f1ebe0;
+  --sidebar-border: #3c362d;
+  --sidebar-ring: #e0a32e;
+}
+
+:root[data-variant="2-workshop"] :is(h1, h2, h3, [data-slot="card-title"]) {
+  font-family: var(--font-display);
+  font-weight: 700;
+  line-height: 1.1;
+  text-wrap: balance;
+}
+
+/* One object per band: bands get large vertical rhythm, controls get a taller target. */
+:root[data-variant="2-workshop"] [data-part="band"] {
+  padding-block: 3rem;
+}
+
+:root[data-variant="2-workshop"] :is(button, [role="button"], input, select, textarea) {
+  min-height: 3rem;
+}

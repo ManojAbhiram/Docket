@@ -11,6 +11,11 @@ if (!container) {
   throw new Error("index.html has no #root element");
 }
 
+// Design directions are a development aid: `?variant=1-instrument-panel` and so on. Not in the production bundle.
+if (import.meta.env.DEV) {
+  void import("@/design/variants/switch").then((module) => module.applyVariantFromUrl());
+}
+
 createRoot(container).render(
   <StrictMode>
     <App />
