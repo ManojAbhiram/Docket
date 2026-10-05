@@ -1,0 +1,8 @@
+# Regression gate for the OCR benchmark (llm-eval skill, step 6).
+# No baseline has been accepted and no CI job reads this file yet. Accepting a baseline is a
+# deliberate edit by a person: set `accepted: true` in a results summary and record who and when.
+metric: mean field accuracy (evals/report.py)
+delta: 0.02          # fail when the score drops below the baseline by more than this, absolute
+ram_budget_mb: 512   # CONSTRAINTS.md hosting limit, from the research request
+subset: all          # 30 documents, free to run, so no subset is needed
+accepted_baseline: none

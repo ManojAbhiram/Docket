@@ -14,10 +14,15 @@ from dataclasses import dataclass
 from datetime import date, timedelta
 from typing import Literal
 
-type DocType = Literal["10th_marksheet", "12th_marksheet", "id_proof"]
+type DocType = Literal["10th_marksheet", "12th_marksheet", "id_proof", "transfer_certificate"]
 type MismatchField = Literal["name", "dob", "roll_number", "marks"]
 
-DOC_TYPES: tuple[DocType, DocType, DocType] = ("10th_marksheet", "12th_marksheet", "id_proof")
+DOC_TYPES: tuple[DocType, DocType, DocType, DocType] = (
+    "10th_marksheet",
+    "12th_marksheet",
+    "id_proof",
+    "transfer_certificate",
+)
 APPLICATION_COUNT = 20
 DOCUMENT_COUNT = 30
 MISMATCH_COUNT = 8
@@ -51,6 +56,8 @@ _MASK = (1 << 64) - 1
 _MISMATCH_CYCLE: tuple[MismatchField, ...] = ("name", "dob", "roll_number", "marks")
 _MARKSHEET_FIELDS: frozenset[MismatchField] = frozenset({"name", "dob", "roll_number", "marks"})
 _ID_PROOF_FIELDS: frozenset[MismatchField] = frozenset({"name", "dob"})
+_NAME_AND_DOB_ONLY: frozenset[DocType] = frozenset({"id_proof", "transfer_certificate"})
+_NUMBER_PREFIX = {"id_proof": f"{ID_PREFIX}ID", "transfer_certificate": f"{ID_PREFIX}TC"}
 
 
 class SeededRng:
@@ -106,11 +113,15 @@ class Application:
 
 @dataclass(frozen=True)
 class NoiseSpec:
-    """Photo noise applied when a document is rendered to PNG."""
+    """Photo noise applied to a clean screenshot, as a phone camera would add it.
+
+    `low_light` is a brightness multiplier: 1.0 leaves the page as it is, 0.4 is a dim room.
+    """
 
     blur_radius: float
     skew_degrees: float
     shadow_strength: float
+    low_light: float
 
 
 @dataclass(frozen=True)
@@ -202,6 +213,33 @@ def labels_json(dataset: Dataset) -> str:
     return json.dumps(payload, indent=2, sort_keys=True, default=str) + "\n"
 
 
+def cases_jsonl(dataset: Dataset) -> str:
+    """One labelled eval case per document: what the page prints and how it was degraded."""
+    lines: list[str] = []
+    for doc in dataset.documents:
+        fields = {
+            "name": doc.printed_name,
+            "father_name": doc.printed_father_name,
+            "dob": doc.printed_dob,
+            "board": doc.printed_board,
+            "roll_number": doc.printed_roll_number,
+            "marks": doc.printed_marks,
+        }
+        case = {
+            "id": doc.document_id,
+            "input": doc.file_name,
+            "doc_type": doc.doc_type,
+            "expected": {key: value for key, value in fields.items() if value is not None},
+            "mismatch_field": doc.mismatch_field,
+            "noise": dataclasses.asdict(doc.noise),
+            "source": "synthetic",
+            "labelled_by": "seed generator",
+            "labelled_at": f"seed {dataset.seed}",
+        }
+        lines.append(json.dumps(case, sort_keys=True))
+    return "\n".join(lines) + "\n"
+
+
 def _build_applications(rng: SeededRng) -> tuple[Application, ...]:
     combos = [(given, surname) for given in GIVEN_NAMES for surname in SURNAMES]
     names = rng.sample(combos, APPLICATION_COUNT)
@@ -234,7 +272,11 @@ def _new_roll_number(rng: SeededRng, used: set[str]) -> str:
 
 
 def _document_plan() -> list[tuple[int, DocType]]:
-    """Which application gets which documents: 4 apps with 3, 6 with 2, 6 with 1, 4 with none."""
+    """Which application gets which documents: 4 apps with 3, 6 with 2, 6 with 1, 4 with none.
+
+    Types rotate over four, which gives 7 tenth marksheets, 8 twelfth marksheets, 8 ID
+    proofs and 7 transfer certificates (the stretch type).
+    """
     plan: list[tuple[int, DocType]] = []
     for app_index in range(APPLICATION_COUNT):
         if app_index < 4:
@@ -245,7 +287,7 @@ def _document_plan() -> list[tuple[int, DocType]]:
             count = 1
         else:
             count = 0
-        plan.extend((app_index, DOC_TYPES[(app_index + offset) % 3]) for offset in range(count))
+        plan.extend((app_index, DOC_TYPES[(app_index + offset) % 4]) for offset in range(count))
     return plan
 
 
@@ -253,7 +295,8 @@ def _assign_mismatches(rng: SeededRng, plan: list[tuple[int, DocType]]) -> dict[
     chosen = rng.sample(range(len(plan)), MISMATCH_COUNT)
     assigned: dict[int, MismatchField] = {}
     for order, doc_index in enumerate(chosen):
-        allowed = _ID_PROOF_FIELDS if plan[doc_index][1] == "id_proof" else _MARKSHEET_FIELDS
+        limited = plan[doc_index][1] in _NAME_AND_DOB_ONLY
+        allowed = _ID_PROOF_FIELDS if limited else _MARKSHEET_FIELDS
         candidates = [_MISMATCH_CYCLE[(order + shift) % 4] for shift in range(4)]
         assigned[doc_index] = next(kind for kind in candidates if kind in allowed)
     return assigned
@@ -286,24 +329,26 @@ def _build_document(
     elif mismatch == "marks":
         subject = rng.pick(SUBJECTS)
         marks[subject] = _change_mark(rng, app.marks[subject])
-    is_marksheet = doc_type != "id_proof"
+    is_marksheet = doc_type not in _NAME_AND_DOB_ONLY
+    prefix = _NUMBER_PREFIX.get(doc_type)
     return DocumentRecord(
         document_id=f"{ID_PREFIX}-DOC-{index + 1:03d}",
         application_id=app.application_id,
         doc_type=doc_type,
         printed_name=name,
-        printed_father_name=app.father_name if is_marksheet else None,
+        printed_father_name=None if doc_type == "id_proof" else app.father_name,
         printed_dob=dob.strftime("%d/%m/%Y"),
         printed_board=app.board if is_marksheet else None,
         printed_roll_number=roll if is_marksheet else None,
         printed_marks=marks if is_marksheet else None,
-        printed_id_number=None if is_marksheet else f"{ID_PREFIX}ID{rng.between(10**7, 10**8 - 1)}",
+        printed_id_number=None if prefix is None else f"{prefix}{rng.between(10**7, 10**8 - 1)}",
         mismatch_field=mismatch,
         name_reordered=reordered,
         noise=NoiseSpec(
             blur_radius=round(rng.uniform(0.6, 1.6), 2),
             skew_degrees=round(rng.uniform(-4.0, 4.0), 2),
             shadow_strength=round(rng.uniform(0.15, 0.45), 2),
+            low_light=round(rng.uniform(0.4, 1.0), 2),
         ),
     )
 

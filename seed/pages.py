@@ -8,7 +8,9 @@ _TITLES = {
     "10th_marksheet": "Secondary School Examination, Class X: Statement of Marks",
     "12th_marksheet": "Senior School Certificate Examination, Class XII: Statement of Marks",
     "id_proof": "Identity Card",
+    "transfer_certificate": "School Transfer Certificate",
 }
+_NUMBER_LABELS = {"id_proof": "ID number", "transfer_certificate": "TC number"}
 
 _STYLE = """
 body { font-family: 'DejaVu Serif', serif; background: #fdfcf7; margin: 0; padding: 40px;
@@ -32,7 +34,7 @@ def render_html(doc: DocumentRecord, app: Application) -> str:
     if doc.printed_roll_number is not None:
         rows.append(("Roll number", doc.printed_roll_number))
     if doc.printed_id_number is not None:
-        rows.append(("ID number", doc.printed_id_number))
+        rows.append((_NUMBER_LABELS[doc.doc_type], doc.printed_id_number))
     body = "".join(
         f'<tr><td class="label">{escape(label)}</td><td>{escape(value)}</td></tr>'
         for label, value in rows

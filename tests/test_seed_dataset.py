@@ -46,10 +46,10 @@ def test_different_seed_gives_a_different_dataset(dataset: Dataset) -> None:
     assert build_dataset(seed=2) != dataset
 
 
-def test_all_three_document_types_appear(dataset: Dataset) -> None:
+def test_all_four_document_types_appear(dataset: Dataset) -> None:
     kinds = {doc.doc_type for doc in dataset.documents}
 
-    assert kinds == {"10th_marksheet", "12th_marksheet", "id_proof"}
+    assert kinds == {"10th_marksheet", "12th_marksheet", "id_proof", "transfer_certificate"}
 
 
 def test_four_applications_have_no_documents(dataset: Dataset) -> None:
@@ -92,7 +92,9 @@ def test_a_clean_marksheet_prints_the_application_values(dataset: Dataset) -> No
     clean = [
         d
         for d in dataset.documents
-        if d.mismatch_field is None and not d.name_reordered and d.doc_type != "id_proof"
+        if d.mismatch_field is None
+        and not d.name_reordered
+        and d.doc_type in ("10th_marksheet", "12th_marksheet")
     ]
 
     assert clean

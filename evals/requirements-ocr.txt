@@ -1,0 +1,21 @@
+# OCR engines for the benchmark. Installed into their own environment, not the project
+# lock: several of them may have no wheel for the project's Python 3.14 (DEBT-006), and a
+# failed resolve here would break `uv lock` for the whole repository.
+#
+#   uv venv .venv-ocr --python 3.12
+#   uv pip install --python .venv-ocr/bin/python -r evals/requirements-ocr.txt
+#
+# Also needed on the system: the tesseract binary with English and Hindi data, for example
+#   sudo apt install tesseract-ocr tesseract-ocr-eng tesseract-ocr-hin
+#
+# Free and open source. Sizes are large (torch alone is about 2 GB); none is pinned yet,
+# so record the versions the benchmark ran with (`uv pip freeze`) next to its results.
+numpy>=2,<3
+opencv-python-headless>=4.10,<5
+pillow>=11,<13
+pytesseract
+rapidocr
+onnxruntime
+paddlepaddle
+paddleocr
+python-doctr[torch]
