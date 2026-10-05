@@ -35,7 +35,8 @@ describe("design gallery", () => {
     renderRoute("/__design");
     expect(await screen.findByRole("heading", { name: "Design gallery" })).toBeInTheDocument();
     expect(screen.getByRole("link", { name: "S-00 API health" })).toBeInTheDocument();
-    expect(screen.getByText("loading")).toBeInTheDocument();
+    // Every screen has a loading state, so the badge appears once per screen.
+    expect(screen.getAllByText("loading").length).toBeGreaterThanOrEqual(allScreens().length);
   });
 
   it("renders the chosen state with the state switcher", async () => {

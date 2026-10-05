@@ -1,6 +1,8 @@
 import { Link, Outlet } from "@tanstack/react-router";
 import { Suspense } from "react";
 
+import { ThemeToggle } from "@/components/ThemeToggle";
+
 /**
  * RootLayout frames every route: header with navigation, then the outlet.
  * The Suspense boundary is where a lazy route or a useSuspenseQuery waits,
@@ -12,8 +14,11 @@ export function RootLayout() {
       <header className="border-b">
         <nav aria-label="Main" className="mx-auto flex max-w-5xl items-center gap-4 px-4 py-3">
           <Link to="/" className="font-semibold">
-            AdmitCheck
+            Docket
           </Link>
+          <div className="ml-auto">
+            <ThemeToggle />
+          </div>
         </nav>
       </header>
       <main className="mx-auto max-w-5xl px-4 py-8">

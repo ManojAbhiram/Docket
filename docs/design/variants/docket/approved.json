@@ -2,9 +2,10 @@
   "round": 1,
   "date": "2026-10-05",
   "recommended": "1-instrument-panel",
-  "chosen": null,
+  "chosen": "1-instrument-panel",
+  "chosen_by": "delegated: the user wrote \"does everything done\" instead of choosing, so the recommendation was applied",
   "ratings": {},
   "comments": {},
-  "remix": null,
-  "notes": "Waiting for the user's choice. Directions are theme files in frontend/src/design/variants/. Nothing was rendered: no screens exist and no browser was run."
+  "remix": "Take the 48 px controls and the one-object-per-band rhythm from 2-workshop on the intake screens S-03 and S-05 only.",
+  "notes": "Change the choice by telling the designer; the directions are theme files and the default look is bound in frontend/src/index.css. Nothing was rendered: no browser was run."
 }
