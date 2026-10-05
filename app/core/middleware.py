@@ -4,6 +4,7 @@ Not `BaseHTTPMiddleware`: that class breaks streaming responses and does not
 propagate contextvars reliably.
 """
 
+import re
 import time
 import uuid
 
@@ -16,6 +17,8 @@ from app.core.errors import unhandled_response
 log = structlog.get_logger()
 
 REQUEST_ID_HEADER = "x-request-id"
+# A client-supplied id goes into every log line, so only a short, plain one is accepted.
+_VALID_REQUEST_ID = re.compile(r"[A-Za-z0-9._-]{1,128}")
 
 
 class RequestIdMiddleware:
@@ -32,7 +35,10 @@ class RequestIdMiddleware:
         if scope["type"] != "http":
             await self.app(scope, receive, send)
             return
-        request_id = Headers(scope=scope).get(REQUEST_ID_HEADER) or uuid.uuid4().hex
+        offered = Headers(scope=scope).get(REQUEST_ID_HEADER)
+        request_id = (
+            offered if offered and _VALID_REQUEST_ID.fullmatch(offered) else uuid.uuid4().hex
+        )
         structlog.contextvars.clear_contextvars()
         structlog.contextvars.bind_contextvars(
             request_id=request_id, method=scope["method"], path=scope["path"]

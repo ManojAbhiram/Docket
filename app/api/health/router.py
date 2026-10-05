@@ -1,5 +1,6 @@
 """Liveness and readiness. Readiness checks every dependency the service needs."""
 
+import asyncio
 from collections.abc import Awaitable, Callable
 from functools import partial
 from typing import Annotated
@@ -38,10 +39,14 @@ async def healthz(version: Annotated[str, Depends(get_version)]) -> HealthOut:
 
 
 @router.get("/readyz", response_model=ReadyOut, responses={503: {"model": ErrorEnvelope}})
-async def readyz(check: Annotated[ReadinessCheck, Depends(get_readiness_check)]) -> ReadyOut:
-    """Every dependency is reachable; 503 with the failed check otherwise."""
+async def readyz(
+    request: Request, check: Annotated[ReadinessCheck, Depends(get_readiness_check)]
+) -> ReadyOut:
+    """Every dependency answers within the timeout; 503 with the failed check otherwise."""
+    timeout: float = request.app.state.settings.readiness_timeout_seconds
     try:
-        await check()
+        async with asyncio.timeout(timeout):
+            await check()
     except (OSError, TimeoutError, SQLAlchemyError) as exc:
         log.warning("readiness failed", check="database", error_type=type(exc).__name__)
         raise ServiceUnavailableError(

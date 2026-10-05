@@ -5,10 +5,12 @@ have no defaults. `get_settings` is the one module-level singleton.
 """
 
 from functools import lru_cache
-from typing import Literal
+from typing import Literal, Self
 
-from pydantic import PostgresDsn, field_validator
+from pydantic import Field, PostgresDsn, field_validator, model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
+
+_EXAMPLE_PASSWORDS = frozenset({None, "", "postgres", "password", "changeme"})
 
 Env = Literal["development", "test", "production"]
 LogLevel = Literal["debug", "info", "warning", "error"]
@@ -25,10 +27,24 @@ class Settings(BaseSettings):
     port: int = 8080
     log_level: LogLevel = "info"
     log_format: LogFormat = "json"
-    database_url: PostgresDsn
+    database_url: PostgresDsn = Field(repr=False)
     db_pool_size: int = 5
     db_pool_max_overflow: int = 10
     db_echo: bool = False
+    readiness_timeout_seconds: float = Field(default=2.0, gt=0)
+    gateway_engine: str = "recorded"
+    gateway_call_cap: int = Field(default=1000, ge=1)
+    review_confidence_cutoff: float = Field(default=0.9804, ge=0, le=1)
+    name_match_threshold: float = Field(default=0.85, ge=0, le=1)
+
+    @model_validator(mode="after")
+    def _production_has_a_real_database_password(self) -> Self:
+        """The example password is for a laptop. Production refuses it."""
+        password = self.database_url.hosts()[0].get("password")
+        if self.env == "production" and password in _EXAMPLE_PASSWORDS:
+            msg = "production refuses an example database password"
+            raise ValueError(msg)
+        return self
 
     @field_validator("database_url")
     @classmethod
