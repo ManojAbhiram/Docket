@@ -1,31 +1,34 @@
-"""Integration fixtures: a real engine on DATABASE_URL, each test rolled back."""
+"""Integration fixtures: a real Postgres, the migrated schema, and a transaction per test.
+
+Run `make db` and `make migrate` first, then `make test-integration`. Every test works inside one
+transaction that is rolled back, so nothing is left behind and tests do not see each other.
+"""
 
 import os
 from collections.abc import AsyncIterator
 
 import pytest
-from sqlalchemy.ext.asyncio import AsyncEngine, AsyncSession, create_async_engine
+from sqlalchemy.ext.asyncio import (
+    AsyncConnection,
+    AsyncSession,
+    async_sessionmaker,
+    create_async_engine,
+)
 
 
 @pytest.fixture
-async def engine() -> AsyncIterator[AsyncEngine]:
-    """The migrated database named by DATABASE_URL. Fails loudly when unset."""
-    url = os.environ.get("DATABASE_URL")
-    if not url:
-        pytest.fail("DATABASE_URL is not set; run make db, make migrate, make test-integration")
-    engine = create_async_engine(url)
-    try:
-        yield engine
-    finally:
-        await engine.dispose()
+async def connection() -> AsyncIterator[AsyncConnection]:
+    engine = create_async_engine(os.environ["DATABASE_URL"])
+    async with engine.connect() as conn:
+        transaction = await conn.begin()
+        yield conn
+        await transaction.rollback()
+    await engine.dispose()
 
 
 @pytest.fixture
-async def session(engine: AsyncEngine) -> AsyncIterator[AsyncSession]:
-    """A session inside a transaction that is always rolled back."""
-    async with engine.connect() as connection:
-        transaction = await connection.begin()
-        try:
-            yield AsyncSession(bind=connection, expire_on_commit=False)
-        finally:
-            await transaction.rollback()
+def factory(connection: AsyncConnection) -> async_sessionmaker[AsyncSession]:
+    """Sessions that join the test's transaction, each commit becoming a savepoint."""
+    return async_sessionmaker(
+        bind=connection, join_transaction_mode="create_savepoint", expire_on_commit=False
+    )

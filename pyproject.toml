@@ -20,6 +20,11 @@ dependencies = [
   "opentelemetry-sdk>=1.44,<2",
   "opentelemetry-exporter-otlp-proto-http>=1.44,<2",
   "opentelemetry-instrumentation-fastapi>=0.65b0,<1",
+  # Uploads (ADR-0008, ADR-0010): decode and re-encode images to strip metadata, and rasterise the
+  # first page of a PDF through the poppler-utils system package. Free and open source.
+  "opencv-python-headless>=4.10,<5",
+  "numpy>=2,<3",
+  "pdf2image>=1.17,<2",
 ]
 
 [dependency-groups]
@@ -32,10 +37,8 @@ dev = [
   "httpx>=0.28,<1",
   "asgi-lifespan>=2.1,<3",
   "pre-commit>=4.3,<5",
-  # Seed noise (seed/render.py) and OCR preprocessing (evals/preprocess.py); free and open source.
-  # The OCR engines are not here: see evals/requirements-ocr.txt.
-  "opencv-python-headless>=4.10,<5",
-  "numpy>=2,<3",
+  # The seed noise (seed/render.py) and the OCR preprocessing (evals/preprocess.py) use OpenCV and
+  # numpy, now runtime dependencies. The OCR engines are not here: see evals/requirements-ocr.txt.
 ]
 
 [tool.uv]
@@ -96,7 +99,7 @@ init_typed = false
 warn_required_dynamic_aliases = true
 
 [[tool.mypy.overrides]]
-module = ["asyncpg.*", "opentelemetry.instrumentation.*", "opentelemetry.exporter.*"]
+module = ["asyncpg.*", "opentelemetry.instrumentation.*", "opentelemetry.exporter.*", "pdf2image.*"]
 ignore_missing_imports = true
 
 [tool.pytest.ini_options]
