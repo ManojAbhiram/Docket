@@ -14,8 +14,8 @@ PRD: docs/product/PRD.md   Backlog: docs/product/backlog.md   Built: 2026-10-04
 | REQ-006 | Rasterise first PDF page locally | criterion-of US-00-002 | It is how a PDF upload is handled | US-00-002 | AC-US-00-002-3 |
 | REQ-007 | Process noisy phone photos | criterion-of US-00-003 | It qualifies how documents are read | US-00-003 | AC-US-00-003-5 |
 | REQ-008 | One gateway call per document | criterion-of US-00-003 | It limits how reading is done | US-00-003 | AC-US-00-003-1 |
-| REQ-009 | Classify document type | merged into US-00-003 (story) | Same reading step as extraction, one outcome | US-00-003 | AC-US-00-003-2 |
-| REQ-010 | Fields as JSON with confidence | merged into US-00-003 (story) | The extraction is the core of the story | US-00-003 | AC-US-00-003-3 |
+| REQ-009 | Classify document type | criterion-of US-00-003 | It is the type result of the same reading step as extraction | US-00-003 | AC-US-00-003-2 |
+| REQ-010 | Fields as JSON with confidence | story | Staff can have a document read into fields, the core of the story | US-00-003 | AC-US-00-003-3 |
 | REQ-011 | Low-confidence fields to Needs review | criterion-of US-00-003 | It is a routing rule for extracted fields | US-00-003 | AC-US-00-003-4 |
 | REQ-012 | Compare each field with the application | story | The check that decides who needs a person | US-00-004 | AC-US-00-004-1, AC-US-00-004-5 |
 | REQ-013 | Names by token-sorted similarity | criterion-of US-00-004 | A matching rule for one field type | US-00-004 | AC-US-00-004-1 |
@@ -26,13 +26,13 @@ PRD: docs/product/PRD.md   Backlog: docs/product/backlog.md   Built: 2026-10-04
 | REQ-018 | Auto-Verified with evidence | criterion-of US-00-005 | It is one way the status is set | US-00-005 | AC-US-00-005-1 |
 | REQ-019 | No Verified without match or decision | criterion-of US-00-005 | A guard on the status | US-00-005 | AC-US-00-005-4 |
 | REQ-020 | Flag mismatches for a verifier | criterion-of US-00-005 | It is the other way the status is set | US-00-005 | AC-US-00-005-2 |
-| REQ-021 | List flagged applications to a verifier | story | A verifier can open the queue | US-00-006 | AC-US-00-006-1 |
+| REQ-021 | List flagged applications to a verifier | story | A verifier can open the queue | US-00-006, US-00-011 | AC-US-00-006-1, AC-US-00-011-2, AC-US-00-011-3 |
 | REQ-022 | Document beside application value | criterion-of US-00-006 | It describes how a flagged item is shown | US-00-006 | AC-US-00-006-2, AC-US-00-006-3 |
 | REQ-023 | Approve | story | A verifier can approve | US-00-007 | AC-US-00-007-1 |
 | REQ-024 | Correct | criterion-of US-00-007 | One of the three decision actions of one story | US-00-007 | AC-US-00-007-2 |
 | REQ-025 | Reject | criterion-of US-00-007 | One of the three decision actions of one story | US-00-007 | AC-US-00-007-4 |
 | REQ-026 | Reason required for reject | criterion-of US-00-007 | A guard on reject | US-00-007 | AC-US-00-007-3 |
-| REQ-027 | Log every decision | criterion-of US-00-007 | It applies to each decision action | US-00-007 | AC-US-00-007-1, AC-US-00-007-2, AC-US-00-007-4, AC-US-00-007-5 |
+| REQ-027 | Log every decision | criterion-of US-00-007 | It applies to each decision action | US-00-007, US-00-011 | AC-US-00-007-1, AC-US-00-007-2, AC-US-00-007-4, AC-US-00-007-5, AC-US-00-011-1, AC-US-00-011-2 |
 | REQ-028 | Dashboard counts by status | story | Staff can see progress | US-00-008 | AC-US-00-008-1, AC-US-00-008-2 |
 | REQ-029 | Export verified list | story | Staff can take the result away | US-00-009 | AC-US-00-009-1, AC-US-00-009-2 |
 | REQ-030 | One gateway function | story | The team gets a single path for all engine calls | US-02-001 | AC-US-02-001-1 |
@@ -63,8 +63,9 @@ PRD: docs/product/PRD.md   Backlog: docs/product/backlog.md   Built: 2026-10-04
 
 | Story | Reason it exists | Action |
 | --- | --- | --- |
-| US-00-011 inferred: | Sign-in is needed so the decision log can say who decided (Q-013) | accept as a REQ via prd / drop |
+| none | US-00-011 was an orphan; it now supports REQ-021 and REQ-027 (owner's choice, Q-013 still open) | n/a |
 
 ## Counts
 
-Not run: the gate `coverage_check.py` could not be run because Bash is unavailable in this session. No counts or verdict are quoted.
+stories-coverage: 46 REQ from docs/product/PRD.md (0 withdrawn), 45 covered, 1 out of scope, 0 gaps, 15 stories, 60 AC, 0 orphans, 0 problems
+Verdict: covered

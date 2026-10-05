@@ -87,7 +87,7 @@ def render(summaries: list[dict[str, object]]) -> str:
         cells = [_pct(accuracy.get(field)) for field in FIELDS]
         ram = float(str(item["peak_rss_mb"]))
         lines.append(
-            f"| {item['engine']}{'+hin' if item['devanagari'] else ''} "
+            f"| {_setup(item)} "
             f"| {'yes' if item['preprocess'] else 'no'} | {item['errors']} | "
             + " | ".join(cells)
             + f" | {item['cer_mean']} | {item['seconds_per_page_p50']} "
@@ -104,20 +104,19 @@ def render(summaries: list[dict[str, object]]) -> str:
 
 
 def _preprocess_table(summaries: list[dict[str, object]]) -> str:
-    by_key: dict[tuple[str, bool], dict[bool, dict[str, object]]] = {}
+    by_key: dict[str, dict[bool, dict[str, object]]] = {}
     for item in summaries:
-        key = (str(item["engine"]), bool(item["devanagari"]))
-        by_key.setdefault(key, {})[bool(item["preprocess"])] = item
+        by_key.setdefault(_setup(item), {})[bool(item["preprocess"])] = item
     rows = [
-        "| Engine | Mean field accuracy raw | with preprocessing | CER raw | with preprocessing |",
+        "| Setup | Mean field accuracy raw | with preprocessing | CER raw | with preprocessing |",
         "| --- | --- | --- | --- | --- |",
     ]
-    for (engine, hin), pair in sorted(by_key.items()):
+    for setup, pair in sorted(by_key.items()):
         if False not in pair or True not in pair:
             continue
         raw, pre = pair[False], pair[True]
         rows.append(
-            f"| {engine}{'+hin' if hin else ''} | {_pct(_mean_accuracy(raw))} "
+            f"| {setup} | {_pct(_mean_accuracy(raw))} "
             f"| {_pct(_mean_accuracy(pre))} | {raw['cer_mean']} | {pre['cer_mean']} |"
         )
     return "\n".join(rows)
@@ -130,7 +129,7 @@ def _confidence_table(summaries: list[dict[str, object]]) -> str:
     ]
     for item in summaries:
         rows.append(
-            f"| {item['engine']}{'+hin' if item['devanagari'] else ''} "
+            f"| {_setup(item)} "
             f"| {'yes' if item['preprocess'] else 'no'} "
             f"| {item.get('mean_confidence_docs_all_found')} "
             f"| {item.get('mean_confidence_docs_with_a_miss')} |"
@@ -144,14 +143,25 @@ def _reading(summaries: list[dict[str, object]]) -> list[str]:
         f"- {len(fits)} of {len(summaries)} runs stayed at or under {RAM_BUDGET_MB} MB peak RSS "
         "on this machine."
     ]
+    overall = max(summaries, key=lambda s: _mean_accuracy(s) or 0.0)
+    lines.append(
+        f"- Highest mean field accuracy overall: {_label(overall)} "
+        f"({_pct(_mean_accuracy(overall))}, CER {overall['cer_mean']}, "
+        f"{overall['peak_rss_mb']} MB peak). With 30 documents this is an indication, "
+        "not a ranking."
+    )
+    if overall not in fits:
+        over = float(str(overall["peak_rss_mb"])) - RAM_BUDGET_MB
+        lines.append(
+            f"- That run is {over:.1f} MB over the {RAM_BUDGET_MB} MB budget. A run that fits "
+            "but reads far less is not a substitute: compare the accuracy columns before "
+            "reading anything into the budget column."
+        )
     if fits:
         best = max(fits, key=lambda s: _mean_accuracy(s) or 0.0)
         lines.append(
-            f"- Highest mean field accuracy among those: {best['engine']}"
-            f"{'+hin' if best['devanagari'] else ''}"
-            f"{' with preprocessing' if best['preprocess'] else ''} "
-            f"({_pct(_mean_accuracy(best))}, CER {best['cer_mean']}). With 30 documents this is "
-            "an indication, not a ranking."
+            f"- Highest mean field accuracy among the runs that fit: {_label(best)} "
+            f"({_pct(_mean_accuracy(best))}, CER {best['cer_mean']}, {best['peak_rss_mb']} MB)."
         )
     failed = [s for s in summaries if int(str(s["errors"])) > 0]
     if failed:
@@ -161,6 +171,16 @@ def _reading(summaries: list[dict[str, object]]) -> list[str]:
             + "."
         )
     return lines
+
+
+def _setup(item: dict[str, object]) -> str:
+    """The variant name without its preprocessing suffix: engine, language, size, images."""
+    name = str(item.get("variant", item["engine"]))
+    return name.replace("-preprocessed", "").replace("-raw", "")
+
+
+def _label(item: dict[str, object]) -> str:
+    return f"{_setup(item)}{' with preprocessing' if item['preprocess'] else ''}"
 
 
 def _mean_accuracy(item: dict[str, object]) -> float | None:

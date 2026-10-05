@@ -8,21 +8,21 @@ Code check: the repository holds only the scaffold (health endpoints, config, er
 
 | Story | Epic | Title | Persona | Priority | Points | Covers | Depends on |
 | --- | --- | --- | --- | --- | --- | --- | --- |
-| US-00-001 | EP-01 | Import applications from a CSV file | Admissions staff | Must | TBD | REQ-001, REQ-002, REQ-003 | none |
-| US-00-002 | EP-01 | Upload scanned documents for an application | Admissions staff | Must | TBD | REQ-004, REQ-005, REQ-006 | US-00-001 |
-| US-02-001 | EP-02 | Route all OCR and vision calls through one gateway | Engineering team | Must | TBD | REQ-030, REQ-031, REQ-032, REQ-033, REQ-034, REQ-044 | none |
-| US-00-003 | EP-02 | Read the type and fields of an uploaded document | Admissions staff | Must | TBD | REQ-007, REQ-008, REQ-009, REQ-010, REQ-011, REQ-044 | US-00-002, US-02-001 |
-| US-00-004 | EP-02 | Compare extracted fields with the application | Verifier | Must | TBD | REQ-012, REQ-013, REQ-014, REQ-015, REQ-016 | US-00-003 |
-| US-00-005 | EP-02 | Set each application's status automatically | Admissions staff | Must | TBD | REQ-017, REQ-018, REQ-019, REQ-020 | US-00-004 |
-| US-00-011 | EP-03 | Sign in as staff or verifier | Admissions staff | Should | TBD | none | none |
-| US-00-006 | EP-03 | Review a flagged application side by side | Verifier | Must | TBD | REQ-021, REQ-022 | US-00-005, US-00-011 |
-| US-00-007 | EP-03 | Decide a flagged application | Verifier | Must | TBD | REQ-023, REQ-024, REQ-025, REQ-026, REQ-027 | US-00-006 |
-| US-00-010 | EP-03 | See field crops beside the values | Verifier | Could | TBD | REQ-046 | US-00-006 |
-| US-00-008 | EP-04 | See counts of applications by status | Admissions staff | Must | TBD | REQ-028 | US-00-005 |
-| US-00-009 | EP-04 | Export the verified list to CSV | Admissions staff | Must | TBD | REQ-029 | US-00-005 |
+| US-00-001 | EP-01 | Import applications from a CSV file | Admissions staff | Must | 5 | REQ-001, REQ-002, REQ-003 | none |
+| US-00-002 | EP-01 | Upload scanned documents for an application | Admissions staff | Must | 5 | REQ-004, REQ-005, REQ-006 | US-00-001 |
+| US-02-001 | EP-02 | Route all OCR and vision calls through one gateway | Engineering team | Must | 8 | REQ-030, REQ-031, REQ-032, REQ-033, REQ-034, REQ-044 | none |
+| US-00-003 | EP-02 | Read the type and fields of an uploaded document | Admissions staff | Must | 8 | REQ-007, REQ-008, REQ-009, REQ-010, REQ-011, REQ-044 | US-00-002, US-02-001 |
+| US-00-004 | EP-02 | Compare extracted fields with the application | Verifier | Must | 5 | REQ-012, REQ-013, REQ-014, REQ-015, REQ-016 | US-00-003 |
+| US-00-005 | EP-02 | Set each application's status automatically | Admissions staff | Must | 5 | REQ-017, REQ-018, REQ-019, REQ-020 | US-00-004 |
+| US-00-011 | EP-03 | Sign in as staff or verifier | Admissions staff | Should | 5 | REQ-021, REQ-027 | none |
+| US-00-006 | EP-03 | Review a flagged application side by side | Verifier | Must | 5 | REQ-021, REQ-022 | US-00-005, US-00-011 |
+| US-00-007 | EP-03 | Decide a flagged application | Verifier | Must | 5 | REQ-023, REQ-024, REQ-025, REQ-026, REQ-027 | US-00-006 |
+| US-00-010 | EP-03 | See field crops beside the values | Verifier | Could | 3 | REQ-046 | US-00-006 |
+| US-00-008 | EP-04 | See counts of applications by status | Admissions staff | Must | 3 | REQ-028 | US-00-005 |
+| US-00-009 | EP-04 | Export the verified list to CSV | Admissions staff | Must | 2 | REQ-029 | US-00-005 |
 | US-02-003 | EP-05 | Seed synthetic applications and documents | Engineering team | Must | TBD | REQ-040, REQ-041, REQ-042, REQ-043 | none |
-| US-02-002 | EP-05 | Choose the engine by measurement | Engineering team | Must | TBD | REQ-035, REQ-036 | US-02-001, US-02-003 |
-| US-02-004 | EP-05 | Report extraction accuracy | Engineering team | Must | TBD | REQ-037, REQ-038, REQ-039 | US-02-002, US-02-003 |
+| US-02-002 | EP-05 | Choose the engine by measurement | Engineering team | Must | 2 | REQ-035, REQ-036 | US-02-001, US-02-003 |
+| US-02-004 | EP-05 | Report extraction accuracy | Engineering team | Must | 1 | REQ-037, REQ-038, REQ-039 | US-02-002, US-02-003 |
 
 ## Hours by discipline
 
@@ -35,7 +35,7 @@ Covers: REQ-001, REQ-002, REQ-003, REQ-004, REQ-005, REQ-006
 
 ### US-00-001 Import applications from a CSV file
 
-Epic: EP-01   Priority: Must   Points: TBD (estimate)
+Epic: EP-01   Priority: Must   Points: 5
 Persona: Admissions staff, group 00   Ticket: unassigned
 Covers: REQ-001, REQ-002, REQ-003   Judgement: merged from REQ-001, REQ-002, REQ-003
 
@@ -74,7 +74,7 @@ Covers: REQ-001, REQ-002, REQ-003   Judgement: merged from REQ-001, REQ-002, REQ
 
 ### US-00-002 Upload scanned documents for an application
 
-Epic: EP-01   Priority: Must   Points: TBD (estimate)
+Epic: EP-01   Priority: Must   Points: 5
 Persona: Admissions staff, group 00   Ticket: unassigned
 Covers: REQ-004, REQ-005, REQ-006   Judgement: merged from REQ-004, REQ-005, REQ-006
 
@@ -120,7 +120,7 @@ Covers: REQ-007 to REQ-020, REQ-030 to REQ-034, REQ-044
 
 ### US-02-001 Route all OCR and vision calls through one gateway
 
-Epic: EP-02   Priority: Must   Points: TBD (estimate)
+Epic: EP-02   Priority: Must   Points: 8
 Persona: Engineering team, group 02   Ticket: unassigned
 Covers: REQ-030, REQ-031, REQ-032, REQ-033, REQ-034, REQ-044   Judgement: merged from REQ-030, REQ-031, REQ-032, REQ-033, REQ-034; REQ-044 carried as non-functional
 
@@ -170,7 +170,7 @@ Covers: REQ-030, REQ-031, REQ-032, REQ-033, REQ-034, REQ-044   Judgement: merged
 
 ### US-00-003 Read the type and fields of an uploaded document
 
-Epic: EP-02   Priority: Must   Points: TBD (estimate)
+Epic: EP-02   Priority: Must   Points: 8
 Persona: Admissions staff, group 00   Ticket: unassigned
 Covers: REQ-007, REQ-008, REQ-009, REQ-010, REQ-011, REQ-044   Judgement: merged from REQ-007, REQ-008, REQ-009, REQ-010, REQ-011; REQ-044 carried as non-functional
 
@@ -222,7 +222,7 @@ Covers: REQ-007, REQ-008, REQ-009, REQ-010, REQ-011, REQ-044   Judgement: merged
 
 ### US-00-004 Compare extracted fields with the application
 
-Epic: EP-02   Priority: Must   Points: TBD (estimate)
+Epic: EP-02   Priority: Must   Points: 5
 Persona: Verifier, group 00   Ticket: unassigned
 Covers: REQ-012, REQ-013, REQ-014, REQ-015, REQ-016   Judgement: merged from REQ-012, REQ-013, REQ-014, REQ-015, REQ-016
 
@@ -269,7 +269,7 @@ Covers: REQ-012, REQ-013, REQ-014, REQ-015, REQ-016   Judgement: merged from REQ
 
 ### US-00-005 Set each application's status automatically
 
-Epic: EP-02   Priority: Must   Points: TBD (estimate)
+Epic: EP-02   Priority: Must   Points: 5
 Persona: Admissions staff, group 00   Ticket: unassigned
 Covers: REQ-017, REQ-018, REQ-019, REQ-020   Judgement: merged from REQ-017, REQ-018, REQ-019, REQ-020
 
@@ -319,16 +319,18 @@ Covers: REQ-021 to REQ-027, REQ-046
 
 ### US-00-011 Sign in as staff or verifier
 
-Epic: EP-03   Priority: Should   Points: TBD (estimate)
+Epic: EP-03   Priority: Should   Points: 5
 Persona: Admissions staff, group 00   Ticket: unassigned
-Covers: none   Judgement: inferred: orphan, needed so a decision log can say who
+Covers: REQ-021, REQ-027   Judgement: supports REQ-021 and REQ-027; no requirement names sign-in itself (Q-013)
 
 **Narrative.** As a staff member or verifier, I want to sign in, so that my actions are mine and each role sees what it should.
 
 **Why it matters.** B2: the decision log must say who decided, which needs a known user.
 
 **From the PRD.**
-- none (inferred: the PRD names two roles and a log of "who" but no sign-in; see Q-013)
+- REQ-021: "The system lists the flagged applications to a verifier."
+- REQ-027: "The system logs every decision with who made it, when, what was decided and the reason."
+- The PRD names two roles and a log of "who" but no sign-in itself (see Q-013).
 
 **Preconditions.**
 - none
@@ -336,8 +338,11 @@ Covers: none   Judgement: inferred: orphan, needed so a decision log can say who
 **Acceptance criteria.**
 
 - AC-US-00-011-1. Given a seeded staff account, when the user signs in, then import, upload, dashboard and export are available.
+  Covers: REQ-027
 - AC-US-00-011-2. Given a seeded verifier account, when the user signs in, then the flagged queue and decisions are available.
+  Covers: REQ-021, REQ-027
 - AC-US-00-011-3. Given a verifier account, when it calls a staff-only action, then the service refuses it.
+  Covers: REQ-021
 
 **Not in this story.**
 - Account management and password reset (not in the PRD; raise before build).
@@ -352,7 +357,7 @@ Covers: none   Judgement: inferred: orphan, needed so a decision log can say who
 
 ### US-00-006 Review a flagged application side by side
 
-Epic: EP-03   Priority: Must   Points: TBD (estimate)
+Epic: EP-03   Priority: Must   Points: 5
 Persona: Verifier, group 00   Ticket: unassigned
 Covers: REQ-021, REQ-022   Judgement: merged from REQ-021, REQ-022
 
@@ -391,7 +396,7 @@ Covers: REQ-021, REQ-022   Judgement: merged from REQ-021, REQ-022
 
 ### US-00-007 Decide a flagged application
 
-Epic: EP-03   Priority: Must   Points: TBD (estimate)
+Epic: EP-03   Priority: Must   Points: 5
 Persona: Verifier, group 00   Ticket: unassigned
 Covers: REQ-023, REQ-024, REQ-025, REQ-026, REQ-027   Judgement: merged from REQ-023, REQ-024, REQ-025, REQ-026, REQ-027
 
@@ -437,7 +442,7 @@ Covers: REQ-023, REQ-024, REQ-025, REQ-026, REQ-027   Judgement: merged from REQ
 
 ### US-00-010 See field crops beside the values
 
-Epic: EP-03   Priority: Could   Points: TBD (estimate)
+Epic: EP-03   Priority: Could   Points: 3
 Persona: Verifier, group 00   Ticket: unassigned
 Covers: REQ-046   Judgement: story (stretch)
 
@@ -476,7 +481,7 @@ Covers: REQ-028, REQ-029
 
 ### US-00-008 See counts of applications by status
 
-Epic: EP-04   Priority: Must   Points: TBD (estimate)
+Epic: EP-04   Priority: Must   Points: 3
 Persona: Admissions staff, group 00   Ticket: unassigned
 Covers: REQ-028   Judgement: story
 
@@ -510,7 +515,7 @@ Covers: REQ-028   Judgement: story
 
 ### US-00-009 Export the verified list to CSV
 
-Epic: EP-04   Priority: Must   Points: TBD (estimate)
+Epic: EP-04   Priority: Must   Points: 2
 Persona: Admissions staff, group 00   Ticket: unassigned
 Covers: REQ-029   Judgement: story
 
@@ -594,7 +599,7 @@ Covers: REQ-040, REQ-041, REQ-042, REQ-043   Judgement: merged from REQ-040, REQ
 
 ### US-02-002 Choose the engine by measurement
 
-Epic: EP-05   Priority: Must   Points: TBD (estimate)
+Epic: EP-05   Priority: Must   Points: 2
 Persona: Engineering team, group 02   Ticket: unassigned
 Covers: REQ-035, REQ-036   Judgement: merged from REQ-035, REQ-036
 
@@ -640,7 +645,7 @@ Covers: REQ-035, REQ-036   Judgement: merged from REQ-035, REQ-036
 
 ### US-02-004 Report extraction accuracy
 
-Epic: EP-05   Priority: Must   Points: TBD (estimate)
+Epic: EP-05   Priority: Must   Points: 1
 Persona: Engineering team, group 02   Ticket: unassigned
 Covers: REQ-037, REQ-038, REQ-039   Judgement: merged from REQ-037, REQ-038, REQ-039
 

@@ -49,13 +49,15 @@ type Recognise = Callable[[Image], tuple[str, float | None]]
 ENGINES = ("tesseract", "rapidocr", "paddleocr", "doctr")
 
 
-def make_tesseract(lang: str) -> Recognise:
+def make_tesseract(lang: str, psm: int) -> Recognise:
     import pytesseract
     from pytesseract import Output
 
     def recognise(image: Image) -> tuple[str, float | None]:
         rgb = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
-        data = pytesseract.image_to_data(rgb, lang=lang, config="--psm 6", output_type=Output.DICT)
+        data = pytesseract.image_to_data(
+            rgb, lang=lang, config=f"--psm {psm}", output_type=Output.DICT
+        )
         words = [
             (w, float(c)) for w, c in zip(data["text"], data["conf"], strict=True) if w.strip()
         ]
@@ -134,9 +136,9 @@ def make_doctr() -> Recognise:
     return recognise
 
 
-def build_engine(name: str, devanagari: bool, tesseract_lang: str) -> Recognise:
+def build_engine(name: str, devanagari: bool, tesseract_lang: str, psm: int) -> Recognise:
     if name == "tesseract":
-        return make_tesseract(tesseract_lang)
+        return make_tesseract(tesseract_lang, psm)
     if name == "rapidocr":
         return make_rapidocr(devanagari)
     if name == "paddleocr":
@@ -155,11 +157,18 @@ def main() -> int:
     parser.add_argument("--preprocess", action="store_true", help="flatten light and deskew first")
     parser.add_argument("--devanagari", action="store_true", help="rapidocr and paddleocr")
     parser.add_argument("--tesseract-lang", default="hin+eng")
+    parser.add_argument("--tesseract-psm", type=int, default=6, help="page segmentation mode")
     args = parser.parse_args()
 
     variant = args.engine + ("-devanagari" if args.devanagari else "")
+    if args.engine == "tesseract":
+        variant += f"-{args.tesseract_lang.replace('+', '_')}-psm{args.tesseract_psm}"
     variant += "-preprocessed" if args.preprocess else "-raw"
-    recognise = build_engine(args.engine, args.devanagari, args.tesseract_lang)
+    if args.max_side:
+        variant += f"-side{args.max_side}"
+    if args.png_dir.name != "png":
+        variant += f"-{args.png_dir.name}"
+    recognise = build_engine(args.engine, args.devanagari, args.tesseract_lang, args.tesseract_psm)
     documents = build_dataset(args.seed).documents
     if args.limit:
         documents = documents[: args.limit]

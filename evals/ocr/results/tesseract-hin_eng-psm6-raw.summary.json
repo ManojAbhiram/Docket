@@ -1,0 +1,28 @@
+{
+  "variant": "tesseract-hin_eng-psm6-raw",
+  "engine": "tesseract",
+  "devanagari": false,
+  "preprocess": false,
+  "max_side": 0,
+  "documents": 30,
+  "errors": 0,
+  "peak_rss_mb": 63.1,
+  "peak_rss_mb_self": 63.1,
+  "peak_rss_mb_children": 63.1,
+  "seconds_per_page_mean": 0.445,
+  "seconds_per_page_p50": 0.469,
+  "seconds_per_page_p95": 0.769,
+  "preprocess_seconds_mean": 0.0,
+  "cer_mean": 0.7201,
+  "field_accuracy": {
+    "name": 0.033,
+    "father_name": 0.091,
+    "dob": 0.033,
+    "roll_number": 0.0,
+    "marks": 0.0,
+    "board": 0.0
+  },
+  "docs_with_all_fields_found": 0,
+  "mean_confidence_docs_all_found": null,
+  "mean_confidence_docs_with_a_miss": 0.461
+}

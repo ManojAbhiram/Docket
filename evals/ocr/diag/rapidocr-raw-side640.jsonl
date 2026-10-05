@@ -1,0 +1,1 @@
+{"cer": 0.0, "confidence": 0.9944508333333334, "doc_type": "10th_marksheet", "error": "", "hits": {"board": [1, 1], "dob": [1, 1], "father_name": [1, 1], "marks": [5, 5], "name": [1, 1], "roll_number": [1, 1]}, "id": "SYN-DOC-001", "mismatch_field": null, "noise": {"blur": 0.79, "low_light": 0.78, "shadow": 0.19, "skew": -2.34}, "seconds": 1.3602}
