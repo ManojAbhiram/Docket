@@ -14,6 +14,7 @@ from app.api.applications.schemas import (
     PageOut,
 )
 from app.api.auth.deps import current_user
+from app.api.decisions.etag import etag_for
 from app.core.errors import ErrorEnvelope, NotFoundError
 from app.db.repositories.application_detail import SqlReviewStore
 from app.db.repositories.applications import SqlApplicationStore
@@ -61,5 +62,5 @@ async def get_application(
     detail = await store.get_detail(application_id)
     if detail is None:
         raise NotFoundError("no such application")
-    response.headers["ETag"] = f'"{detail.updated_at.isoformat()}"'
+    response.headers["ETag"] = etag_for(detail.updated_at)
     return ApplicationDetailOut.model_validate(asdict(detail))
