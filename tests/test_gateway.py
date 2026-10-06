@@ -5,9 +5,12 @@ interfaces the gateway owns, so no database, engine or network is needed.
 """
 
 import ast
+import contextlib
 import hashlib
 import json
 import socket
+import threading
+from concurrent.futures import ThreadPoolExecutor
 from decimal import Decimal
 from pathlib import Path
 
@@ -58,6 +61,24 @@ class FakeEngine:
         if self.fail:
             raise RuntimeError("decoder crashed")
         return OcrResult(words=self.words)
+
+
+class GatedEngine:
+    """An engine that holds each caller in `read` until all of them have arrived.
+
+    A caller that passed the cap check always reaches `read`, so the gate opens only if the cap was
+    overshot. When the cap holds, the gate times out and the one admitted caller carries on.
+    """
+
+    name = "gated"
+
+    def __init__(self, parties: int) -> None:
+        self._gate = threading.Barrier(parties, timeout=1.0)
+
+    def read(self, image: bytes) -> OcrResult:
+        with contextlib.suppress(threading.BrokenBarrierError):
+            self._gate.wait()
+        return OcrResult(words=WORDS)
 
 
 def test_a_call_returns_the_engine_result_and_logs_one_ok_row() -> None:
@@ -112,6 +133,37 @@ def test_a_refused_call_does_not_use_up_the_cap() -> None:
             read_document(IMAGE, engine=engine, ledger=ledger, cap=1)
 
     assert ledger.calls_made() == 1
+
+
+def test_concurrent_calls_at_the_last_slot_cannot_overshoot_the_cap() -> None:
+    """US-02-001 AC-4: a check and a write apart let every caller see the one free slot."""
+    cap = 3
+    callers = 4
+    ledger = MemoryLedger()
+    for _ in range(cap - 1):
+        read_document(IMAGE, engine=FakeEngine("fake-a"), ledger=ledger, cap=cap)
+    engine = GatedEngine(parties=callers)
+
+    with ThreadPoolExecutor(max_workers=callers) as pool:
+        futures = [
+            pool.submit(read_document, IMAGE, engine=engine, ledger=ledger, cap=cap)
+            for _ in range(callers)
+        ]
+    refused = [f for f in futures if isinstance(f.exception(), CallCapReachedError)]
+
+    assert ledger.calls_made() == cap
+    assert len(refused) == callers - 1
+
+
+def test_a_failed_call_gives_its_slot_back() -> None:
+    """US-02-001 AC-4: a slot held after the engine failed would count that call twice."""
+    ledger = MemoryLedger()
+    with pytest.raises(EngineError):
+        read_document(IMAGE, engine=FakeEngine("fake-a", fail=True), ledger=ledger, cap=2)
+
+    result = read_document(IMAGE, engine=FakeEngine("fake-a"), ledger=ledger, cap=2)
+
+    assert result.words == WORDS
 
 
 def test_two_engines_give_the_same_result_shape_to_the_same_caller() -> None:
