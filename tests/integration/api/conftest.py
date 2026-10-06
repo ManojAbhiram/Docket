@@ -15,10 +15,12 @@ from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 from app.api.applications.deps import get_application_store, get_review_store
 from app.api.auth.deps import get_auth_store
 from app.api.documents.deps import get_upload_store
+from app.api.reports.deps import get_report_store
 from app.core.config import Settings
 from app.db.repositories.application_detail import SqlReviewStore
 from app.db.repositories.applications import SqlApplicationStore
 from app.db.repositories.auth import SqlAuthStore
+from app.db.repositories.reports import SqlReportStore
 from app.db.repositories.uploads import SqlUploadStore
 from app.main import create_app
 from tests.integration.helpers import FakeClock
@@ -53,6 +55,7 @@ async def api_app(
     application.dependency_overrides[get_application_store] = lambda: SqlApplicationStore(factory)
     application.dependency_overrides[get_review_store] = lambda: SqlReviewStore(factory)
     application.dependency_overrides[get_upload_store] = lambda: SqlUploadStore(factory)
+    application.dependency_overrides[get_report_store] = lambda: SqlReportStore(factory)
     async with LifespanManager(application):
         application.state.clock = clock
         yield application

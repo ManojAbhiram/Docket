@@ -504,7 +504,7 @@ paths:
       operationId: exportVerified
       summary: Download the verified applications as CSV
       description: >-
-        Staff role only. One row per verified application: application_id, name and decision (assumption Q-011). A cell that starts with =, +, - or @ is prefixed so a spreadsheet shows it as text.
+        Staff role only. One row per verified application: application_id, name, date_of_birth (ISO), board, roll_number, category and status (assumption Q-011). There is no decision column until the decision log exists (US-00-007). A cell that starts with =, +, -, @, a tab or a carriage return is prefixed with an apostrophe so a spreadsheet shows it as text.
         Every export writes an audit entry.
       tags: [reports]
       x-story-ids: [US-00-009]
@@ -519,7 +519,7 @@ paths:
           content:
             text/csv:
               schema: { type: string }
-              example: "application_id,name,decision\nSYN-APP-004,Latha Sharma,auto_verified\n"
+              example: "application_id,name,date_of_birth,board,roll_number,category,status\nSYN-APP-004,Latha Sharma,2006-12-10,CBSE,SYN0945957,General,verified\n"
         '401': { $ref: '#/components/responses/Unauthorized' }
         '403': { $ref: '#/components/responses/Forbidden' }
         '500': { $ref: '#/components/responses/InternalError' }
