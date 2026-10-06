@@ -7,11 +7,21 @@ import {
 } from "@tanstack/react-router";
 
 import { HomePage } from "@/app/HomePage";
+import { HomeRedirect } from "@/app/HomeRedirect";
 import { NotFound } from "@/app/NotFound";
 import { RootLayout } from "@/app/RootLayout";
 import { RouteError } from "@/app/RouteError";
 import { GalleryIndex, GalleryScreen } from "@/design/Gallery";
 import { parseGallerySearch } from "@/design/registry";
+import { AuthGate, RequireRole } from "@/features/auth/components/AuthGate";
+import { SignInPage } from "@/features/auth/components/SignInPage";
+import { ApplicationsPage } from "@/features/intake/pages/ApplicationsPage";
+import { ImportPage } from "@/features/intake/pages/ImportPage";
+import { UploadPage } from "@/features/intake/pages/UploadPage";
+import { DashboardPage } from "@/features/reports/pages/DashboardPage";
+import { ExportPage } from "@/features/reports/pages/ExportPage";
+import { ComparePage } from "@/features/review/pages/ComparePage";
+import { QueuePage } from "@/features/review/pages/QueuePage";
 
 // Code-based routes. A route that needs data adds
 // `loader: ({ context }) => context.queryClient.ensureQueryData(options)`
@@ -28,10 +38,94 @@ const rootRoute = createRootRouteWithContext<RouterContext>()({
   notFoundComponent: NotFound,
 });
 
-const indexRoute = createRoute({
+const signInRoute = createRoute({
   getParentRoute: () => rootRoute,
-  path: "/",
+  path: "/sign-in",
+  validateSearch: (search: Record<string, unknown>): { reason?: "ended" } =>
+    search.reason === "ended" ? { reason: "ended" } : {},
+  component: function SignInRoute() {
+    const { reason } = signInRoute.useSearch();
+    return <SignInPage ended={reason === "ended"} />;
+  },
+});
+
+const statusRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "/status",
   component: HomePage,
+});
+
+// Everything below needs a session: AuthGate sends the browser to sign-in without one.
+const appRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  id: "app",
+  component: AuthGate,
+});
+
+const homeRoute = createRoute({
+  getParentRoute: () => appRoute,
+  path: "/",
+  component: HomeRedirect,
+});
+
+const applicationsRoute = createRoute({
+  getParentRoute: () => appRoute,
+  path: "/applications",
+  component: ApplicationsPage,
+});
+
+const importRoute = createRoute({
+  getParentRoute: () => appRoute,
+  path: "/import",
+  component: function ImportRoute() {
+    return (
+      <RequireRole roles={["staff"]}>
+        <ImportPage />
+      </RequireRole>
+    );
+  },
+});
+
+const uploadRoute = createRoute({
+  getParentRoute: () => appRoute,
+  path: "/applications/$id/upload",
+  component: function UploadRoute() {
+    return (
+      <RequireRole roles={["staff"]}>
+        <UploadPage />
+      </RequireRole>
+    );
+  },
+});
+
+const compareRoute = createRoute({
+  getParentRoute: () => appRoute,
+  path: "/applications/$id",
+  component: ComparePage,
+});
+
+const queueRoute = createRoute({
+  getParentRoute: () => appRoute,
+  path: "/queue",
+  component: QueuePage,
+});
+
+const dashboardRoute = createRoute({
+  getParentRoute: () => appRoute,
+  path: "/dashboard",
+  component: DashboardPage,
+});
+
+const exportRoute = createRoute({
+  getParentRoute: () => appRoute,
+  path: "/export",
+  component: function ExportRoute() {
+    return (
+      <RequireRole roles={["staff"]}>
+        <ExportPage />
+      </RequireRole>
+    );
+  },
 });
 
 // The design gallery: every *.screen.tsx in every state, inside this layout.
@@ -57,9 +151,23 @@ const galleryScreenRoute = createRoute({
   },
 });
 
-export const routeTree = rootRoute.addChildren(
-  designGalleryEnabled ? [indexRoute, galleryIndexRoute, galleryScreenRoute] : [indexRoute],
-);
+const appRoutes = appRoute.addChildren([
+  homeRoute,
+  applicationsRoute,
+  importRoute,
+  uploadRoute,
+  compareRoute,
+  queueRoute,
+  dashboardRoute,
+  exportRoute,
+]);
+
+export const routeTree = rootRoute.addChildren([
+  signInRoute,
+  statusRoute,
+  appRoutes,
+  ...(designGalleryEnabled ? [galleryIndexRoute, galleryScreenRoute] : []),
+]);
 
 interface AppRouterOptions {
   queryClient: QueryClient;

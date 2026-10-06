@@ -18,10 +18,10 @@ function renderAt(path: string) {
 }
 
 describe("App", () => {
-  it("renders the home route with the health card", async () => {
+  it("renders the status route with the health card", async () => {
     server.use(http.get("*/healthz", () => HttpResponse.json({ status: "ok", version: "test" })));
 
-    renderAt("/");
+    renderAt("/status");
 
     expect(await screen.findByRole("heading", { name: "API health" })).toBeInTheDocument();
     expect(await screen.findByText("test")).toBeInTheDocument();
