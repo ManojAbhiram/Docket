@@ -38,6 +38,7 @@ class Settings(BaseSettings):
     name_match_threshold: float = Field(default=0.85, ge=0, le=1)
     import_max_bytes: int = Field(default=5_000_000, ge=1_000)
     import_max_rows: int = Field(default=20_000, ge=1)
+    upload_max_bytes: int = Field(default=8 * 1024 * 1024, ge=1_000)
     # Sessions and sign-in (ADR-0006, ADR-0012). Lifetimes are assumptions until the owner confirms.
     session_cookie_secure: bool = True
     session_idle_minutes: int = Field(default=30, ge=1)

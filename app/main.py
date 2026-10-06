@@ -17,6 +17,7 @@ from fastapi import FastAPI
 from app import __version__
 from app.api.applications.router import router as applications_router
 from app.api.auth.router import router as auth_router
+from app.api.documents.router import router as documents_router
 from app.api.health.router import router as health_router
 from app.api.imports.router import router as imports_router
 from app.core.config import Settings, get_settings
@@ -26,6 +27,7 @@ from app.core.middleware import RequestIdMiddleware
 from app.core.telemetry import configure_tracing
 from app.db.session import make_engine, make_session_factory
 from app.domain.auth import LoginLimiter, Passwords
+from app.domain.pdf import PopplerRasteriser
 
 log = structlog.get_logger()
 
@@ -38,6 +40,7 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
     app.state.engine = engine
     app.state.session_factory = make_session_factory(engine)
     _start_sign_in(app, settings)
+    app.state.rasteriser = PopplerRasteriser()
     log.info("startup", env=settings.env, version=__version__)
     try:
         yield
@@ -93,5 +96,6 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     app.include_router(auth_router, prefix="/api")
     app.include_router(imports_router, prefix="/api")
     app.include_router(applications_router, prefix="/api")
+    app.include_router(documents_router, prefix="/api")
     configure_tracing(app, settings.app_name, __version__)
     return app

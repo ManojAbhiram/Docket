@@ -14,9 +14,11 @@ from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
 from app.api.applications.deps import get_application_store
 from app.api.auth.deps import get_auth_store
+from app.api.documents.deps import get_upload_store
 from app.core.config import Settings
 from app.db.repositories.applications import SqlApplicationStore
 from app.db.repositories.auth import SqlAuthStore
+from app.db.repositories.uploads import SqlUploadStore
 from app.main import create_app
 from tests.integration.helpers import FakeClock
 
@@ -37,6 +39,7 @@ def api_settings() -> Settings:
         argon2_memory_kib=8,
         argon2_time_cost=1,
         import_max_bytes=4_000,
+        upload_max_bytes=60_000,
     )
 
 
@@ -47,6 +50,7 @@ async def api_app(
     application = create_app(api_settings)
     application.dependency_overrides[get_auth_store] = lambda: SqlAuthStore(factory)
     application.dependency_overrides[get_application_store] = lambda: SqlApplicationStore(factory)
+    application.dependency_overrides[get_upload_store] = lambda: SqlUploadStore(factory)
     async with LifespanManager(application):
         application.state.clock = clock
         yield application
