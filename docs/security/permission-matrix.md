@@ -42,4 +42,4 @@ A role denial is 403, because both roles know every route exists. An unknown id 
 | deactivated user | application | read | any | 401 | TC-AUTH-deactivated-application-read |
 | stale session version | decision | create | any | 401 | TC-AUTH-stale-decision-create |
 
-Cells: 33. Tests: 0 written, 33 reserved. The two numbers must match when the suite prints them; today they do not, because no routes exist.
+Cells: 33. Covered by a test today: the session, role-gate, deactivated and stale-session behaviour, through a test-only router (`tests/integration/test_auth_api.py`). The import, upload, application, document, decision, dashboard and export cells are still reserved, because those routes do not exist yet. Each gets its test when its route is built.

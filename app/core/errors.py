@@ -24,10 +24,17 @@ class DomainError(Exception):
     status_code: int = 400
     code: str = "bad_request"
 
-    def __init__(self, message: str, *, details: Mapping[str, object] | None = None) -> None:
+    def __init__(
+        self,
+        message: str,
+        *,
+        details: Mapping[str, object] | None = None,
+        headers: Mapping[str, str] | None = None,
+    ) -> None:
         super().__init__(message)
         self.message = message
         self.details: dict[str, object] = dict(details or {})
+        self.headers: dict[str, str] = dict(headers or {})
 
 
 class NotFoundError(DomainError):
@@ -42,6 +49,27 @@ class ConflictError(DomainError):
 
     status_code = 409
     code = "conflict"
+
+
+class UnauthorizedError(DomainError):
+    """No session, a dead one, or a sign-in that failed. The message never says which."""
+
+    status_code = 401
+    code = "unauthorized"
+
+
+class ForbiddenError(DomainError):
+    """Signed in, but this role or request may not do this."""
+
+    status_code = 403
+    code = "forbidden"
+
+
+class TooManyAttemptsError(DomainError):
+    """Too many failed sign-ins. `Retry-After` says when to try again."""
+
+    status_code = 429
+    code = "too_many_attempts"
 
 
 class ServiceUnavailableError(DomainError):
@@ -71,6 +99,7 @@ def error_response(
     code: str,
     message: str,
     details: Mapping[str, object] | None = None,
+    headers: Mapping[str, str] | None = None,
 ) -> JSONResponse:
     """Build the envelope with the current request id attached."""
     request_id = structlog.contextvars.get_contextvars().get("request_id")
@@ -82,7 +111,9 @@ def error_response(
             request_id=request_id if isinstance(request_id, str) else None,
         )
     )
-    return JSONResponse(status_code=status_code, content=body.model_dump())
+    return JSONResponse(
+        status_code=status_code, content=body.model_dump(), headers=dict(headers or {})
+    )
 
 
 def register_exception_handlers(app: FastAPI) -> None:
@@ -90,7 +121,7 @@ def register_exception_handlers(app: FastAPI) -> None:
 
     @app.exception_handler(DomainError)
     async def _domain(_: Request, exc: DomainError) -> JSONResponse:
-        return error_response(exc.status_code, exc.code, exc.message, exc.details)
+        return error_response(exc.status_code, exc.code, exc.message, exc.details, exc.headers)
 
     @app.exception_handler(RequestValidationError)
     async def _validation(_: Request, exc: RequestValidationError) -> JSONResponse:

@@ -36,6 +36,24 @@ class Settings(BaseSettings):
     gateway_call_cap: int = Field(default=1000, ge=1)
     review_confidence_cutoff: float = Field(default=0.9804, ge=0, le=1)
     name_match_threshold: float = Field(default=0.85, ge=0, le=1)
+    # Sessions and sign-in (ADR-0006, ADR-0012). Lifetimes are assumptions until the owner confirms.
+    session_cookie_secure: bool = True
+    session_idle_minutes: int = Field(default=30, ge=1)
+    session_absolute_hours: int = Field(default=8, ge=1)
+    allowed_origins: str = "http://localhost:5173,http://localhost:8080"
+    login_max_failures: int = Field(default=5, ge=1)
+    login_source_max_failures: int = Field(default=20, ge=1)
+    login_window_minutes: int = Field(default=15, ge=1)
+    login_lock_minutes: int = Field(default=15, ge=1)
+    login_hash_concurrency: int = Field(default=2, ge=1)
+    argon2_memory_kib: int = Field(default=65536, ge=8)
+    argon2_time_cost: int = Field(default=3, ge=1)
+    argon2_parallelism: int = Field(default=1, ge=1)
+
+    @property
+    def origins(self) -> frozenset[str]:
+        """The origins a state-changing request may come from."""
+        return frozenset(o.strip() for o in self.allowed_origins.split(",") if o.strip())
 
     @model_validator(mode="after")
     def _production_has_a_real_database_password(self) -> Self:
@@ -43,6 +61,9 @@ class Settings(BaseSettings):
         password = self.database_url.hosts()[0].get("password")
         if self.env == "production" and password in _EXAMPLE_PASSWORDS:
             msg = "production refuses an example database password"
+            raise ValueError(msg)
+        if self.env == "production" and not self.session_cookie_secure:
+            msg = "production requires SESSION_COOKIE_SECURE=true"
             raise ValueError(msg)
         return self
 

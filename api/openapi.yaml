@@ -594,7 +594,7 @@ components:
       name: X-CSRF-Token
       in: header
       required: true
-      description: Anti-forgery token for a state-changing request with a cookie session. The mechanism is a pending story (threat T-03).
+      description: Anti-forgery token for a state-changing request with a cookie session. Copy the docket_csrf cookie value into this header (ADR-0012). The server also refuses an Origin that is not allowed.
       schema: { type: string }
     Cursor:
       name: cursor

@@ -22,7 +22,7 @@ define need_tool
 command -v $(UV) >/dev/null || $(call skip,$(1),uv); $(UV) run --quiet $(2) --version >/dev/null 2>&1 || $(call skip,$(1),$(2))
 endef
 
-.PHONY: help setup dev check check-file fix test test-integration lint typecheck format format-check migrate migrate-verify migrate-down migrate-new vuln doctor db db-reset clean
+.PHONY: help setup dev seed-accounts check check-file fix test test-integration lint typecheck format format-check migrate migrate-verify migrate-down migrate-new vuln doctor db db-reset clean
 
 help: ## List targets
 	@grep -E '^[a-zA-Z_-]+:.*?## ' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*?## "}; {printf "  %-18s %s\n", $$1, $$2}'
@@ -106,6 +106,9 @@ db-reset: ## Drop and recreate the local database (destructive)
 
 migrate: ## alembic upgrade head
 	DATABASE_URL=$(DATABASE_URL) $(UV) run alembic upgrade head
+
+seed-accounts: ## Create the two demo accounts and print their one-time passwords once
+	DATABASE_URL=$(DATABASE_URL) $(UV) run python -m app.db.seed_accounts
 
 migrate-down: ## alembic downgrade one
 	DATABASE_URL=$(DATABASE_URL) $(UV) run alembic downgrade -1

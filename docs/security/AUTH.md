@@ -1,6 +1,6 @@
 # Authentication and authorisation: Docket (staff and verifier roles)
 
-Design only. There is no auth code and no route yet (`app/main.py` mounts only the health router), so nothing below is "as built": it is what US-00-011 and the stories in `docs/security/threat-model-docket.md` section 6 must build. Every row that depends on code is marked planned.
+Built on `feature/US-00-011-SignIn` (2026-10-06): login, logout, `/auth/me`, the `current_user` and `require_role` dependencies, CSRF and the login limiter. The import, upload, decision, dashboard and export routes do not exist yet, so their matrix rows are still planned. Decisions are in ADR-0006 and ADR-0012.
 
 | Field | Value |
 | --- | --- |
@@ -9,7 +9,7 @@ Design only. There is no auth code and no route yet (`app/main.py` mounts only t
 | Identity source | own passwords, argon2id, seeded accounts only, no self sign-up, no reset |
 | Tenancy | single office: no `tenant_id` anywhere (`docs/design/data-model.md` section 10) |
 | Middleware | planned: a router-level `dependencies=[Depends(current_user)]` on the API router in `app/main.py`; the health router and login route opt out by name |
-| Last reviewed | 2026-10-05, draft, unreviewed |
+| Last reviewed | 2026-10-06, built for US-00-011, unreviewed by a second person |
 
 ## Public routes
 
@@ -60,7 +60,7 @@ Loads by id: 0 (no code exists to count). The matrix tests and the audit above t
 
 ## Decisions, and what is not done
 
-- Session model, RBAC and the identity source are recorded in ADR-0006 and the backlog; no new ADR is needed. The argon2id library and the CSRF mechanism are to be chosen and recorded when the stories are built.
+- Session model, RBAC and the identity source are recorded in ADR-0006 and the backlog. The argon2id library and the CSRF mechanism are recorded in ADR-0012.
 - Not built, by request of the mode: the middleware, the roles table logic and the matrix tests. The matrix test ids (`TC-AUTH-...`) are reserved in the matrix. No test is written yet because the routes do not exist, and a failing or skipped placeholder would break the repository's rule against skipped tests.
 - A `/logout/everywhere` endpoint and a `session:end` permission are not in any story; the `users.session_version` column makes it one increment later. Recommended, not added.
 
@@ -68,7 +68,7 @@ Loads by id: 0 (no code exists to count). The matrix tests and the audit above t
 
 | Item | Owner | Task |
 | --- | --- | --- |
-| Build the session middleware, login, logout and the role dependency (US-00-011) | backend lead rotation | US-00-011 |
+| ~~Build the session middleware, login, logout and the role dependency~~ done in US-00-011; the forced password change on first sign-in was not built (no change-password endpoint) | backend lead rotation | US-00-011 |
 | Login hardening: rate limit, lockout and uniform errors | backend lead rotation | new story, no id yet |
 | CSRF protection for cookie sessions | backend lead rotation | new story, no id yet |
 | Seed accounts with generated one-time passwords | backend lead rotation | new story, no id yet |

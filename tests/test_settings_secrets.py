@@ -38,6 +38,20 @@ def test_production_accepts_a_database_password_that_is_not_an_example() -> None
     )
 
 
+def test_production_refuses_a_session_cookie_that_is_not_secure() -> None:
+    with pytest.raises(ValidationError, match="SESSION_COOKIE_SECURE"):
+        make(
+            env="production",
+            database_url=URL.format(password="x9Qv-long-secret"),
+            session_cookie_secure=False,
+        )
+
+
+def test_the_session_cookie_is_secure_unless_a_developer_turns_it_off() -> None:
+    assert make().session_cookie_secure is True
+    assert make(session_cookie_secure=False).session_cookie_secure is False
+
+
 @pytest.mark.parametrize("env", ["development", "test"])
 def test_development_and_test_may_use_the_example_password(env: str) -> None:
     assert make(env=env, database_url=URL.format(password="postgres")).env == env
