@@ -70,27 +70,37 @@ class Reader(Protocol):
 
 
 async def process_next(
-    store: DocumentStore, reader: Reader, *, confidence_cutoff: float
+    store: DocumentStore,
+    reader: Reader,
+    *,
+    confidence_cutoff: float,
+    settle: Callable[[UUID], Awaitable[None]] | None = None,
 ) -> Outcome:
-    """Handle the oldest waiting document, if there is one."""
+    """Handle the oldest waiting document, if there is one.
+
+    `settle` runs once a document is read or failed: it compares the fields and sets the status. If
+    it raises, the error is logged and the document keeps its outcome, because a read must not be
+    lost to a failure further on.
+    """
     document = await store.claim_next()
     if document is None:
         return "idle"
     try:
         result = await asyncio.to_thread(reader.read, document.image)
     except CallCapReachedError:
-        return await _failed(store, document.id, "cap_reached")
+        return await _failed(store, document.id, "cap_reached", settle)
     except ReadTimeoutError:
-        return await _failed(store, document.id, "timeout")
+        return await _failed(store, document.id, "timeout", settle)
     except EngineError as exc:
         reason = "timeout" if isinstance(exc.__cause__, EngineTimeoutError) else "engine_error"
-        return await _failed(store, document.id, reason)
+        return await _failed(store, document.id, reason, settle)
     doc_type = classify(result.words)
     fields = extract_fields(result.words, doc_type, confidence_cutoff=confidence_cutoff)
     if not await store.complete(document.id, ProcessedDocument(doc_type=doc_type, fields=fields)):
         log.warning("worker.result_discarded", document_id=str(document.id))
         return "stale"
     log.info("document.read", document_id=str(document.id), doc_type=doc_type)
+    await _settle(settle, document.id)
     return "read"
 
 
@@ -127,8 +137,25 @@ async def sweep_loop(store: DocumentStore, *, interval_seconds: float, stop: asy
             await asyncio.wait_for(stop.wait(), timeout=interval_seconds)
 
 
-async def _failed(store: DocumentStore, document_id: UUID, reason: str) -> Outcome:
+async def _failed(
+    store: DocumentStore,
+    document_id: UUID,
+    reason: str,
+    settle: Callable[[UUID], Awaitable[None]] | None,
+) -> Outcome:
     if not await store.fail(document_id, reason):
         return "stale"
     log.warning("document.failed", document_id=str(document_id), reason_code=reason)
+    await _settle(settle, document_id)
     return "failed"
+
+
+async def _settle(settle: Callable[[UUID], Awaitable[None]] | None, document_id: UUID) -> None:
+    if settle is None:
+        return
+    try:
+        await settle(document_id)
+    except Exception as exc:
+        log.error(
+            "worker.settle_failed", document_id=str(document_id), error_type=type(exc).__name__
+        )

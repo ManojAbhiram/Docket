@@ -221,3 +221,69 @@ async def test_the_sweep_loop_sweeps_again_and_again_until_asked_to_stop() -> No
     await asyncio.wait_for(sweep_loop(store, interval_seconds=0.01, stop=stop), timeout=3)
 
     assert store.swept_with == [300, 300, 300]
+
+
+class Settled:
+    def __init__(self, error: Exception | None = None) -> None:
+        self.calls: list[UUID] = []
+        self.error = error
+
+    async def __call__(self, document_id: UUID) -> None:
+        self.calls.append(document_id)
+        if self.error is not None:
+            raise self.error
+
+
+async def test_a_read_document_is_settled_so_its_application_is_compared_and_its_status_set() -> (
+    None
+):
+    store = MemoryStore()
+    document_id = one_document(store)
+    settled = Settled()
+
+    outcome = await process_next(
+        store, FakeReader(result=ID_CARD), confidence_cutoff=CUTOFF, settle=settled
+    )
+
+    assert outcome == "read"
+    assert settled.calls == [document_id]
+
+
+async def test_a_failed_document_is_settled_too_because_it_holds_the_application_in_review() -> (
+    None
+):
+    store = MemoryStore()
+    document_id = one_document(store)
+    settled = Settled()
+
+    outcome = await process_next(
+        store, FakeReader(error=EngineError("x")), confidence_cutoff=CUTOFF, settle=settled
+    )
+
+    assert outcome == "failed"
+    assert settled.calls == [document_id]
+
+
+async def test_a_result_that_arrives_after_the_sweeper_is_not_settled() -> None:
+    store = MemoryStore(still_processing=False)
+    one_document(store)
+    settled = Settled()
+
+    await process_next(store, FakeReader(result=ID_CARD), confidence_cutoff=CUTOFF, settle=settled)
+
+    assert settled.calls == []
+
+
+async def test_a_settle_that_raises_is_logged_and_does_not_undo_the_read() -> None:
+    store = MemoryStore()
+    one_document(store)
+
+    outcome = await process_next(
+        store,
+        FakeReader(result=ID_CARD),
+        confidence_cutoff=CUTOFF,
+        settle=Settled(error=RuntimeError("database went away")),
+    )
+
+    assert outcome == "read"
+    assert len(store.completed) == 1

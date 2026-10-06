@@ -73,7 +73,9 @@ async def upload_document(
         content_type=declared,
         created=created,
     )
-    if not created:
+    if created:
+        await store.recompute_status(application_id)
+    else:
         response.status_code = 200
     return DocumentOut.model_validate(asdict(record))
 

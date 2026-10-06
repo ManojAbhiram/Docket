@@ -13,6 +13,7 @@ from uuid import UUID
 from sqlalchemy import Row, text
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
+from app.db.repositories.statuses import recompute_status
 from app.domain.paging import decode_cursor, encode_cursor
 from app.domain.uploads import StoredImage
 
@@ -123,6 +124,10 @@ class SqlUploadStore:
                 },
             )
         return record, True
+
+    async def recompute_status(self, application_id: UUID) -> str:
+        """Set the application's status again from its documents, now that one more exists."""
+        return await recompute_status(self._factory, application_id)
 
     async def list_documents(
         self, application_id: UUID, *, limit: int, cursor: str | None

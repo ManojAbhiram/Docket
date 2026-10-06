@@ -6,9 +6,11 @@ kills a child that is still reading, and waits for both tasks to end.
 """
 
 import asyncio
+from collections.abc import Awaitable, Callable
 from dataclasses import dataclass, field
 from functools import partial
 from typing import Protocol
+from uuid import UUID
 
 from app.gateway import OcrResult
 from app.jobs.worker import DocumentStore, process_next, run_loop, sweep_loop
@@ -47,10 +49,11 @@ def start_worker(
     confidence_cutoff: float,
     idle_seconds: float,
     sweep_interval_seconds: float,
+    settle: Callable[[UUID], Awaitable[None]] | None = None,
 ) -> RunningWorker:
     """Create both tasks on the running loop."""
     stop = asyncio.Event()
-    step = partial(process_next, store, reader, confidence_cutoff=confidence_cutoff)
+    step = partial(process_next, store, reader, confidence_cutoff=confidence_cutoff, settle=settle)
     worker = RunningWorker(reader=reader, stop_signal=stop)
     worker.tasks = [
         asyncio.create_task(run_loop(step, idle_seconds=idle_seconds, stop=stop)),

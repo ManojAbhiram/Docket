@@ -32,6 +32,7 @@ from app.domain.auth import LoginLimiter, Passwords
 from app.domain.pdf import PopplerRasteriser
 from app.gateway.reader import build_reader, engine_version
 from app.jobs.runner import RunningWorker, start_worker
+from app.jobs.settle import make_settle
 
 log = structlog.get_logger()
 
@@ -78,6 +79,7 @@ def _start_document_worker(app: FastAPI, settings: Settings) -> RunningWorker | 
         confidence_cutoff=settings.review_confidence_cutoff,
         idle_seconds=settings.worker_idle_seconds,
         sweep_interval_seconds=settings.sweep_interval_seconds,
+        settle=make_settle(factory, name_threshold=settings.name_match_threshold),
     )
 
 

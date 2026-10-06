@@ -7,7 +7,7 @@ The worker is two background tasks: one claims and reads documents, one fails do
 import asyncio
 from uuid import UUID
 
-from app.gateway import OcrResult
+from app.gateway import OcrResult, OcrWord
 from app.jobs.runner import start_worker
 from app.jobs.worker import ClaimedDocument, ProcessedDocument
 
@@ -77,3 +77,44 @@ async def test_stopping_twice_is_harmless() -> None:
     await worker.stop()
 
     assert reader.closed is True
+
+
+class OneDocumentStore(IdleStore):
+    """Hands out one document, then nothing, and says when it has been settled."""
+
+    def __init__(self) -> None:
+        super().__init__()
+        self._waiting: list[ClaimedDocument] = [ClaimedDocument(id=UUID(int=7), image=b"page")]
+        self.settled = asyncio.Event()
+
+    async def claim_next(self) -> ClaimedDocument | None:
+        return self._waiting.pop() if self._waiting else None
+
+
+class TitleReader(ClosableReader):
+    def read(self, image: bytes) -> OcrResult:
+        word = OcrWord(text="Identity Card", confidence=0.9, box=(0.0, 0.0, 9.0, 9.0))
+        return OcrResult(words=(word,))
+
+
+async def test_the_settle_hook_given_to_the_worker_reaches_the_loop() -> None:
+    store = OneDocumentStore()
+    seen: list[UUID] = []
+
+    async def settle(document_id: UUID) -> None:
+        seen.append(document_id)
+        store.settled.set()
+
+    worker = start_worker(
+        store,
+        TitleReader(),
+        confidence_cutoff=0.95,
+        idle_seconds=0.01,
+        sweep_interval_seconds=1.0,
+        settle=settle,
+    )
+
+    await asyncio.wait_for(store.settled.wait(), timeout=3)
+    await worker.stop()
+
+    assert seen == [UUID(int=7)]
