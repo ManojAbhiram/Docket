@@ -1,5 +1,6 @@
 import { useState } from "react";
 
+import { ActionNotice } from "@/components/ActionNotice";
 import { Kbd } from "@/components/Kbd";
 import type { NoticeSpec } from "@/components/Notice";
 import { PageHeader } from "@/components/PageHeader";
@@ -7,7 +8,6 @@ import { StatusBadge } from "@/components/StatusBadge";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { formatTime } from "@/features/applications/fixtures";
-import { ActionNotice } from "@/features/review/components/ActionNotice";
 import { useHotkeys } from "@/lib/hotkeys";
 import { cn } from "@/lib/utils";
 

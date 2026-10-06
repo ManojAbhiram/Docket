@@ -1,5 +1,6 @@
 import { useState } from "react";
 
+import { ActionNotice } from "@/components/ActionNotice";
 import { DocumentImage } from "@/components/DocumentImage";
 import { Kbd } from "@/components/Kbd";
 import type { NoticeSpec } from "@/components/Notice";
@@ -9,7 +10,6 @@ import { StatusBadge } from "@/components/StatusBadge";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { documentImageUrl } from "@/features/review/api";
-import { ActionNotice } from "@/features/review/components/ActionNotice";
 import { FieldsPanel } from "@/features/review/components/FieldsPanel";
 import {
   documentTitle,

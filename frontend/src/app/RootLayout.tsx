@@ -3,6 +3,7 @@ import { Suspense } from "react";
 
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { Button } from "@/components/ui/button";
+import { Toaster } from "@/components/ui/sonner";
 import { useLogout, useMe } from "@/features/auth/hooks";
 import type { Role } from "@/features/auth/schemas";
 
@@ -78,6 +79,7 @@ export function RootLayout() {
           <Outlet />
         </Suspense>
       </main>
+      <Toaster />
     </div>
   );
 }

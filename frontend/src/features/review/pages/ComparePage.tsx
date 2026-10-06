@@ -1,7 +1,6 @@
 import { useNavigate, useParams } from "@tanstack/react-router";
 import { useState } from "react";
 
-import { Toaster } from "@/components/ui/sonner";
 import { useMe } from "@/features/auth/hooks";
 import { DecisionDialog } from "@/features/review/components/DecisionDialog";
 import { ReviewView } from "@/features/review/components/ReviewView";
@@ -90,7 +89,6 @@ export function ComparePage() {
           reload={async () => (await loaded.refetch()).data?.application.status}
         />
       )}
-      <Toaster />
     </>
   );
 }

@@ -1,5 +1,6 @@
 import { useState } from "react";
 
+import { ActionNotice } from "@/components/ActionNotice";
 import { Kbd } from "@/components/Kbd";
 import type { NoticeSpec } from "@/components/Notice";
 import { Button } from "@/components/ui/button";
@@ -14,7 +15,6 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { ActionNotice } from "@/features/review/components/ActionNotice";
 import { useHotkeys } from "@/lib/hotkeys";
 
 export type DecisionAction = "approve" | "correct" | "reject";

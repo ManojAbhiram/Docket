@@ -24,6 +24,24 @@ if (!("ResizeObserver" in globalThis)) {
   });
 }
 
+// jsdom has no matchMedia; the toast container at the root of the layout reads it for the colour
+// scheme. A plain stub that matches nothing, so every test can mount the whole app.
+if (typeof window.matchMedia !== "function") {
+  Object.defineProperty(window, "matchMedia", {
+    writable: true,
+    value: (query: string): MediaQueryList => ({
+      matches: false,
+      media: query,
+      onchange: null,
+      addEventListener: () => undefined,
+      removeEventListener: () => undefined,
+      addListener: () => undefined,
+      removeListener: () => undefined,
+      dispatchEvent: () => false,
+    }),
+  });
+}
+
 // jsdom has no layout; the router's scroll restoration calls this on navigation.
 Object.defineProperty(window, "scrollTo", { value: () => undefined, writable: true });
 

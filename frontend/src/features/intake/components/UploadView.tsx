@@ -1,3 +1,4 @@
+import { ActionNotice } from "@/components/ActionNotice";
 import { FileDrop } from "@/components/FileDrop";
 import type { NoticeSpec } from "@/components/Notice";
 import { PageHeader } from "@/components/PageHeader";
@@ -5,7 +6,6 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import type { DocumentStatus, UploadedDocument } from "@/features/applications/types";
-import { ActionNotice } from "@/features/intake/components/ActionNotice";
 
 const STATUS_WORDS: Record<DocumentStatus, string> = {
   uploaded: "Uploaded",

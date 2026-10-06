@@ -1,5 +1,6 @@
 import type { ReactNode } from "react";
 
+import { ActionNotice } from "@/components/ActionNotice";
 import type { NoticeSpec } from "@/components/Notice";
 import { PageHeader } from "@/components/PageHeader";
 import { StatusBadge, type StatusKind } from "@/components/StatusBadge";
@@ -15,7 +16,6 @@ import {
 } from "@/components/ui/table";
 import { formatTime } from "@/features/applications/fixtures";
 import type { ApplicationStatus, ApplicationSummary } from "@/features/applications/types";
-import { ActionNotice } from "@/features/intake/components/ActionNotice";
 
 export type StatusFilter = "all" | ApplicationStatus;
 
