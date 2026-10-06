@@ -32,7 +32,13 @@ class DocumentFacts:
     fields: tuple[FieldFacts, ...] = ()
 
 
-class VerificationNotAllowedError(ConflictError):
+class StatusNotAllowedError(ConflictError):
+    """A status was asked for that the evidence does not give."""
+
+    code = "status_not_allowed"
+
+
+class VerificationNotAllowedError(StatusNotAllowedError):
     """Verified was asked for without every field matching or a verifier's approval."""
 
     code = "verification_not_allowed"
@@ -43,7 +49,9 @@ def compute_status(documents: list[DocumentFacts], *, approved: bool = False) ->
     present = {
         d.doc_type for d in documents if d.state == "read" and d.doc_type not in (None, "unknown")
     }
-    missing = not present >= REQUIRED_TYPES
+    waiting = any(d.state in ("uploaded", "processing") for d in documents)
+    # An upload nobody has read yet is evidence still to come, so it holds back Verified.
+    missing = waiting or not present >= REQUIRED_TYPES
     if approved:
         return "missing_documents" if missing else "verified"
     if any(_needs_a_person(d) for d in documents):

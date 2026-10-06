@@ -121,6 +121,27 @@ def test_a_direct_request_for_verified_is_allowed_after_an_approval() -> None:
     assert_can_verify(documents, approved=True)
 
 
+def test_a_new_upload_still_waiting_to_be_read_holds_back_verified() -> None:
+    documents = complete_and_matching()
+    documents.append(DocumentFacts(doc_type=None, state="uploaded"))
+
+    assert compute_status(documents) == "missing_documents"
+
+
+def test_a_new_upload_being_read_holds_back_an_approval_too() -> None:
+    documents = complete_and_matching()
+    documents.append(DocumentFacts(doc_type=None, state="processing"))
+
+    assert compute_status(documents, approved=True) == "missing_documents"
+
+
+def test_a_field_not_yet_compared_is_not_a_match() -> None:
+    documents = complete_and_matching()
+    documents[0] = read("10th_marksheet", FieldFacts(match=None, needs_review=True))
+
+    assert compute_status(documents) == "needs_review"
+
+
 @pytest.mark.parametrize(
     "documents",
     [[], complete_and_matching(), [DocumentFacts(doc_type=None, state="failed")]],
