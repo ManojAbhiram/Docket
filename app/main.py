@@ -15,8 +15,10 @@ import structlog
 from fastapi import FastAPI
 
 from app import __version__
+from app.api.applications.router import router as applications_router
 from app.api.auth.router import router as auth_router
 from app.api.health.router import router as health_router
+from app.api.imports.router import router as imports_router
 from app.core.config import Settings, get_settings
 from app.core.errors import register_exception_handlers
 from app.core.logging import configure_logging
@@ -89,5 +91,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     register_exception_handlers(app)
     app.include_router(health_router)
     app.include_router(auth_router, prefix="/api")
+    app.include_router(imports_router, prefix="/api")
+    app.include_router(applications_router, prefix="/api")
     configure_tracing(app, settings.app_name, __version__)
     return app

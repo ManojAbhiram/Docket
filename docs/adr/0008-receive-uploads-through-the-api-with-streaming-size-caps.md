@@ -26,7 +26,7 @@ We will receive each upload through `POST /api/applications/{id}/documents` as m
 ## Consequences
 
 - Easier: one rule, enforced on the server and again by `chk_documents_size_range` and `chk_document_blobs_size_range`.
-- Harder: `python-multipart` is not in `pyproject.toml` and must be proposed with `dependency-audit` first (rule 7 of AGENTS.md). The 8 MiB cap and the type list are assumptions for the product owner (data model section 12).
+- Harder: `python-multipart` was proposed under rule 7 of AGENTS.md and approved on 2026-10-06 (pip-audit clean); it is now in `pyproject.toml`. The 8 MiB cap and the type list are assumptions for the product owner (data model section 12).
 - Revisit when real documents are planned or object storage is chosen.
 
 ## Commits us to

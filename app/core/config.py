@@ -36,6 +36,8 @@ class Settings(BaseSettings):
     gateway_call_cap: int = Field(default=1000, ge=1)
     review_confidence_cutoff: float = Field(default=0.9804, ge=0, le=1)
     name_match_threshold: float = Field(default=0.85, ge=0, le=1)
+    import_max_bytes: int = Field(default=5_000_000, ge=1_000)
+    import_max_rows: int = Field(default=20_000, ge=1)
     # Sessions and sign-in (ADR-0006, ADR-0012). Lifetimes are assumptions until the owner confirms.
     session_cookie_secure: bool = True
     session_idle_minutes: int = Field(default=30, ge=1)

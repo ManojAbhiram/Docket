@@ -9,6 +9,7 @@ import io
 import json
 from dataclasses import dataclass
 from datetime import date
+from uuid import UUID
 
 from app.core.errors import DomainError
 
@@ -63,6 +64,20 @@ class ImportOutcome:
     rows: tuple[ApplicationRow, ...]
     errors: tuple[RowError, ...]
     rows_read: int
+
+
+@dataclass(frozen=True)
+class SavedImport:
+    """What an import left behind: its id, the counts and every refused row."""
+
+    id: UUID
+    rows_read: int
+    rows_created: int
+    errors: tuple[RowError, ...]
+
+    @property
+    def rows_rejected(self) -> int:
+        return len(self.errors)
 
 
 class ImportTooLargeError(DomainError):
