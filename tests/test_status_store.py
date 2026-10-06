@@ -30,17 +30,28 @@ class Rows:
     def all(self) -> list[tuple[Any, ...]]:
         return self._rows
 
+    def scalar_one(self) -> Any:
+        return self._rows[0][0]
+
 
 class ScriptedSession:
     """Answers the three statements the store sends, and records the writes."""
 
     def __init__(
-        self, *, stored: str, rejected: bool, facts: list[tuple[Any, ...]], exists: bool = True
+        self,
+        *,
+        stored: str,
+        rejected: bool,
+        facts: list[tuple[Any, ...]],
+        exists: bool = True,
+        approval_stands: bool = False,
     ) -> None:
         self.stored = stored
         self.rejected = rejected
         self.facts = facts
         self.exists = exists
+        self.approval_stands = approval_stands
+        self.asked_the_log = False
         self.writes: list[dict[str, Any]] = []
 
     async def execute(self, statement: Any, params: dict[str, Any]) -> Rows:
@@ -50,6 +61,9 @@ class ScriptedSession:
         if sql.startswith("UPDATE"):
             self.writes.append(params)
             return Rows([])
+        if "FROM decisions" in sql:
+            self.asked_the_log = True
+            return Rows([(self.approval_stands,)])
         return Rows(self.facts)
 
 
@@ -181,3 +195,36 @@ async def test_a_rejected_application_cannot_be_asked_for_verified_even_with_an_
         )
 
     assert session.writes == []
+
+
+async def test_a_standing_approval_in_the_log_keeps_a_mismatching_application_verified() -> None:
+    mismatch = (
+        complete()[:1]
+        + doc(uuid4(), "12th_marksheet", ("mismatch", True))
+        + doc(uuid4(), "id_proof", ("match", False))
+    )
+    session = ScriptedSession(
+        stored="needs_review", rejected=False, facts=mismatch, approval_stands=True
+    )
+
+    assert await run(session) == "verified"
+    assert session.asked_the_log is True
+
+
+async def test_with_no_approval_in_the_log_the_same_application_stays_in_review() -> None:
+    mismatch = (
+        complete()[:1]
+        + doc(uuid4(), "12th_marksheet", ("mismatch", True))
+        + doc(uuid4(), "id_proof", ("match", False))
+    )
+    session = ScriptedSession(stored="needs_review", rejected=False, facts=mismatch)
+
+    assert await run(session) == "needs_review"
+
+
+async def test_an_explicit_approval_flag_overrides_the_log_and_the_log_is_not_asked() -> None:
+    session = ScriptedSession(stored="needs_review", rejected=False, facts=complete())
+
+    await run(session, approved=False)
+
+    assert session.asked_the_log is False

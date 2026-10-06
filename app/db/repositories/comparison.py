@@ -47,29 +47,36 @@ async def compare_document(
     A document that does not exist, or is not `read`, is left alone.
     """
     async with factory.begin() as session:
-        loaded = (await session.execute(_LOAD_DOCUMENT, {"document_id": document_id})).first()
-        if loaded is None:
-            return
-        document_type, full_name, father_name, born, board, roll, marks = loaded
-        rows = (await session.execute(_LOAD_FIELDS, {"document_id": document_id})).all()
-        results = compare_fields(
-            document_type,
-            [FieldToCompare(field_id=r[0], name=r[1], subject=r[2], value=r[3]) for r in rows],
-            _application(full_name, father_name, born, board, roll, marks),
-            name_threshold=name_threshold,
-        )
-        earlier = {r[0]: r[4] for r in rows}
-        writes = [
-            {
-                "field_id": field_id,
-                "document_id": document_id,
-                "result": result,
-                "reason": review_reason_after(result, earlier[field_id]),
-            }
-            for field_id, result in results
-        ]
-        if writes:
-            await session.execute(_WRITE, writes)
+        await compare_in_session(session, document_id, name_threshold=name_threshold)
+
+
+async def compare_in_session(
+    session: AsyncSession, document_id: UUID, *, name_threshold: float
+) -> None:
+    """The same comparison inside a transaction the caller owns (a correction uses it)."""
+    loaded = (await session.execute(_LOAD_DOCUMENT, {"document_id": document_id})).first()
+    if loaded is None:
+        return
+    document_type, full_name, father_name, born, board, roll, marks = loaded
+    rows = (await session.execute(_LOAD_FIELDS, {"document_id": document_id})).all()
+    results = compare_fields(
+        document_type,
+        [FieldToCompare(field_id=r[0], name=r[1], subject=r[2], value=r[3]) for r in rows],
+        _application(full_name, father_name, born, board, roll, marks),
+        name_threshold=name_threshold,
+    )
+    earlier = {r[0]: r[4] for r in rows}
+    writes = [
+        {
+            "field_id": field_id,
+            "document_id": document_id,
+            "result": result,
+            "reason": review_reason_after(result, earlier[field_id]),
+        }
+        for field_id, result in results
+    ]
+    if writes:
+        await session.execute(_WRITE, writes)
 
 
 def _application(

@@ -94,3 +94,8 @@ def test_a_decision_time_without_a_timezone_is_refused() -> None:
 
     with pytest.raises(ValueError, match="timezone"):
         log_entry(DecisionRequest(action="approve"), decided_by=uuid4(), decided_at=naive)
+
+
+def test_a_correction_with_a_blank_new_value_is_refused() -> None:
+    with pytest.raises(ValueError, match="new value"):
+        DecisionRequest(action="correct", extracted_field_id=3, new_value="   ")

@@ -39,6 +39,13 @@ _FACTS = text(
     "FROM documents d LEFT JOIN extracted_fields f ON f.document_id = d.id "
     "WHERE d.application_id = :id AND d.is_current ORDER BY d.created_at, d.id, f.id"
 )
+_APPROVAL_STANDS = text(
+    "SELECT EXISTS (SELECT 1 FROM decisions d WHERE d.application_id = :id "
+    "AND d.action = 'approve' AND d.created_at > coalesce((SELECT max(greatest(doc.created_at, "
+    "doc.updated_at, coalesce(f.updated_at, doc.updated_at))) FROM documents doc "
+    "LEFT JOIN extracted_fields f ON f.document_id = doc.id WHERE doc.application_id = :id), "
+    "'-infinity'::timestamptz))"
+)
 _WRITE = text(
     "UPDATE applications SET status = CAST(:status AS application_status), updated_at = now() "
     "WHERE id = :id AND status <> CAST(:status AS application_status)"
@@ -46,16 +53,37 @@ _WRITE = text(
 
 
 async def recompute_status(
-    factory: async_sessionmaker[AsyncSession], application_id: UUID, *, approved: bool = False
+    factory: async_sessionmaker[AsyncSession],
+    application_id: UUID,
+    *,
+    approved: bool | None = None,
 ) -> str:
-    """Set the status the evidence gives and return it. A rejected one stays needs_review."""
+    """Set the status the evidence gives and return it. A rejected one stays needs_review.
+
+    `approved` left as None is read from the decision log (see `recompute_in_session`).
+    """
     async with factory.begin() as session:
-        stored, rejected = await _lock(session, application_id)
-        if rejected:
-            return stored
-        computed = compute_status(await _facts(session, application_id), approved=approved)
-        await _write(session, application_id, computed, stored)
-        return computed
+        return await recompute_in_session(session, application_id, approved=approved)
+
+
+async def recompute_in_session(
+    session: AsyncSession, application_id: UUID, *, approved: bool | None = None
+) -> str:
+    """The same recompute inside a transaction the caller owns, so a decision and the status it
+    leads to commit or roll back together.
+
+    A verifier's approval stands in for a field that did not match only while no evidence has
+    changed since it: `approved` None means "the newest approval is newer than every document and
+    field". New evidence (an upload, a read, a correction) makes the approval stale, and the status
+    comes from the evidence again. Pass True or False to override the log.
+    """
+    stored, rejected = await _lock(session, application_id)
+    if rejected:
+        return stored
+    standing = await _approval_stands(session, application_id) if approved is None else approved
+    computed = compute_status(await _facts(session, application_id), approved=standing)
+    await _write(session, application_id, computed, stored)
+    return computed
 
 
 async def request_status(
@@ -93,6 +121,11 @@ async def _lock(session: AsyncSession, application_id: UUID) -> tuple[Status, bo
         raise NotFoundError(msg)
     status: Status = row[0]
     return status, bool(row[1])
+
+
+async def _approval_stands(session: AsyncSession, application_id: UUID) -> bool:
+    """True if an approve decision is newer than every document and extracted field."""
+    return bool((await session.execute(_APPROVAL_STANDS, {"id": application_id})).scalar_one())
 
 
 async def _write(session: AsyncSession, application_id: UUID, status: Status, stored: str) -> None:

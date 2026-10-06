@@ -28,6 +28,9 @@ class DecisionRequest(BaseModel):
         if self.action == "correct" and (self.extracted_field_id is None or self.new_value is None):
             msg = "a correction needs the field and the new value"
             raise ValueError(msg)
+        if self.action == "correct" and not (self.new_value or "").strip():
+            msg = "a correction needs a new value that is not blank"
+            raise ValueError(msg)
         return self
 
 
