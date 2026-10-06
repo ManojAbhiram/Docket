@@ -1,7 +1,7 @@
 import { useState } from "react";
 
 import { Kbd } from "@/components/Kbd";
-import { NoticeBox, type NoticeSpec } from "@/components/Notice";
+import type { NoticeSpec } from "@/components/Notice";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -14,6 +14,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { ActionNotice } from "@/features/review/components/ActionNotice";
 import { useHotkeys } from "@/lib/hotkeys";
 
 export type DecisionAction = "approve" | "correct" | "reject";
@@ -24,10 +25,27 @@ const CHOICES: { value: DecisionAction; label: string; key: string }[] = [
   { value: "reject", label: "Reject", key: "r" },
 ];
 
+/** A field a verifier may correct. */
+export interface CorrectableField {
+  id: number;
+  label: string;
+  value: string;
+}
+
+/** What the dialog hands back when the verifier saves. */
+export interface DecisionDraft {
+  action: DecisionAction;
+  reason: string;
+  newValue: string;
+  fieldId: number | undefined;
+}
+
 interface DecisionDialogViewProps {
   reference: string;
-  /** The field being corrected, from the selection on S-07. */
+  /** The field being corrected, from the selection on S-07. Used when no field list is given. */
   fieldLabel: string;
+  /** The fields a correction can name, flagged ones first. */
+  fields?: CorrectableField[];
   initialAction?: DecisionAction;
   reason?: string;
   newValue?: string;
@@ -40,12 +58,17 @@ interface DecisionDialogViewProps {
   open?: boolean;
   /** Called by Cancel, Esc and the close button. */
   onClose?: () => void;
+  /** Called with the draft when it passes the checks the screen can make itself. */
+  onSave?: (draft: DecisionDraft) => void;
+  /** The id of the control that gets focus back when the dialog closes. */
+  returnFocusTo?: string;
 }
 
 /** S-08: approve, correct a value or reject, with the reason a rejection needs. Every decision is logged. */
 export function DecisionDialogView({
   reference,
   fieldLabel,
+  fields,
   initialAction,
   reason = "",
   newValue = "",
@@ -55,8 +78,14 @@ export function DecisionDialogView({
   notice,
   open = true,
   onClose,
+  onSave,
+  returnFocusTo,
 }: DecisionDialogViewProps) {
   const [action, setAction] = useState<DecisionAction | undefined>(initialAction);
+  const [reasonText, setReasonText] = useState(reason);
+  const [valueText, setValueText] = useState(newValue);
+  const [fieldId, setFieldId] = useState<number | undefined>(fields?.[0]?.id);
+  const [problem, setProblem] = useState<{ field: "reason" | "value"; text: string } | undefined>();
   useHotkeys(
     {
       a: () => {
@@ -71,7 +100,27 @@ export function DecisionDialogView({
     },
     open && !busy,
   );
+
   const blocked = busy || offline || action === undefined;
+  const reasonProblem = reasonError ?? (problem?.field === "reason" ? problem.text : undefined);
+  const valueProblem = problem?.field === "value" ? problem.text : undefined;
+
+  const save = () => {
+    if (action === undefined) {
+      return;
+    }
+    if (action === "reject" && reasonText.trim() === "") {
+      setProblem({ field: "reason", text: "Give a reason for the rejection." });
+      return;
+    }
+    if (action === "correct" && valueText.trim() === "") {
+      setProblem({ field: "value", text: "Enter the new value." });
+      return;
+    }
+    setProblem(undefined);
+    onSave?.({ action, reason: reasonText.trim(), newValue: valueText.trim(), fieldId });
+  };
+
   return (
     <Dialog
       open={open}
@@ -81,7 +130,15 @@ export function DecisionDialogView({
         }
       }}
     >
-      <DialogContent>
+      <DialogContent
+        onCloseAutoFocus={(event) => {
+          const target = returnFocusTo ? document.getElementById(returnFocusTo) : null;
+          if (target) {
+            event.preventDefault();
+            target.focus();
+          }
+        }}
+      >
         <DialogHeader>
           <DialogTitle>Decide {reference}</DialogTitle>
           <DialogDescription>
@@ -89,7 +146,7 @@ export function DecisionDialogView({
             edited.
           </DialogDescription>
         </DialogHeader>
-        {notice && <NoticeBox spec={notice} />}
+        {notice && <ActionNotice spec={notice} />}
         <div role="radiogroup" aria-label="Decision" className="grid gap-2 sm:grid-cols-3">
           {CHOICES.map((choice) => (
             <Button
@@ -102,6 +159,7 @@ export function DecisionDialogView({
               disabled={busy}
               onClick={() => {
                 setAction(choice.value);
+                setProblem(undefined);
               }}
             >
               {choice.label}
@@ -111,9 +169,44 @@ export function DecisionDialogView({
         </div>
         {action === "correct" && (
           <div className="space-y-2">
-            <p className="text-muted-foreground">Field: {fieldLabel}</p>
+            {fields && fields.length > 0 ? (
+              <>
+                <Label htmlFor="correct-field">Field</Label>
+                <select
+                  id="correct-field"
+                  className="min-h-11 w-full rounded-md border border-input bg-background px-3 text-base sm:min-h-9"
+                  value={fieldId}
+                  disabled={busy}
+                  onChange={(event) => {
+                    setFieldId(Number(event.target.value));
+                  }}
+                >
+                  {fields.map((option) => (
+                    <option key={option.id} value={option.id}>
+                      {option.label}: {option.value || "none"}
+                    </option>
+                  ))}
+                </select>
+              </>
+            ) : (
+              <p className="text-muted-foreground">Field: {fieldLabel}</p>
+            )}
             <Label htmlFor="new-value">New value</Label>
-            <Input id="new-value" defaultValue={newValue} disabled={busy} />
+            <Input
+              id="new-value"
+              value={valueText}
+              disabled={busy}
+              aria-invalid={valueProblem ? true : undefined}
+              aria-describedby={valueProblem ? "new-value-error" : undefined}
+              onChange={(event) => {
+                setValueText(event.target.value);
+              }}
+            />
+            {valueProblem && (
+              <p id="new-value-error" className="text-destructive">
+                {valueProblem}
+              </p>
+            )}
           </div>
         )}
         {action === "reject" && (
@@ -121,14 +214,17 @@ export function DecisionDialogView({
             <Label htmlFor="reason">Reason</Label>
             <Textarea
               id="reason"
-              defaultValue={reason}
+              value={reasonText}
               disabled={busy}
-              aria-invalid={reasonError ? true : undefined}
-              aria-describedby={reasonError ? "reason-error" : undefined}
+              aria-invalid={reasonProblem ? true : undefined}
+              aria-describedby={reasonProblem ? "reason-error" : undefined}
+              onChange={(event) => {
+                setReasonText(event.target.value);
+              }}
             />
-            {reasonError && (
+            {reasonProblem && (
               <p id="reason-error" className="text-destructive">
-                {reasonError}
+                {reasonProblem}
               </p>
             )}
           </div>
@@ -148,7 +244,7 @@ export function DecisionDialogView({
           >
             Cancel
           </Button>
-          <Button type="button" className="min-h-11 sm:min-h-9" disabled={blocked}>
+          <Button type="button" className="min-h-11 sm:min-h-9" disabled={blocked} onClick={save}>
             {busy ? "Saving decision" : "Save decision"}
           </Button>
         </DialogFooter>

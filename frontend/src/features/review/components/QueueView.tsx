@@ -1,41 +1,64 @@
 import { useState } from "react";
 
 import { Kbd } from "@/components/Kbd";
-import { NoticeBox, type NoticeSpec } from "@/components/Notice";
+import type { NoticeSpec } from "@/components/Notice";
 import { PageHeader } from "@/components/PageHeader";
 import { StatusBadge } from "@/components/StatusBadge";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { formatTime } from "@/features/applications/fixtures";
-import type { ApplicationSummary } from "@/features/applications/types";
+import { ActionNotice } from "@/features/review/components/ActionNotice";
 import { useHotkeys } from "@/lib/hotkeys";
 import { cn } from "@/lib/utils";
 
+/** What a queue row needs. The gallery's summaries and the API's applications both have it. */
+export interface QueueRow {
+  id: string;
+  ref: string;
+  name: string;
+  /** Why it is flagged, when the data says. */
+  flag?: string | undefined;
+  updatedAt: string;
+}
+
 interface QueueViewProps {
-  items: ApplicationSummary[];
+  items: QueueRow[];
   /** The server's total, so a partial page can say "20 of 611". */
   total?: number;
   loading?: boolean;
   offline?: boolean;
   notice?: NoticeSpec;
-  /** Opens one application on S-07. "Review next" and the `n` key open the oldest. */
-  onOpen?: (item: ApplicationSummary) => void;
+  /** More pages exist on the server. */
+  hasMore?: boolean;
+  loadingMore?: boolean;
+  onLoadMore?: () => void;
+  /** Runs the notice's action, for example Reload. */
+  onNoticeAction?: () => void;
+  /** Opens one application on S-07. "Review next" and the `n` key open the first one listed. */
+  onOpen?: (item: QueueRow) => void;
+  /** Where "Go to the dashboard" leads from the empty queue. */
+  onDashboard?: () => void;
 }
 
-/** S-06: the flagged applications a verifier still has to decide, oldest first. */
+/** S-06: the flagged applications a verifier still has to decide, newest change first. */
 export function QueueView({
   items,
   total,
   loading = false,
   offline = false,
   notice,
+  hasMore = false,
+  loadingMore = false,
+  onLoadMore,
+  onNoticeAction,
   onOpen,
+  onDashboard,
 }: QueueViewProps) {
   const [selected, setSelected] = useState(0);
   const reviewNext = () => {
-    const oldest = items[0];
-    if (oldest && !offline) {
-      onOpen?.(oldest);
+    const first = items[0];
+    if (first && !offline) {
+      onOpen?.(first);
     }
   };
   useHotkeys({
@@ -49,11 +72,16 @@ export function QueueView({
   });
   const count = total ?? items.length;
   const empty = !loading && !notice && items.length === 0;
+  const more = hasMore || (total !== undefined && total > items.length);
   return (
     <div className="space-y-6">
       <PageHeader
         title="Review queue"
-        description={!loading && items.length > 0 ? `${count} to review` : undefined}
+        description={
+          !loading && items.length > 0
+            ? `${String(count)} to review${hasMore && total === undefined ? " so far" : ""}`
+            : undefined
+        }
         actions={
           <Button
             className="min-h-11 sm:min-h-9"
@@ -69,7 +97,7 @@ export function QueueView({
           Offline. Showing what was loaded.
         </p>
       )}
-      {notice && <NoticeBox spec={notice} />}
+      {notice && <ActionNotice spec={notice} onAction={onNoticeAction} />}
       {loading && (
         <div className="space-y-2" aria-busy="true">
           {[0, 1, 2, 3, 4, 5].map((slot) => (
@@ -80,7 +108,7 @@ export function QueueView({
       {empty && (
         <div className="space-y-3 py-8">
           <p className="text-lg">Nothing needs review.</p>
-          <Button variant="outline" className="min-h-11 sm:min-h-9">
+          <Button variant="outline" className="min-h-11 sm:min-h-9" onClick={onDashboard}>
             Go to the dashboard
           </Button>
         </div>
@@ -106,6 +134,7 @@ export function QueueView({
                   variant="outline"
                   size="sm"
                   className="min-h-11 sm:min-h-8"
+                  aria-label={`Open ${item.ref}`}
                   onClick={() => {
                     onOpen?.(item);
                   }}
@@ -117,13 +146,20 @@ export function QueueView({
           ))}
         </ul>
       )}
-      {total !== undefined && total > items.length && (
+      {more && (
         <div className="flex flex-wrap items-center gap-3">
-          <p data-numeric>
-            {items.length} of {total} shown.
-          </p>
-          <Button variant="outline" className="min-h-11 sm:min-h-9" disabled={offline}>
-            Load more
+          {total !== undefined && (
+            <p data-numeric>
+              {items.length} of {total} shown.
+            </p>
+          )}
+          <Button
+            variant="outline"
+            className="min-h-11 sm:min-h-9"
+            disabled={offline || loadingMore}
+            onClick={onLoadMore}
+          >
+            {loadingMore ? "Loading" : "Load more"}
           </Button>
         </div>
       )}
