@@ -5,7 +5,7 @@ import numpy as np
 import numpy.typing as npt
 import pytest
 
-from evals.preprocess import preprocess
+from app.gateway.preprocess import preprocess
 
 type Image = npt.NDArray[np.uint8]
 

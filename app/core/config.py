@@ -5,6 +5,7 @@ have no defaults. `get_settings` is the one module-level singleton.
 """
 
 from functools import lru_cache
+from pathlib import Path
 from typing import Literal, Self
 
 from pydantic import Field, PostgresDsn, field_validator, model_validator
@@ -34,6 +35,13 @@ class Settings(BaseSettings):
     readiness_timeout_seconds: float = Field(default=2.0, gt=0)
     gateway_engine: str = "recorded"
     gateway_call_cap: int = Field(default=1000, ge=1)
+    gateway_recording: Path | None = None
+    # The document worker runs inside the API process (ADR-0011). Off unless asked for.
+    worker_enabled: bool = False
+    worker_idle_seconds: float = Field(default=2.0, gt=0)
+    sweep_interval_seconds: float = Field(default=60.0, gt=0)
+    read_timeout_seconds: float = Field(default=120.0, gt=0)
+    engine_recycle_after: int = Field(default=500, ge=1)
     review_confidence_cutoff: float = Field(default=0.9804, ge=0, le=1)
     name_match_threshold: float = Field(default=0.85, ge=0, le=1)
     import_max_bytes: int = Field(default=5_000_000, ge=1_000)

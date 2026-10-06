@@ -12,12 +12,14 @@ import pytest
 
 from app.domain.extract import ExtractedField
 from app.gateway import CallCapReachedError, EngineError, OcrResult, OcrWord
+from app.gateway.process import EngineTimeoutError
 from app.jobs.worker import (
     ClaimedDocument,
     ProcessedDocument,
     ReadTimeoutError,
     process_next,
     run_loop,
+    sweep_loop,
     sweep_stale_documents,
 )
 
@@ -190,3 +192,32 @@ async def test_a_step_that_raises_is_logged_and_the_loop_carries_on() -> None:
     await asyncio.wait_for(run_loop(step, idle_seconds=0.01, stop=stop), timeout=2)
 
     assert calls == 2
+
+
+async def test_an_engine_error_caused_by_a_timeout_is_recorded_as_a_timeout() -> None:
+    store = MemoryStore()
+    document_id = one_document(store)
+    error = EngineError("the engine could not read the image")
+    error.__cause__ = EngineTimeoutError("the read ran past its limit")
+
+    outcome = await process_next(store, FakeReader(error=error), confidence_cutoff=CUTOFF)
+
+    assert outcome == "failed"
+    assert store.failed == {document_id: "timeout"}
+
+
+async def test_the_sweep_loop_sweeps_again_and_again_until_asked_to_stop() -> None:
+    stop = asyncio.Event()
+
+    class StoppingStore(MemoryStore):
+        async def sweep_stale(self, older_than_seconds: int) -> int:
+            swept = await super().sweep_stale(older_than_seconds)
+            if len(self.swept_with) == 3:
+                stop.set()
+            return swept
+
+    store = StoppingStore()
+
+    await asyncio.wait_for(sweep_loop(store, interval_seconds=0.01, stop=stop), timeout=3)
+
+    assert store.swept_with == [300, 300, 300]

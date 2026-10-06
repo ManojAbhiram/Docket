@@ -71,7 +71,7 @@ def render(summaries: list[dict[str, object]]) -> str:
     docs = summaries[0]["documents"]
     lines += [
         f"{len(summaries)} runs, {docs} documents each, every engine on the same images, with and "
-        "without preprocessing (light flattening and deskew, `evals/preprocess.py`).",
+        "without preprocessing (light flattening and deskew, `app/gateway/preprocess.py`).",
         "",
         "## Results",
         "",

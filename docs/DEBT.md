@@ -20,7 +20,7 @@ an estimate.
 | DEBT-003 | OCR scores are uncalibrated while REQ-011 routes on them (docs/product/PRD.md REQ-011, Q-016) | other | est. 1.5 | est. 6 | before US-00-003 is built | Docket team | 2026-10-05 |
 | DEBT-004 | RapidOCR downloads models on first use; CI and offline runs need pre-downloaded, pinned models (docs/research/ocr-landscape.md, Risks) | other | est. 0.5 | est. 2 | before the gateway tests replay recorded responses in CI (US-02-001) | Docket team | 2026-10-05 |
 | DEBT-005 | Hindi accuracy evidence is general text, not document photos; no benchmark on Indian marksheets or IDs found (docs/research/ocr-landscape.md, Evidence on Hindi) | other | est. 0.5 | est. 4 | when the synthetic set exists (US-02-003) | Docket team | 2026-10-05 |
-| DEBT-006 | Python 3.14 wheels for ONNX Runtime, PaddlePaddle, PyTorch and the OCR packages not checked (pyproject.toml requires 3.14) | other | est. 0.5 | est. 1 | before the first engine install | Docket team | 2026-10-05 |
+| DEBT-006 | Python 3.14 wheels for PaddlePaddle, PyTorch and the other benchmark OCR packages not checked (ONNX Runtime and RapidOCR are confirmed on 3.14, 2026-10-06) | other | est. 0.5 | est. 1 | before the first engine install | Docket team | 2026-10-05 |
 
 ## Needs an estimate
 

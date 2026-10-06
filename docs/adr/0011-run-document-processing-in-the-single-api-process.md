@@ -1,9 +1,9 @@
 # ADR-0011: Run document processing inside one API process
 
-- Status: Proposed (awaiting the engineer; found by the high-level design reconciliation, not yet decided by a person)
+- Status: Accepted
 - Date: 2026-10-05
 - Task: US-02-002
-- Deciders: none yet
+- Deciders: Manoj Abhiram (accepted in session, 2026-10-06, after a probe showed RapidOCR 3.9.2 and ONNX Runtime 1.30.0 install and run on Python 3.14.4)
 - Area: compute
 - Reversibility: cheap: the loop is one module; moving it to its own container later changes the compose file and the claim query stays.
 
@@ -33,3 +33,7 @@ We will run one gunicorn worker (`WEB_CONCURRENCY=1`) and host the claiming loop
 ## Commits us to
 
 No new technology. A change to `Dockerfile:18` and a compose service for the API.
+
+## Update 2026-10-06 (US-00-003)
+
+Built as decided: `app/gateway/process.py` runs the engine in a spawned child with a 120 second read timeout and a recycle after 500 documents, and `app/jobs/runner.py` starts the loop and the sweeper from the lifespan (`WORKER_ENABLED`). Measured: three seeded pages read in 6 seconds through the real API process, one gateway call each, engine alone peaked at 419 MB. The API plus engine total is still unmeasured under load. `WEB_CONCURRENCY` is 1 in the Dockerfile; the image build itself was not run.

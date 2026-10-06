@@ -19,6 +19,7 @@ from app.core.errors import DomainError
 from app.domain.classify import classify
 from app.domain.extract import ExtractedField, extract_fields
 from app.gateway import CallCapReachedError, EngineError, OcrResult
+from app.gateway.process import EngineTimeoutError
 
 log = structlog.get_logger()
 
@@ -81,8 +82,9 @@ async def process_next(
         return await _failed(store, document.id, "cap_reached")
     except ReadTimeoutError:
         return await _failed(store, document.id, "timeout")
-    except EngineError:
-        return await _failed(store, document.id, "engine_error")
+    except EngineError as exc:
+        reason = "timeout" if isinstance(exc.__cause__, EngineTimeoutError) else "engine_error"
+        return await _failed(store, document.id, reason)
     doc_type = classify(result.words)
     fields = extract_fields(result.words, doc_type, confidence_cutoff=confidence_cutoff)
     if not await store.complete(document.id, ProcessedDocument(doc_type=doc_type, fields=fields)):
@@ -110,6 +112,19 @@ async def run_loop(
         if outcome == "idle":
             with contextlib.suppress(TimeoutError):
                 await asyncio.wait_for(stop.wait(), timeout=idle_seconds)
+
+
+async def sweep_loop(store: DocumentStore, *, interval_seconds: float, stop: asyncio.Event) -> None:
+    """Sweep every `interval_seconds` until `stop` is set, and survive a sweep that raises."""
+    while not stop.is_set():
+        try:
+            swept = await sweep_stale_documents(store)
+            if swept:
+                log.warning("worker.swept", documents=swept)
+        except Exception as exc:
+            log.error("worker.sweep_failed", error_type=type(exc).__name__)
+        with contextlib.suppress(TimeoutError):
+            await asyncio.wait_for(stop.wait(), timeout=interval_seconds)
 
 
 async def _failed(store: DocumentStore, document_id: UUID, reason: str) -> Outcome:

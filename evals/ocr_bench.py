@@ -33,7 +33,7 @@ import cv2
 import numpy as np
 import numpy.typing as npt
 
-from evals.preprocess import preprocess
+from app.gateway.preprocess import preprocess
 from evals.scoring import (
     FieldScore,
     accuracy_by_field,

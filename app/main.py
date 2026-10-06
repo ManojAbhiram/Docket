@@ -25,9 +25,13 @@ from app.core.errors import register_exception_handlers
 from app.core.logging import configure_logging
 from app.core.middleware import RequestIdMiddleware
 from app.core.telemetry import configure_tracing
+from app.db.repositories.documents import SqlDocumentStore
+from app.db.repositories.gateway_calls import SqlCallLedger
 from app.db.session import make_engine, make_session_factory
 from app.domain.auth import LoginLimiter, Passwords
 from app.domain.pdf import PopplerRasteriser
+from app.gateway.reader import build_reader, engine_version
+from app.jobs.runner import RunningWorker, start_worker
 
 log = structlog.get_logger()
 
@@ -41,16 +45,40 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
     app.state.session_factory = make_session_factory(engine)
     _start_sign_in(app, settings)
     app.state.rasteriser = PopplerRasteriser()
+    app.state.worker = _start_document_worker(app, settings)
     log.info("startup", env=settings.env, version=__version__)
     try:
         yield
     finally:
+        if app.state.worker is not None:
+            await app.state.worker.stop()
         await engine.dispose()
         log.info("shutdown")
 
 
 def _utc_now() -> datetime:
     return datetime.now(UTC)
+
+
+def _start_document_worker(app: FastAPI, settings: Settings) -> RunningWorker | None:
+    """Read uploaded documents inside this process when `WORKER_ENABLED` is set (ADR-0011)."""
+    if not settings.worker_enabled:
+        log.info("worker disabled; uploaded documents will wait")
+        return None
+    factory = app.state.session_factory
+    ledger = SqlCallLedger(
+        factory,
+        asyncio.get_running_loop(),
+        engine_version=engine_version(settings),
+        preprocess=True,
+    )
+    return start_worker(
+        SqlDocumentStore(factory),
+        build_reader(settings, ledger),
+        confidence_cutoff=settings.review_confidence_cutoff,
+        idle_seconds=settings.worker_idle_seconds,
+        sweep_interval_seconds=settings.sweep_interval_seconds,
+    )
 
 
 def _start_sign_in(app: FastAPI, settings: Settings) -> None:

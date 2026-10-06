@@ -27,6 +27,8 @@ dependencies = [
   "pdf2image>=1.17,<2",
   "argon2-cffi>=25.1.0",
   "python-multipart>=0.0.32",
+  "rapidocr>=3.9.2",
+  "onnxruntime>=1.30.0",
 ]
 
 [dependency-groups]
@@ -39,11 +41,14 @@ dev = [
   "httpx>=0.28,<1",
   "asgi-lifespan>=2.1,<3",
   "pre-commit>=4.3,<5",
-  # The seed noise (seed/render.py) and the OCR preprocessing (evals/preprocess.py) use OpenCV and
+  # The seed noise (seed/render.py) and the OCR preprocessing (app/gateway/preprocess.py) use OpenCV and
   # numpy, now runtime dependencies. The OCR engines are not here: see evals/requirements-ocr.txt.
 ]
 
 [tool.uv]
+# rapidocr asks for opencv-python (the GUI build, which needs libGL and cannot start in the slim
+# image). The headless build above provides the same cv2, so the GUI build is never installed.
+override-dependencies = ["opencv-python; sys_platform == 'never'"]
 # The repository is run from its root, not installed as a distribution.
 package = false
 

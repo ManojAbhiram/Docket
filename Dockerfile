@@ -12,14 +12,17 @@ COPY alembic ./alembic
 COPY alembic.ini ./
 
 FROM python:3.14-slim-bookworm
+# poppler-utils rasterises the first page of an uploaded PDF (ADR-0008).
+RUN apt-get update && apt-get install -y --no-install-recommends poppler-utils \
+    && rm -rf /var/lib/apt/lists/*
 RUN groupadd --system --gid 10001 app && useradd --system --uid 10001 --gid app --no-create-home app
 WORKDIR /app
 COPY --from=build --chown=app:app /app /app
-ENV PATH="/app/.venv/bin:$PATH" PYTHONUNBUFFERED=1 PYTHONDONTWRITEBYTECODE=1 PORT=8080 WEB_CONCURRENCY=2
+ENV PATH="/app/.venv/bin:$PATH" PYTHONUNBUFFERED=1 PYTHONDONTWRITEBYTECODE=1 PORT=8080 WEB_CONCURRENCY=1
 USER app
 EXPOSE 8080
 # gunicorn supervises uvicorn workers (uvicorn-worker is the maintained home
 # of UvicornWorker; uvicorn.workers is deprecated). WEB_CONCURRENCY sets the
-# worker count; two per CPU is the usual ceiling. `make dev` runs uvicorn
-# directly with --reload.
+# worker count and stays 1: the document worker and the engine live in that one
+# process (ADR-0011). `make dev` runs uvicorn directly with --reload.
 CMD ["gunicorn", "app.main:create_app()", "-k", "uvicorn_worker.UvicornWorker", "--bind", "0.0.0.0:8080", "--access-logfile", "-", "--graceful-timeout", "30", "--timeout", "60"]
