@@ -2,13 +2,20 @@
 
 from dataclasses import asdict
 from typing import Annotated, Literal
+from uuid import UUID
 
-from fastapi import APIRouter, Depends, Query
+from fastapi import APIRouter, Depends, Query, Response
 
-from app.api.applications.deps import get_application_store
-from app.api.applications.schemas import ApplicationListOut, ApplicationOut, PageOut
+from app.api.applications.deps import get_application_store, get_review_store
+from app.api.applications.schemas import (
+    ApplicationDetailOut,
+    ApplicationListOut,
+    ApplicationOut,
+    PageOut,
+)
 from app.api.auth.deps import current_user
-from app.core.errors import ErrorEnvelope
+from app.core.errors import ErrorEnvelope, NotFoundError
+from app.db.repositories.application_detail import SqlReviewStore
 from app.db.repositories.applications import SqlApplicationStore
 
 router = APIRouter(tags=["applications"], dependencies=[Depends(current_user)])
@@ -35,3 +42,24 @@ async def list_applications(
         data=[ApplicationOut.model_validate(asdict(record)) for record in page.data],
         page=PageOut(next_cursor=page.next_cursor, has_more=page.next_cursor is not None),
     )
+
+
+@router.get(
+    "/applications/{application_id}",
+    response_model=ApplicationDetailOut,
+    responses={401: {"model": ErrorEnvelope}, 404: {"model": ErrorEnvelope}},
+)
+async def get_application(
+    application_id: UUID,
+    response: Response,
+    store: Annotated[SqlReviewStore, Depends(get_review_store)],
+) -> ApplicationDetailOut:
+    """The application with each document value beside the application value, failures marked.
+
+    The `ETag` is the application's `updated_at`: a decision sends it back as `If-Match`.
+    """
+    detail = await store.get_detail(application_id)
+    if detail is None:
+        raise NotFoundError("no such application")
+    response.headers["ETag"] = f'"{detail.updated_at.isoformat()}"'
+    return ApplicationDetailOut.model_validate(asdict(detail))

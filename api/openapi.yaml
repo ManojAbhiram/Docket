@@ -744,6 +744,7 @@ components:
         field_name: { type: string, enum: [name, father_name, dob, board, roll_number, marks, document_number] }
         subject: { type: [string, 'null'], description: "The subject for a marks row." }
         value: { type: string }
+        application_value: { type: [string, 'null'], description: "The value on the application this field is compared to, so the screen can show both side by side. Null when the application holds nothing to compare, for example a document number." }
         confidence: { type: [number, 'null'], minimum: 0, maximum: 1 }
         box:
           type: [array, 'null']

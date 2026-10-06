@@ -14,6 +14,7 @@ from uuid import UUID
 import structlog
 from fastapi import APIRouter, Depends, Query, Request, Response
 
+from app.api.applications.deps import get_review_store
 from app.api.applications.schemas import PageOut
 from app.api.auth.deps import current_user, get_settings_from_app, require_role, verify_csrf
 from app.api.documents.deps import get_rasteriser, get_upload_store
@@ -21,6 +22,7 @@ from app.api.documents.schemas import DocumentListOut, DocumentOut
 from app.api.uploads import read_one_file
 from app.core.config import Settings
 from app.core.errors import ErrorEnvelope, NotFoundError
+from app.db.repositories.application_detail import SqlReviewStore
 from app.db.repositories.uploads import SqlUploadStore
 from app.domain.auth import SessionUser
 from app.domain.uploads import (
@@ -99,6 +101,39 @@ async def list_documents(
     return DocumentListOut(
         data=[DocumentOut.model_validate(asdict(record)) for record in page.data],
         page=PageOut(next_cursor=page.next_cursor, has_more=page.next_cursor is not None),
+    )
+
+
+@router.get(
+    "/documents/{document_id}/image",
+    dependencies=[Depends(current_user)],
+    response_class=Response,
+    responses={
+        200: {"content": {"image/jpeg": {}, "image/png": {}}},
+        401: {"model": ErrorEnvelope},
+        404: {"model": ErrorEnvelope},
+    },
+)
+async def get_document_image(
+    document_id: UUID, store: Annotated[SqlReviewStore, Depends(get_review_store)]
+) -> Response:
+    """The stored page: always a re-encoded JPEG or PNG, served with fixed safe headers.
+
+    The name in `Content-Disposition` is made from the document id. The name the client uploaded
+    under is never stored and never sent back (ADR-0009).
+    """
+    page = await store.get_image(document_id)
+    if page is None:
+        raise NotFoundError("no such document")
+    suffix = "png" if page.content_type == "image/png" else "jpg"
+    return Response(
+        content=page.content,
+        media_type=page.content_type,
+        headers={
+            "X-Content-Type-Options": "nosniff",
+            "Cache-Control": "private, no-store",
+            "Content-Disposition": f'inline; filename="document-{document_id}.{suffix}"',
+        },
     )
 
 

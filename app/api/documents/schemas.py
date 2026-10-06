@@ -7,10 +7,7 @@ from uuid import UUID
 from pydantic import BaseModel
 
 from app.api.applications.schemas import PageOut
-
-DocumentType = Literal[
-    "10th_marksheet", "12th_marksheet", "id_proof", "transfer_certificate", "unknown"
-]
+from app.api.types import DocumentType
 
 
 class DocumentOut(BaseModel):
