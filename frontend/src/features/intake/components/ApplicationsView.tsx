@@ -1,4 +1,6 @@
-import { NoticeBox, type NoticeSpec } from "@/components/Notice";
+import type { ReactNode } from "react";
+
+import type { NoticeSpec } from "@/components/Notice";
 import { PageHeader } from "@/components/PageHeader";
 import { StatusBadge, type StatusKind } from "@/components/StatusBadge";
 import { Button } from "@/components/ui/button";
@@ -13,6 +15,7 @@ import {
 } from "@/components/ui/table";
 import { formatTime } from "@/features/applications/fixtures";
 import type { ApplicationStatus, ApplicationSummary } from "@/features/applications/types";
+import { ActionNotice } from "@/features/intake/components/ActionNotice";
 
 export type StatusFilter = "all" | ApplicationStatus;
 
@@ -23,18 +26,30 @@ const FILTERS: { value: StatusFilter; label: string }[] = [
   { value: "missing_documents", label: "Missing documents" },
 ];
 
-function statusOf(application: ApplicationSummary): StatusKind {
+/** What the list needs of an application. The API list has no document counts, so they are optional. */
+export type ListedApplication = Omit<ApplicationSummary, "documentsRead" | "documentsTotal"> &
+  Partial<Pick<ApplicationSummary, "documentsRead" | "documentsTotal">>;
+
+function statusOf(application: ListedApplication): StatusKind {
   return application.rejected ? "rejected" : application.status;
 }
 
 interface ApplicationsViewProps {
-  applications: ApplicationSummary[];
+  applications: ListedApplication[];
   filter?: StatusFilter;
   /** The server's total, so a partial page can say "20 of 5,000". */
   total?: number;
   loading?: boolean;
   offline?: boolean;
   notice?: NoticeSpec;
+  /** Wiring from the page. Without it the controls are inert, as in the design gallery. */
+  onFilter?: (filter: StatusFilter) => void;
+  onNoticeAction?: () => void;
+  onLoadMore?: () => void;
+  loadingMore?: boolean;
+  /** Replaces the row's buttons, for links. */
+  rowActions?: (application: ListedApplication) => ReactNode;
+  emptyAction?: ReactNode;
 }
 
 /** S-04: every application with its status, to find one and add its documents. */
@@ -45,8 +60,15 @@ export function ApplicationsView({
   loading = false,
   offline = false,
   notice,
+  onFilter,
+  onNoticeAction,
+  onLoadMore,
+  loadingMore = false,
+  rowActions,
+  emptyAction,
 }: ApplicationsViewProps) {
   const partial = total !== undefined && total > applications.length;
+  const showCounts = applications.every((a) => a.documentsTotal !== undefined);
   const filteredEmpty = !loading && !notice && applications.length === 0 && filter !== "all";
   const empty = !loading && !notice && applications.length === 0 && filter === "all";
   return (
@@ -67,6 +89,9 @@ export function ApplicationsView({
             variant={filter === value ? "default" : "outline"}
             aria-pressed={filter === value}
             className="min-h-11 sm:min-h-9"
+            onClick={() => {
+              onFilter?.(value);
+            }}
           >
             {label}
           </Button>
@@ -77,7 +102,7 @@ export function ApplicationsView({
           Offline. Showing what was loaded.
         </p>
       )}
-      {notice && <NoticeBox spec={notice} />}
+      {notice && <ActionNotice spec={notice} onAction={onNoticeAction} />}
       {loading && (
         <div className="space-y-2" aria-busy="true">
           {[0, 1, 2, 3, 4, 5].map((slot) => (
@@ -88,7 +113,7 @@ export function ApplicationsView({
       {empty && (
         <div className="space-y-3 py-8">
           <p className="text-lg">No applications yet.</p>
-          <Button className="min-h-11 sm:min-h-9">Import applications</Button>
+          {emptyAction ?? <Button className="min-h-11 sm:min-h-9">Import applications</Button>}
         </div>
       )}
       {filteredEmpty && (
@@ -96,7 +121,13 @@ export function ApplicationsView({
           <p className="text-lg">
             No applications are {FILTERS.find((f) => f.value === filter)?.label}.
           </p>
-          <Button variant="outline" className="min-h-11 sm:min-h-9">
+          <Button
+            variant="outline"
+            className="min-h-11 sm:min-h-9"
+            onClick={() => {
+              onFilter?.("all");
+            }}
+          >
             Clear filter
           </Button>
         </div>
@@ -110,9 +141,11 @@ export function ApplicationsView({
                   <TableHead scope="col">Application</TableHead>
                   <TableHead scope="col">Name</TableHead>
                   <TableHead scope="col">Status</TableHead>
-                  <TableHead scope="col" className="text-right">
-                    Documents read
-                  </TableHead>
+                  {showCounts && (
+                    <TableHead scope="col" className="text-right">
+                      Documents read
+                    </TableHead>
+                  )}
                   <TableHead scope="col">Changed</TableHead>
                   <TableHead scope="col">
                     <span className="sr-only">Actions</span>
@@ -127,17 +160,25 @@ export function ApplicationsView({
                     <TableCell>
                       <StatusBadge status={statusOf(application)} />
                     </TableCell>
-                    <TableCell data-numeric className="text-right">
-                      {application.documentsRead} of {application.documentsTotal}
-                    </TableCell>
+                    {showCounts && (
+                      <TableCell data-numeric className="text-right">
+                        {application.documentsRead} of {application.documentsTotal}
+                      </TableCell>
+                    )}
                     <TableCell>{formatTime(application.updatedAt)}</TableCell>
                     <TableCell className="space-x-2 text-right">
-                      <Button size="sm" variant="outline">
-                        Add documents
-                      </Button>
-                      <Button size="sm" variant="ghost">
-                        Open
-                      </Button>
+                      {rowActions ? (
+                        rowActions(application)
+                      ) : (
+                        <>
+                          <Button size="sm" variant="outline">
+                            Add documents
+                          </Button>
+                          <Button size="sm" variant="ghost">
+                            Open
+                          </Button>
+                        </>
+                      )}
                     </TableCell>
                   </TableRow>
                 ))}
@@ -155,16 +196,24 @@ export function ApplicationsView({
                   <StatusBadge status={statusOf(application)} />
                 </div>
                 <p>{application.name}</p>
-                <p data-numeric className="text-sm text-muted-foreground">
-                  {application.documentsRead} of {application.documentsTotal} documents read
-                </p>
+                {showCounts && (
+                  <p data-numeric className="text-sm text-muted-foreground">
+                    {application.documentsRead} of {application.documentsTotal} documents read
+                  </p>
+                )}
                 <div className="flex gap-2">
-                  <Button variant="outline" className="min-h-11 flex-1">
-                    Add documents
-                  </Button>
-                  <Button variant="ghost" className="min-h-11 flex-1">
-                    Open
-                  </Button>
+                  {rowActions ? (
+                    rowActions(application)
+                  ) : (
+                    <>
+                      <Button variant="outline" className="min-h-11 flex-1">
+                        Add documents
+                      </Button>
+                      <Button variant="ghost" className="min-h-11 flex-1">
+                        Open
+                      </Button>
+                    </>
+                  )}
                 </div>
               </li>
             ))}
@@ -176,8 +225,26 @@ export function ApplicationsView({
           <p data-numeric>
             {applications.length} of {new Intl.NumberFormat("en-IN").format(total)} shown.
           </p>
-          <Button variant="outline" className="min-h-11 sm:min-h-9" disabled={offline}>
-            Load more
+          <Button
+            variant="outline"
+            className="min-h-11 sm:min-h-9"
+            disabled={offline || loadingMore}
+            onClick={onLoadMore}
+          >
+            {loadingMore ? "Loading" : "Load more"}
+          </Button>
+        </div>
+      )}
+      {total === undefined && onLoadMore && (
+        <div className="flex flex-wrap items-center gap-3">
+          <p data-numeric>{applications.length} shown.</p>
+          <Button
+            variant="outline"
+            className="min-h-11 sm:min-h-9"
+            disabled={offline || loadingMore}
+            onClick={onLoadMore}
+          >
+            {loadingMore ? "Loading" : "Load more"}
           </Button>
         </div>
       )}

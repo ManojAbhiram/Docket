@@ -1,16 +1,36 @@
 import { FileDrop } from "@/components/FileDrop";
-import { NoticeBox, type NoticeSpec } from "@/components/Notice";
+import type { NoticeSpec } from "@/components/Notice";
 import { PageHeader } from "@/components/PageHeader";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import type { DocumentStatus, UploadedDocument } from "@/features/applications/types";
+import { ActionNotice } from "@/features/intake/components/ActionNotice";
 
 const STATUS_WORDS: Record<DocumentStatus, string> = {
   uploaded: "Uploaded",
   processing: "Reading",
   read: "Read",
   failed: "Failed",
+};
+
+export type BatchState = "waiting" | "uploading" | "stored" | "already" | "refused";
+
+/** One file the person chose, and where it is in the one-by-one upload. */
+export interface BatchItem {
+  key: string;
+  name: string;
+  state: BatchState;
+  /** Why the API refused it, in words. */
+  problem?: string;
+}
+
+const BATCH_WORDS: Record<BatchState, string> = {
+  waiting: "Waiting",
+  uploading: "Uploading",
+  stored: "Stored",
+  already: "Already stored",
+  refused: "Refused",
 };
 
 interface UploadViewProps {
@@ -21,6 +41,10 @@ interface UploadViewProps {
   readOnly?: boolean;
   offline?: boolean;
   notice?: NoticeSpec;
+  /** Wiring from the page. Without it the controls are inert, as in the design gallery. */
+  batch?: BatchItem[];
+  onFiles?: (files: File[]) => void;
+  onNoticeAction?: () => void;
 }
 
 function summary(documents: UploadedDocument[]): string {
@@ -40,6 +64,9 @@ export function UploadView({
   readOnly = false,
   offline = false,
   notice,
+  batch = [],
+  onFiles,
+  onNoticeAction,
 }: UploadViewProps) {
   const empty = !loading && !notice && documents.length === 0;
   return (
@@ -48,7 +75,7 @@ export function UploadView({
         title={`Documents for ${reference}`}
         description="Read on this machine. Nothing is sent anywhere."
       />
-      {notice && <NoticeBox spec={notice} />}
+      {notice && <ActionNotice spec={notice} onAction={onNoticeAction} />}
       {offline && (
         <p role="status" className="text-muted-foreground">
           You are offline. Connect to upload.
@@ -62,7 +89,35 @@ export function UploadView({
           accept="image/jpeg,image/png,application/pdf"
           multiple
           disabled={offline}
+          {...(onFiles && { onFiles })}
         />
+      )}
+      {batch.length > 0 && (
+        <section aria-labelledby="batch-heading" className="space-y-3">
+          <h2 id="batch-heading" className="text-xl">
+            Files
+          </h2>
+          <ul className="space-y-2">
+            {batch.map((item) => (
+              <li key={item.key} className="space-y-1 rounded-md border border-border bg-card p-4">
+                <div className="flex flex-wrap items-center justify-between gap-2">
+                  <span className="font-mono">{item.name}</span>
+                  <Badge
+                    variant="outline"
+                    className={
+                      item.state === "refused"
+                        ? "border-transparent bg-danger-subtle text-sm text-destructive"
+                        : "text-sm"
+                    }
+                  >
+                    {BATCH_WORDS[item.state]}
+                  </Badge>
+                </div>
+                {item.problem && <p role="alert">{item.problem}</p>}
+              </li>
+            ))}
+          </ul>
+        </section>
       )}
       {loading && (
         <div className="space-y-2" aria-busy="true">
@@ -108,7 +163,7 @@ export function UploadView({
                 {document.problem && (
                   <div className="space-y-2">
                     <p>{document.problem}</p>
-                    {document.status === "failed" && !readOnly && (
+                    {document.status === "failed" && !readOnly && onFiles === undefined && (
                       <Button variant="outline" size="sm" className="min-h-11 sm:min-h-8">
                         Reprocess
                       </Button>

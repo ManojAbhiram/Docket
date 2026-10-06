@@ -9,6 +9,8 @@ interface FileDropProps {
   accept: string;
   multiple?: boolean;
   disabled?: boolean;
+  /** Called with the chosen files. Without it the picker is inert, as in the design gallery. */
+  onFiles?: (files: File[]) => void;
 }
 
 /** A file picker in a drop area at least 96 px tall, with a 48 px control inside. */
@@ -19,6 +21,7 @@ export function FileDrop({
   accept,
   multiple = false,
   disabled = false,
+  onFiles,
 }: FileDropProps) {
   return (
     <div className="min-h-24 space-y-3 rounded-md border border-dashed border-input p-6">
@@ -29,6 +32,9 @@ export function FileDrop({
         accept={accept}
         multiple={multiple}
         disabled={disabled}
+        onChange={(event) => {
+          onFiles?.(Array.from(event.target.files ?? []));
+        }}
         className="h-12 py-2.5"
       />
       <p className="text-sm text-muted-foreground">{hint}</p>

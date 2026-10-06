@@ -40,6 +40,10 @@ interface ImportViewProps {
   offline?: boolean;
   notice?: NoticeSpec;
   result?: ImportResult;
+  /** Wiring from the page. Without it the controls are inert, as in the design gallery. */
+  onFile?: (file: File | null) => void;
+  onImport?: () => void;
+  onViewApplications?: () => void;
 }
 
 /** S-03: load applications from a CSV and say which rows were refused and why. */
@@ -49,6 +53,9 @@ export function ImportView({
   offline = false,
   notice,
   result,
+  onFile,
+  onImport,
+  onViewApplications,
 }: ImportViewProps) {
   return (
     <div className="space-y-6">
@@ -68,8 +75,16 @@ export function ImportView({
         hint="One .csv file in UTF-8. Rows already imported are skipped."
         accept=".csv,text/csv"
         disabled={busy || offline}
+        onFiles={(files) => {
+          onFile?.(files[0] ?? null);
+        }}
       />
-      <Button size="lg" className="min-h-12" disabled={busy || offline || !fileName}>
+      <Button
+        size="lg"
+        className="min-h-12"
+        disabled={busy || offline || !fileName}
+        onClick={onImport}
+      >
         {busy ? "Importing" : "Import applications"}
       </Button>
       {offline && (
@@ -77,12 +92,18 @@ export function ImportView({
           You are offline. Connect to import.
         </p>
       )}
-      {result && <ImportOutcome result={result} />}
+      {result && <ImportOutcome result={result} onViewApplications={onViewApplications} />}
     </div>
   );
 }
 
-function ImportOutcome({ result }: { result: ImportResult }) {
+function ImportOutcome({
+  result,
+  onViewApplications,
+}: {
+  result: ImportResult;
+  onViewApplications?: (() => void) | undefined;
+}) {
   const refused = result.refused.length;
   return (
     <section aria-labelledby="import-result" className="space-y-4">
@@ -116,7 +137,7 @@ function ImportOutcome({ result }: { result: ImportResult }) {
           </Table>
         </>
       )}
-      <Button variant="outline" className="min-h-11 sm:min-h-9">
+      <Button variant="outline" className="min-h-11 sm:min-h-9" onClick={onViewApplications}>
         View applications
       </Button>
     </section>
