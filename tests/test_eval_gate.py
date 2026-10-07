@@ -7,6 +7,7 @@ import pytest
 
 from app.gateway.engines import RecordedEngine
 from app.gateway.types import OcrResult, OcrWord
+from evals.extraction_report import render
 from evals.gate_check import check, parse_gate
 from evals.recordings import record
 from seed.dataset import build_dataset
@@ -99,3 +100,52 @@ def test_recording_a_document_that_cannot_be_read_stops_instead_of_skipping_it(
 
     with pytest.raises(FileNotFoundError):
         record(_Fixed(), [doc], tmp_path, tmp_path / "rec.json")
+
+
+def _summary(engine: str, subset: str, mean: float, documents: int = 30) -> dict[str, object]:
+    return {
+        "engine": engine,
+        "subset": subset,
+        "documents": documents,
+        "read_errors": 2,
+        "type_accuracy": 0.9333,
+        "field_accuracy": {"name": 0.8123, "marks": mean},
+        "by_doc_type": {"id_proof": {"name": 0.7777}},
+        "mean_field_accuracy": mean,
+        "failed_documents": ["SYN-DOC-001"],
+    }
+
+
+def test_the_report_says_so_when_there_are_no_summaries() -> None:
+    assert "no summaries; run make eval-extract" in render([])
+
+
+def test_the_report_carries_the_numbers_it_was_given() -> None:
+    text = render([_summary("rapidocr", "all", 0.9123)])
+
+    assert "0.9123" in text
+    assert "0.8123" in text
+    assert "0.7777" in text
+    assert "0.9333" in text
+    assert "Read errors" in text
+
+
+def test_the_report_puts_two_engines_side_by_side_on_the_comparison_subset() -> None:
+    summaries = [
+        _summary("rapidocr", "compare10", 0.9511, documents=10),
+        _summary("tesseract", "compare10", 0.2022, documents=10),
+    ]
+
+    text = render(summaries)
+
+    assert "0.9511" in text
+    assert "0.2022" in text
+    assert "Comparison on 10 documents" in text
+
+
+def test_a_perfect_score_brings_the_clean_page_caveat() -> None:
+    assert "cannot separate" in render([_summary("rapidocr", "all", 1.0)])
+
+
+def test_a_score_below_perfect_does_not_claim_the_set_cannot_separate_engines() -> None:
+    assert "cannot separate" not in render([_summary("rapidocr", "all", 0.95)])

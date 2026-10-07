@@ -22,7 +22,7 @@ define need_tool
 command -v $(UV) >/dev/null || $(call skip,$(1),uv); $(UV) run --quiet $(2) --version >/dev/null 2>&1 || $(call skip,$(1),$(2))
 endef
 
-.PHONY: help setup dev seed-accounts check check-file fix test test-integration lint typecheck format format-check migrate migrate-verify migrate-down migrate-new vuln eval-extract eval-record eval-gate doctor db db-reset clean
+.PHONY: help setup dev seed-accounts check check-file fix test test-integration lint typecheck format format-check migrate migrate-verify migrate-down migrate-new vuln eval-extract eval-record eval-gate eval-report doctor db db-reset clean
 
 help: ## List targets
 	@grep -E '^[a-zA-Z_-]+:.*?## ' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*?## "}; {printf "  %-18s %s\n", $$1, $$2}'
@@ -88,6 +88,9 @@ eval-gate: ## Replay the recording and compare with evals/ocr/gate.yaml (no live
 	$(UV) run python -m evals.gate_check evals/ocr/extraction/recorded-all.summary.json; rc=$$?; \
 	if [ "$$rc" -eq 2 ] && [ "$(EVAL_ALLOW_NO_BASELINE)" = "1" ]; then echo "eval-gate: no baseline accepted yet, nothing gated (EVAL_ALLOW_NO_BASELINE=1)"; exit 0; fi; \
 	exit $$rc
+
+eval-report: ## Write docs/testing/extraction-accuracy.md from the eval summaries
+	$(UV) run python -m evals.extraction_report
 
 check: ## The gate: every gate in GATES, then the tally. CI runs exactly this.
 	@mkdir -p $(STATE); rm -f $(SKIPPED) $(STATE)/.check-passed

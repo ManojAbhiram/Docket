@@ -1,0 +1,47 @@
+{
+ "by_doc_type": {
+  "10th_marksheet": {
+   "board": 1.0,
+   "dob": 1.0,
+   "father_name": 1.0,
+   "marks": 1.0,
+   "name": 1.0,
+   "roll_number": 1.0
+  },
+  "12th_marksheet": {
+   "board": 1.0,
+   "dob": 1.0,
+   "father_name": 1.0,
+   "marks": 1.0,
+   "name": 1.0,
+   "roll_number": 1.0
+  },
+  "id_proof": {
+   "dob": 1.0,
+   "document_number": 1.0,
+   "name": 1.0
+  },
+  "transfer_certificate": {
+   "dob": 1.0,
+   "document_number": 1.0,
+   "father_name": 1.0,
+   "name": 1.0
+  }
+ },
+ "documents": 10,
+ "engine": "rapidocr",
+ "failed_documents": [],
+ "field_accuracy": {
+  "board": 1.0,
+  "dob": 1.0,
+  "document_number": 1.0,
+  "father_name": 1.0,
+  "marks": 1.0,
+  "name": 1.0,
+  "roll_number": 1.0
+ },
+ "mean_field_accuracy": 1.0,
+ "read_errors": 0,
+ "subset": "compare10",
+ "type_accuracy": 1.0
+}

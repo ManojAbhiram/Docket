@@ -1,0 +1,58 @@
+{
+ "by_doc_type": {
+  "10th_marksheet": {
+   "board": 0.0,
+   "dob": 0.0,
+   "father_name": 0.0,
+   "marks": 0.0,
+   "name": 0.0,
+   "roll_number": 0.0
+  },
+  "12th_marksheet": {
+   "board": 0.0,
+   "dob": 0.0,
+   "father_name": 0.0,
+   "marks": 0.0,
+   "name": 0.0,
+   "roll_number": 0.25
+  },
+  "id_proof": {
+   "dob": 0.3333,
+   "document_number": 0.0,
+   "name": 0.0
+  },
+  "transfer_certificate": {
+   "dob": 0.0,
+   "document_number": 0.0,
+   "father_name": 0.0,
+   "name": 0.0
+  }
+ },
+ "documents": 10,
+ "engine": "tesseract",
+ "failed_documents": [
+  "SYN-DOC-023",
+  "SYN-DOC-004",
+  "SYN-DOC-020",
+  "SYN-DOC-007",
+  "SYN-DOC-018",
+  "SYN-DOC-027",
+  "SYN-DOC-022",
+  "SYN-DOC-005",
+  "SYN-DOC-016",
+  "SYN-DOC-012"
+ ],
+ "field_accuracy": {
+  "board": 0.0,
+  "dob": 0.1,
+  "document_number": 0.0,
+  "father_name": 0.0,
+  "marks": 0.0,
+  "name": 0.0,
+  "roll_number": 0.1667
+ },
+ "mean_field_accuracy": 0.0274,
+ "read_errors": 0,
+ "subset": "noisy",
+ "type_accuracy": 1.0
+}

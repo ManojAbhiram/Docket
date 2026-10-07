@@ -1,0 +1,75 @@
+{
+ "by_doc_type": {
+  "10th_marksheet": {
+   "board": 0.0,
+   "dob": 0.0,
+   "father_name": 0.0,
+   "marks": 0.1714,
+   "name": 0.0,
+   "roll_number": 0.0
+  },
+  "12th_marksheet": {
+   "board": 0.375,
+   "dob": 0.5,
+   "father_name": 0.375,
+   "marks": 0.2,
+   "name": 0.375,
+   "roll_number": 0.625
+  },
+  "id_proof": {
+   "dob": 0.5,
+   "document_number": 0.25,
+   "name": 0.25
+  },
+  "transfer_certificate": {
+   "dob": 0.4286,
+   "document_number": 0.1429,
+   "father_name": 0.5714,
+   "name": 0.2857
+  }
+ },
+ "documents": 30,
+ "engine": "tesseract",
+ "failed_documents": [
+  "SYN-DOC-001",
+  "SYN-DOC-002",
+  "SYN-DOC-003",
+  "SYN-DOC-004",
+  "SYN-DOC-005",
+  "SYN-DOC-006",
+  "SYN-DOC-007",
+  "SYN-DOC-008",
+  "SYN-DOC-009",
+  "SYN-DOC-010",
+  "SYN-DOC-011",
+  "SYN-DOC-012",
+  "SYN-DOC-013",
+  "SYN-DOC-015",
+  "SYN-DOC-016",
+  "SYN-DOC-018",
+  "SYN-DOC-019",
+  "SYN-DOC-020",
+  "SYN-DOC-021",
+  "SYN-DOC-022",
+  "SYN-DOC-023",
+  "SYN-DOC-024",
+  "SYN-DOC-026",
+  "SYN-DOC-027",
+  "SYN-DOC-028",
+  "SYN-DOC-029",
+  "SYN-DOC-030"
+ ],
+ "field_accuracy": {
+  "board": 0.2,
+  "dob": 0.3667,
+  "document_number": 0.2,
+  "father_name": 0.3182,
+  "marks": 0.1867,
+  "name": 0.2333,
+  "roll_number": 0.3333
+ },
+ "mean_field_accuracy": 0.2475,
+ "read_errors": 0,
+ "subset": "all",
+ "type_accuracy": 1.0
+}
