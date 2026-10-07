@@ -15,7 +15,13 @@ URL = "postgresql+asyncpg://app:{password}@localhost:5432/docket"
 
 
 def make(**overrides: object) -> Settings:
-    base: dict[str, object] = {"env": "test", "database_url": URL.format(password="s3cretvalue")}
+    # Regression: ISSUE-001 [NOTASK-2], found by /qa on 2026-10-07. Without `_env_file` a local
+    # .env leaked into these settings and failed two tests on a machine that has one.
+    base: dict[str, object] = {
+        "_env_file": None,
+        "env": "test",
+        "database_url": URL.format(password="s3cretvalue"),
+    }
     return Settings.model_validate(base | overrides)
 
 
@@ -59,7 +65,7 @@ def test_development_and_test_may_use_the_example_password(env: str) -> None:
 
 def test_a_missing_database_url_is_refused_and_named() -> None:
     with pytest.raises(ValidationError, match="database_url"):
-        Settings.model_validate({"env": "test"})
+        Settings.model_validate({"_env_file": None, "env": "test"})
 
 
 def test_every_setting_is_documented_in_the_example_file() -> None:
