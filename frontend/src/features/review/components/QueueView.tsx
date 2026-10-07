@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 import { ActionNotice } from "@/components/ActionNotice";
 import { Kbd } from "@/components/Kbd";
@@ -23,6 +23,8 @@ export interface QueueRow {
 
 interface QueueViewProps {
   items: QueueRow[];
+  /** Put focus on "Review next" once there is something to review, after a saved decision. */
+  focusReviewNext?: boolean;
   /** The server's total, so a partial page can say "20 of 611". */
   total?: number;
   loading?: boolean;
@@ -43,6 +45,7 @@ interface QueueViewProps {
 /** S-06: the flagged applications a verifier still has to decide, newest change first. */
 export function QueueView({
   items,
+  focusReviewNext = false,
   total,
   loading = false,
   offline = false,
@@ -55,6 +58,13 @@ export function QueueView({
   onDashboard,
 }: QueueViewProps) {
   const [selected, setSelected] = useState(0);
+  const reviewNextRef = useRef<HTMLButtonElement>(null);
+  const hasItems = items.length > 0;
+  useEffect(() => {
+    if (focusReviewNext && hasItems && !offline) {
+      reviewNextRef.current?.focus();
+    }
+  }, [focusReviewNext, hasItems, offline]);
   const reviewNext = () => {
     const first = items[0];
     if (first && !offline) {
@@ -84,6 +94,7 @@ export function QueueView({
         }
         actions={
           <Button
+            ref={reviewNextRef}
             className="min-h-11 sm:min-h-9"
             disabled={items.length === 0 || offline}
             onClick={reviewNext}

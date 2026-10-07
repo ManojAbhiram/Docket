@@ -365,39 +365,39 @@ describe("deciding an application", () => {
     await waitFor(() => {
       expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
     });
-    expect(served.gets).toBeGreaterThanOrEqual(2);
   });
 
-  it("shows the refreshed application after a decision", async () => {
-    let current = detail();
-    serve(() => current, {
-      post: () => {
-        current = detail({ status: "verified" });
-        return HttpResponse.json(
-          {
-            id: "d1",
-            application_id: APPLICATION_ID,
-            action: "approve",
-            reason: null,
-            extracted_field_id: null,
-            decided_by: "x",
-            created_at: "2026-10-06T10:00:00Z",
-            application_status: "verified",
-          },
-          { status: 201 },
-        );
-      },
-    });
+  // Regression: ISSUE-006 [NOTASK-2], design decision 3A. After a decision the verifier went on
+  // looking at the application instead of going back to the queue.
+  it("returns to the review queue after a decision, with focus on Review next", async () => {
+    serve(detail());
+    server.use(
+      http.get("*/api/applications", () =>
+        HttpResponse.json({
+          data: [
+            {
+              id: "b",
+              application_ref: "SYN-APP-009",
+              full_name: "Ishita Nair",
+              status: "needs_review",
+              rejected: false,
+              updated_at: "2026-10-05T09:12:41Z",
+            },
+          ],
+          page: { next_cursor: null, has_more: false },
+        }),
+      ),
+    );
     renderCompare();
     const dialog = await openDialog();
 
     await userEvent.click(within(dialog).getByRole("radio", { name: /Approve/ }));
     await userEvent.click(within(dialog).getByRole("button", { name: "Save decision" }));
 
+    expect(await screen.findByRole("heading", { name: "Review queue" })).toBeInTheDocument();
     await waitFor(() => {
-      expect(screen.getByText("Verified")).toBeInTheDocument();
+      expect(screen.getByRole("button", { name: /Review next/ })).toHaveFocus();
     });
-    expect(screen.queryByRole("button", { name: /Decide/ })).not.toBeInTheDocument();
   });
 
   it("corrects the chosen field with its new value", async () => {

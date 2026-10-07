@@ -20,6 +20,8 @@ interface DecisionDialogProps {
   fields: CorrectableField[];
   open: boolean;
   onClose: () => void;
+  /** Called once a decision is saved, after the dialog closes. */
+  onSaved?: () => void;
   /** Reload the application and say what status it has now. */
   reload: () => Promise<string | undefined>;
 }
@@ -46,6 +48,7 @@ export function DecisionDialog({
   fields,
   open,
   onClose,
+  onSaved,
   reload,
 }: DecisionDialogProps) {
   const decide = useDecide(applicationId);
@@ -64,6 +67,7 @@ export function DecisionDialog({
         onSuccess: () => {
           toast.success("Decision saved");
           onClose();
+          onSaved?.();
         },
         onError: (error) => {
           void (async () => {

@@ -86,6 +86,9 @@ export function ComparePage() {
           onClose={() => {
             setDeciding(false);
           }}
+          onSaved={() => {
+            void navigate({ to: "/queue", search: { decided: true } });
+          }}
           reload={async () => (await loaded.refetch()).data?.application.status}
         />
       )}

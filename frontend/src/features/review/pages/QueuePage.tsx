@@ -1,4 +1,4 @@
-import { useNavigate } from "@tanstack/react-router";
+import { useNavigate, useSearch } from "@tanstack/react-router";
 
 import { QueueView, type QueueRow } from "@/features/review/components/QueueView";
 import { useQueue } from "@/features/review/hooks";
@@ -8,6 +8,7 @@ import { ApiError } from "@/lib/api";
 export function QueuePage() {
   const navigate = useNavigate();
   const queue = useQueue();
+  const { decided } = useSearch({ strict: false });
   const rows: QueueRow[] =
     queue.data?.pages.flatMap((page) =>
       page.data.map((item) => ({
@@ -23,6 +24,7 @@ export function QueuePage() {
   return (
     <QueueView
       items={rows}
+      focusReviewNext={decided === true}
       loading={queue.isPending}
       loadingMore={queue.isFetchingNextPage}
       hasMore={queue.hasNextPage}
