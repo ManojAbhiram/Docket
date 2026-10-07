@@ -1,5 +1,5 @@
 import { createMemoryHistory } from "@tanstack/react-router";
-import { render, screen, waitFor } from "@testing-library/react";
+import { act, render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { http, HttpResponse } from "msw";
 import { describe, expect, it } from "vitest";
@@ -32,7 +32,26 @@ describe("signing in", () => {
     renderAt("/applications");
 
     expect(await screen.findByRole("heading", { name: "Sign in to Docket" })).toBeInTheDocument();
-    expect(screen.getByText("You were signed out.")).toBeInTheDocument();
+    // Regression: ISSUE-003 [NOTASK-2]. A first-time visitor was told they had been signed out.
+    expect(screen.queryByText("You were signed out.")).not.toBeInTheDocument();
+  });
+
+  it("says the session ended when a signed-in person loses it mid-visit", async () => {
+    fakeSession({ startAs: "verifier" });
+    const queryClient = createTestQueryClient();
+    render(
+      <App
+        queryClient={queryClient}
+        history={createMemoryHistory({ initialEntries: ["/queue"] })}
+      />,
+    );
+    await screen.findByRole("heading", { name: "Review queue" });
+
+    act(() => {
+      queryClient.setQueryData(["auth", "me"], null);
+    });
+
+    expect(await screen.findByText("You were signed out.")).toBeInTheDocument();
   });
 
   it("opens the review queue for a verifier", async () => {

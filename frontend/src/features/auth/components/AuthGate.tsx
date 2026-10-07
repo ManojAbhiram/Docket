@@ -1,10 +1,21 @@
-import { useSuspenseQuery } from "@tanstack/react-query";
+import { useQueryClient, useSuspenseQuery } from "@tanstack/react-query";
 import { Navigate, Outlet } from "@tanstack/react-router";
 import type { ReactNode } from "react";
 
 import { Notice } from "@/components/Notice";
-import { meQueryOptions } from "@/features/auth/hooks";
+import { authKeys, meQueryOptions } from "@/features/auth/hooks";
 import type { Role } from "@/features/auth/schemas";
+
+/**
+ * Where to send a browser with no session. It says "you were signed out" only when the session
+ * check has answered more than once: the first answer is the visit's own, so a person who never
+ * signed in is not told they were.
+ */
+function SignInRedirect() {
+  const client = useQueryClient();
+  const answers = client.getQueryState(authKeys.me())?.dataUpdateCount ?? 0;
+  return <Navigate to="/sign-in" search={answers > 1 ? { reason: "ended" } : {}} replace />;
+}
 
 /**
  * AuthGate wraps every route that needs a session. With no live session it sends the browser to
@@ -14,7 +25,7 @@ import type { Role } from "@/features/auth/schemas";
 export function AuthGate() {
   const { data: me } = useSuspenseQuery(meQueryOptions());
   if (me === null) {
-    return <Navigate to="/sign-in" search={{ reason: "ended" }} replace />;
+    return <SignInRedirect />;
   }
   return <Outlet />;
 }
@@ -23,7 +34,7 @@ export function AuthGate() {
 export function RequireRole({ roles, children }: { roles: Role[]; children: ReactNode }) {
   const { data: me } = useSuspenseQuery(meQueryOptions());
   if (me === null) {
-    return <Navigate to="/sign-in" search={{ reason: "ended" }} replace />;
+    return <SignInRedirect />;
   }
   if (!roles.includes(me.role)) {
     return (
