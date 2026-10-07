@@ -1,5 +1,6 @@
 import { ActionNotice } from "@/components/ActionNotice";
 import { FileDrop } from "@/components/FileDrop";
+import { ListRow } from "@/components/ListRow";
 import type { NoticeSpec } from "@/components/Notice";
 import { PageHeader } from "@/components/PageHeader";
 import { Badge } from "@/components/ui/badge";
@@ -99,7 +100,7 @@ export function UploadView({
           </h2>
           <ul className="space-y-2">
             {batch.map((item) => (
-              <li key={item.key} className="space-y-1 rounded-md border border-border bg-card p-4">
+              <ListRow key={item.key} className="space-y-1 p-4">
                 <div className="flex flex-wrap items-center justify-between gap-2">
                   <span className="font-mono">{item.name}</span>
                   <Badge
@@ -114,7 +115,7 @@ export function UploadView({
                   </Badge>
                 </div>
                 {item.problem && <p role="alert">{item.problem}</p>}
-              </li>
+              </ListRow>
             ))}
           </ul>
         </section>
@@ -141,11 +142,7 @@ export function UploadView({
           </p>
           <ul className="space-y-2">
             {documents.map((document) => (
-              <li
-                key={document.id}
-                data-motion="settle"
-                className="space-y-2 rounded-md border border-border bg-card p-4"
-              >
+              <ListRow key={document.id} data-motion="settle" className="space-y-2 p-4">
                 <div className="flex flex-wrap items-center justify-between gap-2">
                   <span className="font-mono">{document.fileName}</span>
                   <Badge
@@ -170,7 +167,7 @@ export function UploadView({
                     )}
                   </div>
                 )}
-              </li>
+              </ListRow>
             ))}
           </ul>
         </section>

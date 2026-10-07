@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 
 import { ActionNotice } from "@/components/ActionNotice";
 import { Kbd } from "@/components/Kbd";
+import { ListRow } from "@/components/ListRow";
 import type { NoticeSpec } from "@/components/Notice";
 import { PageHeader } from "@/components/PageHeader";
 import { StatusBadge } from "@/components/StatusBadge";
@@ -9,7 +10,6 @@ import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { formatTime } from "@/features/applications/fixtures";
 import { useHotkeys } from "@/lib/hotkeys";
-import { cn } from "@/lib/utils";
 
 /** What a queue row needs. The gallery's summaries and the API's applications both have it. */
 export interface QueueRow {
@@ -127,13 +127,12 @@ export function QueueView({
       {items.length > 0 && (
         <ul className="divide-y divide-border rounded-md border border-border bg-card">
           {items.map((item, index) => (
-            <li
+            <ListRow
               key={item.id}
-              aria-current={index === selected ? "true" : undefined}
-              className={cn(
-                "grid min-h-14 items-center gap-x-4 gap-y-1 px-4 py-3 md:grid-cols-[9rem_1fr_1fr_auto_auto]",
-                index === selected && "bg-accent",
-              )}
+              variant="ruled"
+              interactive
+              selected={index === selected}
+              className="grid min-h-14 items-center gap-x-4 gap-y-1 px-4 py-3 md:grid-cols-[9rem_1fr_1fr_auto_auto]"
             >
               <span className="font-mono">{item.ref}</span>
               <span>{item.name}</span>
@@ -153,7 +152,7 @@ export function QueueView({
                   Open
                 </Button>
               </span>
-            </li>
+            </ListRow>
           ))}
         </ul>
       )}

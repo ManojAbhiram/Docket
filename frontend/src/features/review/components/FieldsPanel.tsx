@@ -2,6 +2,7 @@ import { Check, Minus, TriangleAlert, X, type LucideIcon } from "lucide-react";
 import type { ReactNode } from "react";
 
 import { ConfidenceBadge } from "@/components/ConfidenceBadge";
+import { ListRow } from "@/components/ListRow";
 import { Button } from "@/components/ui/button";
 import {
   Table,
@@ -98,7 +99,7 @@ export function FieldsPanel({ fields, selectedId, onSelect, image, imageNote }: 
         </div>
         <ul className="space-y-2 md:hidden">
           {ordered.map((field) => (
-            <li key={field.id} className="rounded-md border border-border bg-card">
+            <ListRow key={field.id} interactive selected={field.id === selectedId}>
               <Button
                 variant="ghost"
                 className="h-auto min-h-11 w-full flex-col items-stretch gap-2 p-4 text-left whitespace-normal"
@@ -115,7 +116,7 @@ export function FieldsPanel({ fields, selectedId, onSelect, image, imageNote }: 
                 <span className="font-mono text-sm">Document: {field.documentValue || "none"}</span>
                 <ConfidenceBadge confidence={field.confidence} />
               </Button>
-            </li>
+            </ListRow>
           ))}
         </ul>
       </div>
