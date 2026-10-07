@@ -19,7 +19,12 @@ function rateLimited(error: ApiError): SignInOutcome {
 export function registerOutcome(error: unknown): SignInOutcome {
   if (error instanceof ApiError) {
     if (error.status === 409) {
-      return { notice: { title: "That username is taken.", body: "Choose another." } };
+      return {
+        notice: {
+          title: "That username is taken.",
+          body: "Choose another, or sign in if this was you.",
+        },
+      };
     }
     if (error.status === 422) {
       return {

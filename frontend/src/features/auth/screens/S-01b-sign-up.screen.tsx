@@ -10,7 +10,12 @@ export const screen: ScreenModule["screen"] = {
     loading: () => <SignUpView busy />,
     empty: () => <SignUpView />,
     "error: conflict": () => (
-      <SignUpView notice={{ title: "That username is taken.", body: "Choose another." }} />
+      <SignUpView
+        notice={{
+          title: "That username is taken.",
+          body: "Choose another, or sign in if this was you.",
+        }}
+      />
     ),
     "error: rate_limited": () => (
       <SignUpView

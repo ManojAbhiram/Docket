@@ -28,5 +28,6 @@ We will allow open sign up with a self-chosen role. The engineer chose this on 2
 
 - Easier: anyone can try the product at once, with no admin work.
 - Harder: anyone can register as a verifier and approve applications (threat T-38, accepted). Mitigations that bear on escalation are few: every decision is logged with its actor, and the per-source sign up limit only slows bulk registration. Nothing stops a person choosing the verifier role. The Argon2 hash slots are a CPU and memory control for hashing, not a privilege control.
+- Decisions store the actor by user id, but the decision log, the dashboard and the export show `users.display_name`, which an anonymous caller chooses freely and which is not unique. The shown name is self-chosen and not unique; the id is the true actor.
 - A taken username answers 409, so usernames can be enumerated. Accepted for the same reason.
 - Revisit before any real student data. Options then are an access code for the verifier role, or Option B or C once an admin role exists.
