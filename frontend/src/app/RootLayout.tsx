@@ -32,17 +32,25 @@ export function RootLayout() {
   const pathname = useRouterState({ select: (state) => state.location.pathname });
   return (
     <div className="min-h-svh bg-background text-foreground">
+      <p className="flex h-8 items-center justify-center bg-muted px-4 text-center text-sm text-muted-foreground">
+        Synthetic data only. No real student records.
+      </p>
       <header className="border-b">
         <nav
           aria-label="Main"
           className={`mx-auto flex ${mainWidthClass(pathname)} flex-wrap items-center gap-4 px-4 py-3`}
         >
-          <Link to="/" className="font-semibold">
+          <Link to="/" className="inline-flex min-h-11 items-center font-semibold sm:min-h-9">
             Docket
           </Link>
           {me &&
             LINKS.filter((link) => link.roles.includes(me.role)).map((link) => (
-              <Link key={link.to} to={link.to} className="text-sm hover:underline">
+              <Link
+                key={link.to}
+                to={link.to}
+                className="inline-flex min-h-11 items-center px-1 text-sm underline-offset-8 hover:underline sm:min-h-9"
+                activeProps={{ className: "font-semibold text-primary underline decoration-2" }}
+              >
                 {link.label}
               </Link>
             ))}
