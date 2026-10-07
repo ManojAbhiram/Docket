@@ -19,11 +19,12 @@ from app.domain.classify import classify
 from app.domain.extract import extract_fields
 from app.gateway.types import Engine, EngineError, RecordingMissingError
 from evals.extraction import DocumentScore, expected_values, score_document
+from evals.subsets import compare_ten, noisiest
 from seed.dataset import DocumentRecord, build_dataset
 
 READ_ERROR = "read_error"
-ENGINE_NAMES = ("rapidocr", "recorded")
-SUBSET_NAMES = ("all",)
+ENGINE_NAMES = ("rapidocr", "tesseract", "recorded")
+SUBSET_NAMES = ("all", "compare10", "noisy")
 
 
 def run_documents(
@@ -77,6 +78,11 @@ def summarise(scores: Sequence[DocumentScore], engine_name: str, subset: str) ->
     }
 
 
+def default_cutoff() -> float:
+    """The app's own default, read from Settings without needing a database URL to build one."""
+    return float(Settings.model_fields["review_confidence_cutoff"].default)
+
+
 def _mean(values: Sequence[bool]) -> float:
     return round(sum(values) / len(values), 4) if values else 0.0
 
@@ -93,8 +99,20 @@ def _build_engine(name: str, recording: Path | None) -> Engine:
         from app.gateway.rapidocr_engine import RapidOcrEngine
 
         return RapidOcrEngine()
+    if name == "tesseract":
+        from evals.tesseract_engine import TesseractEngine
+
+        return TesseractEngine()
     msg = f"unknown engine {name}"
     raise SystemExit(msg)
+
+
+def _subset(name: str, docs: list[DocumentRecord]) -> list[DocumentRecord]:
+    if name == "compare10":
+        return compare_ten(docs)
+    if name == "noisy":
+        return noisiest(docs)
+    return docs
 
 
 def main(argv: Sequence[str] | None = None) -> int:
@@ -107,8 +125,8 @@ def main(argv: Sequence[str] | None = None) -> int:
     args = parser.parse_args(argv)
 
     engine = _build_engine(args.engine, args.recording)
-    docs = list(build_dataset().documents)
-    cutoff = Settings(_env_file=None).review_confidence_cutoff
+    docs = _subset(args.subset, list(build_dataset().documents))
+    cutoff = default_cutoff()
     scores = run_documents(engine, docs, args.png_dir, cutoff)
     summary = summarise(scores, args.engine, args.subset)
 
