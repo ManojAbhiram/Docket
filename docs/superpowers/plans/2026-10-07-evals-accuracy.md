@@ -69,8 +69,13 @@ from seed.dataset import build_dataset
 
 def _field(name: str, value: str, subject: str | None = None) -> ExtractedField:
     return ExtractedField(
-        field_name=name, subject=subject, value=value, confidence=0.99,
-        box=None, needs_review=False, review_reason=None,
+        field_name=name,
+        subject=subject,
+        value=value,
+        confidence=0.99,
+        box=None,
+        needs_review=False,
+        review_reason=None,
     )
 
 
@@ -106,7 +111,8 @@ def test_names_are_compared_ignoring_case_and_word_order() -> None:
     fields = [_field(n, v, s) for (n, s), v in expected_values(doc).items()]
     swapped = [
         _field("name", " ".join(reversed(doc.printed_name.upper().split())))
-        if f.field_name == "name" else f
+        if f.field_name == "name"
+        else f
         for f in fields
     ]
     assert score_document(doc, "10th_marksheet", swapped).correct[("name", None)]
@@ -116,7 +122,9 @@ def test_a_missing_field_and_a_wrong_value_are_both_incorrect() -> None:
     doc = _doc("10th_marksheet")
     fields = [_field(n, v, s) for (n, s), v in expected_values(doc).items()]
     fields = [f for f in fields if f.field_name != "board"]
-    fields = [_field("roll_number", "WRONG") if f.field_name == "roll_number" else f for f in fields]
+    fields = [
+        _field("roll_number", "WRONG") if f.field_name == "roll_number" else f for f in fields
+    ]
     score = score_document(doc, "10th_marksheet", fields)
     assert score.correct[("board", None)] is False
     assert score.correct[("roll_number", None)] is False
@@ -460,7 +468,9 @@ GATE = "delta: 0.02\nsubset: all\naccepted_baseline: 0.97\n"
 
 
 def test_gate_parses_flat_key_value_lines_and_ignores_comments() -> None:
-    gate = parse_gate("# note\nmetric: mean field accuracy (x)\ndelta: 0.02\naccepted_baseline: none\n")
+    gate = parse_gate(
+        "# note\nmetric: mean field accuracy (x)\ndelta: 0.02\naccepted_baseline: none\n"
+    )
     assert gate["delta"] == "0.02" and gate["accepted_baseline"] == "none"
 
 
@@ -475,7 +485,10 @@ def test_a_score_more_than_delta_below_fails_with_the_numbers_in_the_message() -
 
 
 def test_no_accepted_baseline_is_reported_not_passed() -> None:
-    ok, message = check({"mean_field_accuracy": 1.0, "documents": 30}, parse_gate("delta: 0.02\naccepted_baseline: none\n"))
+    ok, message = check(
+        {"mean_field_accuracy": 1.0, "documents": 30},
+        parse_gate("delta: 0.02\naccepted_baseline: none\n"),
+    )
     assert not ok and "no accepted baseline" in message
 
 
