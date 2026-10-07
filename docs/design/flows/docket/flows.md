@@ -149,7 +149,7 @@ Site-wide, no screen of its own: REQ-044 (nothing leaves the machine) is carried
 | error: internal | message above an empty list, "Reload" | "The queue did not load. Reload, or quote request {request_id}." |
 | error: forbidden | replaces the list | "Only verifiers work the review queue. Go to the dashboard." |
 | error: unavailable | message above the list | "Docket cannot reach its database. Try again in a minute." |
-| success | rows of reference, name and the reason it was flagged (a mismatch, a low confidence, a failed read), oldest first, "Review next" at the top | "{n} to review" |
+| success | rows of reference, name and the reason it was flagged (a mismatch, a low confidence, a failed read), newest change first, "Review newest" at the top | "{n} to review, {m} decided this sitting" |
 | partial | the first 20 rows are shown, the rest load on request | "20 of {n} shown. Load more." |
 | offline | the loaded rows stay, opening a row is disabled | "Offline. Showing what was loaded." |
 
@@ -207,7 +207,7 @@ Goal: "Load the intake, let the machine read it, and decide only the application
 | 2 | Imports the CSV | S-03 result panel | afraid some rows were silently dropped | "Imported 19 of 20 rows." and a table of the refused row with its reason |
 | 3 | Opens an application and uploads three scans | S-05 rows moving from Uploaded to Read | worried the file did not arrive or is being sent somewhere | each row keeps its file name and "Read on this machine" |
 | 4 | Returns to the dashboard | S-02 counts, Needs review rising | anxious about how much is left for people | the count and "of which rejected" read from the server |
-| 5 | A verifier opens the queue | S-06 oldest first, with the reason per row | overwhelmed by volume | "Review next" and the count at the top |
+| 5 | A verifier opens the queue | S-06 newest change first, with the reason per row | overwhelmed by volume | "Review newest" and the count at the top |
 | 6 | Opens an application | S-07 failed fields first, the image beside them | wants to see why it was flagged | the box on the image and the confidence badge per field |
 | 7 | Approves, corrects or rejects | S-08, then the next application | afraid of a wrong click that cannot be undone | the dialog names the action, rejects need a reason, the log is shown as permanent in the dialog text |
 | 8 | Exports the verified list | S-09 download | unsure which applications are in it | "Downloaded verified.csv with {n} rows." |
@@ -351,7 +351,7 @@ Before it starts:
 | Step | Screen | The user | The system |
 | --- | --- | --- | --- |
 | 1 | S-01 Sign in | signs in | shows S-06 with focus on the heading |
-| 2 | S-06 Review queue | presses "Review next" | opens the oldest flagged application on S-07 |
+| 2 | S-06 Review queue | presses "Review newest" | opens the top flagged application (the newest change) on S-07 |
 | 3 | S-07 Compare application | selects a failed field | draws its OCR box on the image and shows the confidence badge |
 | 4 | S-07 Compare application | presses "Decide" | opens S-08 with the three choices |
 | 5 | S-08 Decision dialog | chooses "Reject", types a reason, presses "Save decision" | logs who, when, what and why, removes the application from the queue and shows the next on S-06 |
@@ -464,7 +464,7 @@ Page chrome, every page: a top bar with the product name "Docket" (link to the d
 | S-05 | Drop area | region | "Drop files here" | 96 px | Tab 1, Enter opens the picker | no sheet |
 | S-05 | Open comparison | link | "Open comparison" | 44 px | Tab, Enter | no sheet |
 | S-05 | Back to applications | link | "Back to applications" | 44 px | Tab, Alt+Left | no sheet |
-| S-06 | Review next | button | "Review next" | 48 px | Tab 1, Enter, n | no sheet |
+| S-06 | Review newest | button | "Review newest" | 48 px | Tab 1, Enter, n | no sheet |
 | S-06 | Row | link | "Open {application_ref}" | 44 px | j and k move, Enter opens | no sheet |
 | S-06 | Load more | button | "Load more" | 44 px | Tab, Enter | no sheet |
 | S-07 | Field row | listbox option | "{field}: application {application value}, document {document value}" | 44 px | j and k move, Enter selects | no sheet |
@@ -503,7 +503,7 @@ Shortcuts are listed in the "Keyboard shortcuts" dialog (opened with "?") and ne
 
 | Check | Result | Note |
 | --- | --- | --- |
-| F1 fewest thoughts | pass | the staff path has no decisions that need reading, the verifier path has one (which action), and "Review next" is the visible default |
+| F1 fewest thoughts | pass | the staff path has no decisions that need reading, the verifier path has one (which action), and "Review newest" is the visible default |
 | F2 dead ends | pass | the table in section 6 reads 0 by my reading, `flows_check.py` not run |
 | F3 error recovery on every path | pass | every error row names a control or pointer, three recovery flows are drawn and the rest are one-step retries |
 | F4 state coverage per screen | pass | every screen has loading, empty, error and success rows, `n/a` rows carry a reason, gate not run |
