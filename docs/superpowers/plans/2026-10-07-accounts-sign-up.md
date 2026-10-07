@@ -308,7 +308,9 @@ GOOD = {
         {"is_active": True},
     ],
 )
-async def test_a_bad_body_is_refused_with_422(client: AsyncClient, change: dict[str, object]) -> None:
+async def test_a_bad_body_is_refused_with_422(
+    client: AsyncClient, change: dict[str, object]
+) -> None:
     response = await client.post("/api/auth/register", json={**GOOD, **change})
     assert response.status_code == 422
 
@@ -321,9 +323,7 @@ async def test_a_422_never_echoes_the_password(client: AsyncClient) -> None:
     assert "tooshort" not in response.text
 
 
-async def test_a_source_over_its_limit_gets_429(
-    app: FastAPI, client: AsyncClient
-) -> None:
+async def test_a_source_over_its_limit_gets_429(app: FastAPI, client: AsyncClient) -> None:
     app.state.register_limiter = RegistrationLimiter(
         max_per_source=0, window=timedelta(hours=1), clock=app.state.clock
     )
