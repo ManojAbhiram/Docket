@@ -81,6 +81,46 @@ describe("the review queue", () => {
     expect(await screen.findByText("Name does not match, and 2 more")).toBeInTheDocument();
   });
 
+  // Design decisions 1B and 1C, eng R3 [NOTASK-6].
+  it("counts what is left from the dashboard, not from the page loaded", async () => {
+    fakeSession({ startAs: "verifier" });
+    server.use(
+      http.get("*/api/applications", () => page([queueItem()], "next")),
+      http.get("*/api/dashboard", () =>
+        HttpResponse.json({ verified: 3, needs_review: 611, missing_documents: 4, rejected: 11 }),
+      ),
+    );
+
+    renderQueue();
+
+    expect(await screen.findByText("600 to review")).toBeInTheDocument();
+  });
+
+  it("adds how many this person decided in this sitting", async () => {
+    fakeSession({ startAs: "verifier" });
+    window.sessionStorage.setItem("docket-decided", "4");
+    server.use(
+      http.get("*/api/applications", () => page([queueItem()])),
+      http.get("*/api/dashboard", () =>
+        HttpResponse.json({ verified: 3, needs_review: 12, missing_documents: 4, rejected: 2 }),
+      ),
+    );
+
+    renderQueue();
+
+    expect(await screen.findByText("10 to review, 4 decided this sitting")).toBeInTheDocument();
+    window.sessionStorage.clear();
+  });
+
+  it("shows the loaded count when the dashboard is not available", async () => {
+    fakeSession({ startAs: "verifier" });
+    server.use(http.get("*/api/applications", () => page([queueItem()])));
+
+    renderQueue();
+
+    expect(await screen.findByText("1 to review")).toBeInTheDocument();
+  });
+
   it("shows a loading state and then the list", async () => {
     fakeSession({ startAs: "verifier" });
     server.use(http.get("*/api/applications", () => page([queueItem()])));
@@ -154,7 +194,7 @@ describe("the review queue", () => {
     expect(await screen.findByRole("heading", { name: "SYN-APP-004" })).toBeInTheDocument();
   });
 
-  it("opens the oldest waiting application with Review next", async () => {
+  it("opens the top of the queue with Review newest", async () => {
     fakeSession({ startAs: "verifier" });
     server.use(
       http.get("*/api/applications", () => page([queueItem()])),
@@ -165,7 +205,7 @@ describe("the review queue", () => {
     renderQueue();
     await screen.findByText("SYN-APP-004");
 
-    await userEvent.click(screen.getByRole("button", { name: /Review next/ }));
+    await userEvent.click(screen.getByRole("button", { name: /Review newest/ }));
 
     expect(await screen.findByRole("heading", { name: "SYN-APP-004" })).toBeInTheDocument();
   });

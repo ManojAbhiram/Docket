@@ -25,6 +25,8 @@ interface QueueViewProps {
   items: QueueRow[];
   /** Put focus on "Review next" once there is something to review, after a saved decision. */
   focusReviewNext?: boolean;
+  /** Decisions this person has saved since they signed in, shown beside the count. */
+  decidedThisSitting?: number;
   /** The server's total, so a partial page can say "20 of 611". */
   total?: number;
   loading?: boolean;
@@ -46,6 +48,7 @@ interface QueueViewProps {
 export function QueueView({
   items,
   focusReviewNext = false,
+  decidedThisSitting = 0,
   total,
   loading = false,
   offline = false,
@@ -89,7 +92,9 @@ export function QueueView({
         title="Review queue"
         description={
           !loading && items.length > 0
-            ? `${String(count)} to review${hasMore && total === undefined ? " so far" : ""}`
+            ? `${String(count)} to review${hasMore && total === undefined ? " so far" : ""}${
+                decidedThisSitting > 0 ? `, ${String(decidedThisSitting)} decided this sitting` : ""
+              }`
             : undefined
         }
         actions={
@@ -99,7 +104,7 @@ export function QueueView({
             disabled={items.length === 0 || offline}
             onClick={reviewNext}
           >
-            Review next <Kbd>n</Kbd>
+            Review newest <Kbd>n</Kbd>
           </Button>
         }
       />

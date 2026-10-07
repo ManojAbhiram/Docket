@@ -369,7 +369,7 @@ describe("deciding an application", () => {
 
   // Regression: ISSUE-006 [NOTASK-2], design decision 3A. After a decision the verifier went on
   // looking at the application instead of going back to the queue.
-  it("returns to the review queue after a decision, with focus on Review next", async () => {
+  it("returns to the review queue after a decision, with focus on Review newest", async () => {
     serve(detail());
     server.use(
       http.get("*/api/applications", () =>
@@ -396,7 +396,7 @@ describe("deciding an application", () => {
 
     expect(await screen.findByRole("heading", { name: "Review queue" })).toBeInTheDocument();
     await waitFor(() => {
-      expect(screen.getByRole("button", { name: /Review next/ })).toHaveFocus();
+      expect(screen.getByRole("button", { name: /Review newest/ })).toHaveFocus();
     });
   });
 
