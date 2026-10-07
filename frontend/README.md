@@ -6,7 +6,8 @@ React web app. `make help` lists every command; `make check` is the gate.
 
 ```
 cp .env.example .env
-make setup          # pnpm install (writes pnpm-lock.yaml; commit it), Playwright chromium, git hooks
+make setup          # pnpm install (writes pnpm-lock.yaml; commit it) and Playwright chromium.
+                    # Git hooks are installed by the root make setup.
 make dev            # http://localhost:5173
 ```
 
