@@ -331,3 +331,54 @@ async def test_a_state_changing_gated_route_needs_the_csrf_token(
     allowed = await client.post("/_gate/change", headers=csrf_header(client))
 
     assert (without.status_code, forged.status_code, allowed.status_code) == (403, 403, 200)
+
+
+REGISTER = {
+    "username": "  Asha.K  ",
+    "display_name": "Asha Kumar",
+    "password": "a-long-phrase-1",
+    "role": "verifier",
+}
+
+
+async def test_registering_signs_the_person_in_with_the_chosen_role(client: AsyncClient) -> None:
+    response = await client.post("/api/auth/register", json=REGISTER)
+    assert response.status_code == 200
+    assert response.json()["role"] == "verifier"
+    assert "docket_session" in client.cookies
+    assert "docket_csrf" in client.cookies
+    me = await client.get("/api/auth/me")
+    assert me.json()["display_name"] == "Asha Kumar"
+
+
+async def test_the_name_is_stored_trimmed_and_lower_case_and_signs_in_later(
+    client: AsyncClient,
+) -> None:
+    await client.post("/api/auth/register", json=REGISTER)
+    client.cookies.clear()
+    again = await sign_in(client, "asha.k", "a-long-phrase-1")
+    assert again.status_code == 200
+
+
+async def test_a_taken_name_in_another_case_is_a_409_and_creates_nothing(
+    client: AsyncClient,
+) -> None:
+    await client.post("/api/auth/register", json=REGISTER)
+    client.cookies.clear()
+    second = await client.post(
+        "/api/auth/register", json={**REGISTER, "username": "ASHA.K", "role": "staff"}
+    )
+    assert second.status_code == 409
+    assert "docket_session" not in client.cookies
+
+
+async def test_the_stored_password_is_an_argon2_hash(
+    client: AsyncClient, connection: AsyncConnection
+) -> None:
+    await client.post("/api/auth/register", json=REGISTER)
+    row = await connection.execute(
+        text("SELECT password_hash FROM users WHERE username = 'asha.k'")
+    )
+    stored = row.scalar_one()
+    assert stored.startswith("$argon2id$")
+    assert "a-long-phrase-1" not in stored

@@ -6,18 +6,19 @@ Built on `feature/US-00-011-SignIn` (2026-10-06): login, logout, `/auth/me`, the
 | --- | --- |
 | Session model | server-side cookie session (ADR-0006) |
 | Authorisation model | RBAC with two roles, staff and verifier; no attribute rules (the backlog names roles, not attributes) |
-| Identity source | own passwords, argon2id, seeded accounts only, no self sign-up, no reset |
+| Identity source | own passwords, argon2id, seeded accounts plus open sign up (ADR-0013), no reset |
 | Tenancy | single office: no `tenant_id` anywhere (`docs/design/data-model.md` section 10) |
 | Middleware | planned: a router-level `dependencies=[Depends(current_user)]` on the API router in `app/main.py`; the health router and login route opt out by name |
 | Last reviewed | 2026-10-06, built for US-00-011, unreviewed by a second person |
 
 ## Public routes
 
-Counted from the planned route inventory (`docs/security/threat-model-docket.md` section 3). Routes: 14 entry points, of which public: 4.
+Counted from the planned route inventory (`docs/security/threat-model-docket.md` section 3). Routes: 15 entry points, of which public: 5.
 
 | Route | Reason |
 | --- | --- |
 | `POST /api/auth/login` | the sign-in form; rate limited per account and per source, same error for an unknown user and a wrong password (threat T-01, T-05) |
+| `POST /api/auth/register` | open sign up with a self-chosen role (ADR-0013); limited per source (threat T-38) |
 | `GET /healthz` | liveness probe (`app/api/health/router.py:34`) |
 | `GET /readyz` | readiness probe, returns only ok or a failed check name (`app/api/health/router.py:40`) |
 | `GET /docs` and `GET /openapi.json` | non-production only: the application does not mount them when `ENV=production` (`app/main.py:46`) |
@@ -63,6 +64,10 @@ Loads by id: 0 (no code exists to count). The matrix tests and the audit above t
 - Session model, RBAC and the identity source are recorded in ADR-0006 and the backlog. The argon2id library and the CSRF mechanism are recorded in ADR-0012.
 - Not built, by request of the mode: the middleware, the roles table logic and the matrix tests. The matrix test ids (`TC-AUTH-...`) are reserved in the matrix. No test is written yet because the routes do not exist, and a failing or skipped placeholder would break the repository's rule against skipped tests.
 - A `/logout/everywhere` endpoint and a `session:end` permission are not in any story; the `users.session_version` column makes it one increment later. Recommended, not added.
+
+## Registration
+
+`POST /api/auth/register` (ADR-0013, NOTASK-7) lets anyone create an account and choose the staff or verifier role, then signs them in. The username is trimmed and lower-cased; the password follows the same rules as login and is hashed with Argon2id inside the shared hash slots before the name is looked up. A taken name answers 409, which does say the name exists. Sign ups are limited per source. The risk that anyone can register as a verifier and approve applications is accepted (threat T-38) and must be revisited before any real student data; an access code for the verifier role is the recorded follow-up.
 
 ## Open items
 
