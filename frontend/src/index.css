@@ -280,12 +280,6 @@
   }
 }
 
-/* A stored file settles into its row. */
-[data-motion="settle"] {
-  --rise: 4px;
-  animation: docket-rise var(--duration-base) var(--ease-enter) backwards;
-}
-
 /* Tiles and rows enter in a short wave: --i (0 to 8) is set inline by staggerStyle(). */
 .enter {
   animation: docket-rise var(--duration-slow) var(--ease-enter) backwards;

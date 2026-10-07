@@ -56,13 +56,10 @@ export function ListRow({
       {...props}
     >
       {selected && (
-        <>
-          <span aria-hidden="true" className="absolute inset-y-0 left-0 w-1 bg-primary" />
-          <ChevronRight
-            aria-hidden="true"
-            className="absolute top-1/2 left-1 size-3 -translate-y-1/2 text-muted-foreground"
-          />
-        </>
+        <ChevronRight
+          aria-hidden="true"
+          className="absolute top-1/2 left-0.5 size-3 -translate-y-1/2 text-muted-foreground"
+        />
       )}
       {children}
     </li>

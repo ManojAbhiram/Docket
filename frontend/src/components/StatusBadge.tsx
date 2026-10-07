@@ -1,7 +1,7 @@
 import { Ban, Check, Flag, Minus, type LucideIcon } from "lucide-react";
-import { useState } from "react";
 
 import { Badge } from "@/components/ui/badge";
+import { useChangeCount } from "@/hooks/use-change-count";
 import { cn } from "@/lib/utils";
 
 export type StatusKind = "verified" | "needs_review" | "missing_documents" | "rejected";
@@ -23,12 +23,7 @@ const STATUS: Record<StatusKind, { label: string; icon: LucideIcon; tone: string
  * that first appears with its data, and a refresh that changes nothing, stay still.
  */
 export function StatusBadge({ status }: { status: StatusKind }) {
-  const [shown, setShown] = useState(status);
-  const [changes, setChanges] = useState(0);
-  if (shown !== status) {
-    setShown(status);
-    setChanges(changes + 1);
-  }
+  const changes = useChangeCount(status);
   const { label, icon: Icon, tone } = STATUS[status];
   return (
     <Badge

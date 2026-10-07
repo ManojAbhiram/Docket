@@ -62,9 +62,9 @@ export function FieldsPanel({
   return (
     <div className="grid gap-6 lg:grid-cols-5">
       <div className="order-last space-y-4 lg:order-first lg:col-span-3">
-        <div className="hidden md:block">
+        <div className="hidden overflow-hidden rounded-lg border border-border bg-card md:block">
           <Table>
-            <TableHeader>
+            <TableHeader className="bg-muted">
               <TableRow>
                 <TableHead scope="col">Field</TableHead>
                 <TableHead scope="col">Application</TableHead>
@@ -78,6 +78,7 @@ export function FieldsPanel({
                 <TableRow
                   key={field.id}
                   data-state={field.id === selectedId ? "selected" : undefined}
+                  className="transition-none data-[state=selected]:bg-accent"
                 >
                   <TableCell>
                     <Button
@@ -113,7 +114,12 @@ export function FieldsPanel({
         </div>
         <ul className="space-y-2 md:hidden">
           {ordered.map((field) => (
-            <ListRow key={field.id} interactive selected={field.id === selectedId}>
+            <ListRow
+              key={field.id}
+              interactive
+              selected={field.id === selectedId}
+              className="transition-none"
+            >
               <Button
                 variant="ghost"
                 className="h-auto min-h-11 w-full flex-col items-stretch gap-2 p-4 text-left whitespace-normal"

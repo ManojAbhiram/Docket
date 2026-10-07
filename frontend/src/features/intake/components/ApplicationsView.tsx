@@ -17,6 +17,7 @@ import {
 } from "@/components/ui/table";
 import { formatTime } from "@/features/applications/fixtures";
 import type { ApplicationStatus, ApplicationSummary } from "@/features/applications/types";
+import { staggerStyle } from "@/lib/motion";
 
 export type StatusFilter = "all" | ApplicationStatus;
 
@@ -135,9 +136,9 @@ export function ApplicationsView({
       )}
       {applications.length > 0 && (
         <>
-          <div className="hidden md:block">
+          <div className="hidden overflow-hidden rounded-lg border border-border bg-card md:block">
             <Table>
-              <TableHeader>
+              <TableHeader className="bg-muted">
                 <TableRow>
                   <TableHead scope="col">Application</TableHead>
                   <TableHead scope="col">Name</TableHead>
@@ -154,8 +155,8 @@ export function ApplicationsView({
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {applications.map((application) => (
-                  <TableRow key={application.id}>
+                {applications.map((application, index) => (
+                  <TableRow key={application.id} className="enter" style={staggerStyle(index)}>
                     <TableCell className="font-mono">{application.ref}</TableCell>
                     <TableCell>{application.name}</TableCell>
                     <TableCell>
@@ -187,8 +188,8 @@ export function ApplicationsView({
             </Table>
           </div>
           <ul className="space-y-2 md:hidden">
-            {applications.map((application) => (
-              <ListRow key={application.id} className="space-y-2 p-4">
+            {applications.map((application, index) => (
+              <ListRow key={application.id} index={index} lift className="space-y-2 p-4">
                 <div className="flex items-center justify-between gap-2">
                   <span className="font-mono">{application.ref}</span>
                   <StatusBadge status={statusOf(application)} />
