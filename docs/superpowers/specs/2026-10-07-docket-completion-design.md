@@ -41,6 +41,18 @@ excludes), the containerised one-command demo, DigiLocker, fee payment, bulk upl
 | IBM Plex fonts | Missing |
 | Every story in `docs/progress` | "in review", none closed |
 
+## Progress (updated 2026-10-07, end of day)
+
+| Item | State now | Where |
+| --- | --- | --- |
+| Sign up (piece 1) | Built and task-reviewed; final review, browser check and accessibility audit not run | branch `feature/NOTASK-7-AccountsSignUp`, ADR 0013 |
+| Evals: real extraction accuracy, 10-document comparison, replay gate (piece 2) | Plan written; build in progress, results not yet produced | branch `feature/NOTASK-8-Evals`, `docs/superpowers/plans/2026-10-07-evals-accuracy.md` |
+| Baseline accepted in `evals/ocr/gate.yaml` | Waiting for a person; the plan only proposes the number | `docs/progress/NOTASK-8.md` when written |
+| UI redesign, IBM Plex fonts (piece 3) | Started on its own branch, not yet verified | branch `feature/NOTASK-9-UiRedesign` |
+| Transfer certificate type (stretch) | Not started; the seed data already contains the documents | Q-007 still open |
+| Password reset, containerised one-command demo | Out of scope here | none |
+| Every story in `docs/progress` still "in review" | Unchanged | none |
+
 ## Piece 1: accounts
 
 `POST /auth/register` takes `username`, `display_name`, `password`, `role`. Bodies use
