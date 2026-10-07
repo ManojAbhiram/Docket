@@ -33,6 +33,11 @@ def test_a_password_may_not_be_the_username_in_any_case() -> None:
         check_password("Asha.Kumar.1", "asha.kumar.1")
 
 
+def test_a_password_is_compared_to_the_trimmed_lowered_username() -> None:
+    with pytest.raises(ValueError, match="username"):
+        check_password("Asha.Kumar1", "  asha.kumar1 ")
+
+
 def test_a_display_name_is_trimmed_and_bounded() -> None:
     assert check_display_name("  Asha Kumar ") == "Asha Kumar"
     with pytest.raises(ValueError, match="name"):
@@ -64,6 +69,17 @@ def test_the_fourth_attempt_in_the_window_waits() -> None:
 
     assert wait is not None
     assert 0 < wait <= 3600
+
+
+def test_the_wait_is_measured_from_the_oldest_attempt_in_the_window() -> None:
+    clock = _Clock()
+    limiter = _limiter(clock)
+    limiter.try_register("1.2.3.4")
+    clock.now += timedelta(minutes=10)
+    limiter.try_register("1.2.3.4")
+    limiter.try_register("1.2.3.4")
+
+    assert limiter.try_register("1.2.3.4") == 3000
 
 
 def test_another_source_is_not_affected() -> None:
@@ -99,6 +115,18 @@ def test_the_limiter_keeps_a_bounded_number_of_sources() -> None:
     for index in range(50):
         limiter.try_register(f"10.0.0.{index}")
     assert limiter.size() <= 5
+
+
+def test_the_least_recently_used_source_is_the_one_forgotten() -> None:
+    limiter = _limiter(_Clock(), max_entries=5)
+    for index in range(50):
+        for _ in range(3):
+            limiter.try_register(f"10.0.0.{index}")
+
+    # The latest source is still tracked, so it is still over its limit.
+    assert limiter.try_register("10.0.0.49") is not None
+    # The first was evicted long ago, so it starts again with a fresh allowance.
+    assert limiter.try_register("10.0.0.0") is None
 
 
 def test_limiter_with_max_per_source_zero_returns_window_seconds() -> None:

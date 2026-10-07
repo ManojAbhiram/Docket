@@ -53,6 +53,42 @@ describe("signing up", () => {
     expect(await screen.findByText("That username is taken.")).toBeInTheDocument();
   });
 
+  it("shows the too many attempts notice on a 429 and disables the button", async () => {
+    fakeSession();
+    server.use(
+      http.post("*/api/auth/register", () =>
+        HttpResponse.json(
+          { error: { code: "too_many_attempts", message: "slow down" } },
+          { status: 429, headers: { "Retry-After": "30" } },
+        ),
+      ),
+    );
+    renderSignUp();
+    await fill(userEvent.setup(), "Staff");
+    expect(await screen.findByText("Too many attempts.")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Create account" })).toBeDisabled();
+  });
+
+  it("sends nothing when no role is chosen", async () => {
+    fakeSession();
+    const calls: string[] = [];
+    server.use(
+      http.post("*/api/auth/register", ({ request }) => {
+        calls.push(request.url);
+        return HttpResponse.json(userWith("staff"));
+      }),
+    );
+    renderSignUp();
+    const user = userEvent.setup();
+    await user.type(await screen.findByLabelText("Your name"), "Asha Kumar");
+    await user.type(screen.getByLabelText("Username"), "asha.k");
+    await user.type(screen.getByLabelText("Password"), "a-long-phrase-1");
+    await user.click(screen.getByRole("button", { name: "Create account" }));
+    expect(calls).toHaveLength(0);
+    expect(screen.getByRole("button", { name: "Create account" })).toBeInTheDocument();
+    expect(screen.getByLabelText("Your name")).toBeInTheDocument();
+  });
+
   it("links to sign in and back", async () => {
     fakeSession();
     renderSignUp();

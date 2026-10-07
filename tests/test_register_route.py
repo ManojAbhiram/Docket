@@ -35,11 +35,22 @@ async def test_a_bad_body_is_refused_with_422(
 
 
 async def test_a_422_never_echoes_the_password(client: AsyncClient) -> None:
-    response = await client.post(
-        "/api/auth/register", json={**GOOD, "password": "tooshort", "username": "x"}
-    )
+    response = await client.post("/api/auth/register", json={**GOOD, "password": "tooshort"})
     assert response.status_code == 422
     assert "tooshort" not in response.text
+    assert "password" in response.text
+
+
+async def test_a_password_equal_to_the_username_is_refused_and_not_echoed(
+    client: AsyncClient,
+) -> None:
+    response = await client.post(
+        "/api/auth/register",
+        json={**GOOD, "username": "asha.kumar1", "password": "ASHA.KUMAR1"},
+    )
+    assert response.status_code == 422
+    assert "ASHA.KUMAR1" not in response.text
+    assert "must not be the same as the username" in response.text
 
 
 async def test_a_source_over_its_limit_gets_429(app: FastAPI, client: AsyncClient) -> None:
