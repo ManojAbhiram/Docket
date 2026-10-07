@@ -23,6 +23,10 @@ class ApplicationOut(BaseModel):
     rejected: bool
     created_at: datetime
     updated_at: datetime
+    flag_reason: str | None = Field(
+        default=None,
+        description="Why a needs_review application is flagged, in a few words. Null otherwise.",
+    )
 
 
 class PageOut(BaseModel):

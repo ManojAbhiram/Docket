@@ -14,6 +14,7 @@ export function QueuePage() {
         id: item.id,
         ref: item.application_ref,
         name: item.full_name,
+        flag: item.flag_reason ?? undefined,
         updatedAt: item.updated_at,
       })),
     ) ?? [];

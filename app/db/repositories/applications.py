@@ -9,13 +9,14 @@ table holds tens of thousands.
 
 import json
 from collections.abc import Callable
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from datetime import date, datetime
 from uuid import UUID
 
 from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
+from app.domain.flag import FlaggedField, flag_reason
 from app.domain.importing import ImportOutcome, SavedImport
 from app.domain.paging import decode_cursor, encode_cursor
 
@@ -49,6 +50,19 @@ _LIST = text(
     "OR (updated_at, id) < (CAST(:cursor_at AS timestamptz), CAST(:cursor_id AS uuid))) "
     "ORDER BY updated_at DESC, id DESC LIMIT :fetch"
 )
+# The queue reason (ISSUE-004). Index decision: both reads filter by `application_id` through
+# `documents`, whose `idx_documents_application_id` exists, and touch only a page of ids (at most
+# the page limit), so no new index.
+_FLAGGED_FIELDS = text(
+    "SELECT d.application_id, f.field_name::text, f.subject, f.review_reason "
+    "FROM extracted_fields f JOIN documents d ON d.id = f.document_id "
+    "WHERE d.application_id = ANY(CAST(:ids AS uuid[])) AND f.needs_review"
+)
+_FAILED_DOCUMENTS = text(
+    "SELECT application_id, count(*) FROM documents "
+    "WHERE application_id = ANY(CAST(:ids AS uuid[])) AND status = 'failed' "
+    "GROUP BY application_id"
+)
 
 
 @dataclass(frozen=True)
@@ -66,6 +80,7 @@ class ApplicationRecord:
     rejected: bool
     created_at: datetime
     updated_at: datetime
+    flag_reason: str | None = None
 
 
 @dataclass(frozen=True)
@@ -190,9 +205,33 @@ class SqlApplicationStore:
             )
             for r in rows
         )
-        page = records[:limit]
+        page = await self._with_flag_reasons(records[:limit])
         more = len(records) > limit
         return ApplicationPage(
             data=page,
             next_cursor=encode_cursor(page[-1].updated_at, page[-1].id) if more else None,
+        )
+
+    async def _with_flag_reasons(
+        self, records: tuple[ApplicationRecord, ...]
+    ) -> tuple[ApplicationRecord, ...]:
+        """Add the queue reason to each application that needs review. Two reads for the page."""
+        ids = [r.id for r in records if r.status == "needs_review"]
+        if not ids:
+            return records
+        async with self._factory() as session:
+            field_rows = (await session.execute(_FLAGGED_FIELDS, {"ids": ids})).all()
+            failed_rows = (await session.execute(_FAILED_DOCUMENTS, {"ids": ids})).all()
+        fields: dict[UUID, list[FlaggedField]] = {}
+        for row in field_rows:
+            fields.setdefault(row[0], []).append(FlaggedField(row[1], row[2], row[3]))
+        failed = {row[0]: row[1] for row in failed_rows}
+        return tuple(
+            replace(
+                r,
+                flag_reason=flag_reason(fields.get(r.id, []), failed_documents=failed.get(r.id, 0)),
+            )
+            if r.id in ids
+            else r
+            for r in records
         )

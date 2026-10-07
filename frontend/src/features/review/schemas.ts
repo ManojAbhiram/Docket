@@ -10,6 +10,8 @@ export const queueItemSchema = z.object({
   status: statusSchema,
   rejected: z.boolean(),
   updated_at: z.string(),
+  /** Why it is flagged, in a few words. Null when not flagged. */
+  flag_reason: z.string().nullish(),
 });
 export type QueueItem = z.infer<typeof queueItemSchema>;
 

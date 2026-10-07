@@ -67,6 +67,20 @@ describe("the review queue", () => {
     expect(screen.getByText("2 to review")).toBeInTheDocument();
   });
 
+  // Regression: ISSUE-004 [NOTASK-2]. The "why flagged" cell was always empty.
+  it("says why each application is flagged", async () => {
+    fakeSession({ startAs: "verifier" });
+    server.use(
+      http.get("*/api/applications", () =>
+        page([queueItem({ flag_reason: "Name does not match, and 2 more" })]),
+      ),
+    );
+
+    renderQueue();
+
+    expect(await screen.findByText("Name does not match, and 2 more")).toBeInTheDocument();
+  });
+
   it("shows a loading state and then the list", async () => {
     fakeSession({ startAs: "verifier" });
     server.use(http.get("*/api/applications", () => page([queueItem()])));

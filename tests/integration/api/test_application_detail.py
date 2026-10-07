@@ -373,3 +373,46 @@ async def test_the_queue_is_exactly_the_flagged_applications_newest_change_first
     ).json()["data"]
 
     assert [a["application_ref"] for a in queue] == ["SYN-APP-004", "SYN-APP-002"]
+
+
+# ISSUE-004 [NOTASK-2]: the queue row used to carry no reason, so the verifier saw an empty cell.
+async def test_a_queue_row_says_why_it_is_flagged(
+    api: AsyncClient, connection: AsyncConnection
+) -> None:
+    await as_verifier(api, connection)
+    await flagged_application(connection)
+
+    queue = (
+        await api.get(
+            "/api/applications",
+            params={"filter[status]": "needs_review", "filter[rejected]": "false"},
+        )
+    ).json()["data"]
+
+    assert queue[0]["flag_reason"] == "Name does not match, and 2 more"
+
+
+async def test_a_failed_document_is_the_reason_when_it_could_not_be_read(
+    api: AsyncClient, connection: AsyncConnection
+) -> None:
+    await as_verifier(api, connection)
+    application_id = await make_application(connection)
+    document_id = await make_document(connection, application_id)
+    await connection.execute(
+        text("UPDATE documents SET status = 'failed' WHERE id = :id"), {"id": document_id}
+    )
+
+    queue = (await api.get("/api/applications", params={"filter[status]": "needs_review"})).json()
+
+    assert queue["data"][0]["flag_reason"] == "A document could not be read"
+
+
+async def test_an_application_that_is_not_flagged_has_no_reason(
+    api: AsyncClient, connection: AsyncConnection
+) -> None:
+    await as_verifier(api, connection)
+    await make_application(connection, status="verified")
+
+    data = (await api.get("/api/applications")).json()["data"]
+
+    assert data[0]["flag_reason"] is None
