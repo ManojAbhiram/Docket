@@ -46,7 +46,7 @@ Scale: XS 1, S 2, M 3, L 5, XL 8. Previous sizes: none (all TBD).
 | US-00-005 Set status automatically | Must | TBD | L | 5 | status model; evidence storage; guard that the service itself refuses Verified (AC-4); schema change; Q-004 | A8 |
 | US-00-006 Review a flagged application | Must | TBD | L | 5 | first real screen; queue route; document image beside values; frontend has only the health screen (checked) | A9 |
 | US-00-007 Decide a flagged application | Must | TBD | L | 5 | three actions; decision log table; correct re-runs the comparison; 5 AC | A10 |
-| US-00-011 Sign in | Should | TBD | L | 5 | auth with role checks per resource; seeded accounts only; supports REQ-021 and REQ-027, no requirement names sign-in itself | A11 |
+| US-00-011 Sign in | Should | TBD | L | 5 | auth with role checks per resource; accounts are seeded and people can also register themselves (ADR-0013); supports REQ-021 and REQ-027, no requirement names sign-in itself | A11 |
 | US-00-008 Dashboard counts | Must | TBD | M | 3 | one route plus a new screen | none |
 | US-00-010 Field crops | Could | TBD | M | 3 | needs box positions from the engine; acceptance is set in design | A12 |
 | US-00-009 Export verified list | Must | TBD | S | 2 | one route; columns open (Q-011) | none |

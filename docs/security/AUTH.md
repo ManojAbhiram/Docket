@@ -1,6 +1,6 @@
 # Authentication and authorisation: Docket (staff and verifier roles)
 
-Built on `feature/US-00-011-SignIn` (2026-10-06): login, logout, `/auth/me`, the `current_user` and `require_role` dependencies, CSRF and the login limiter. The import, upload, decision, dashboard and export routes do not exist yet, so their matrix rows are still planned. Decisions are in ADR-0006 and ADR-0012.
+Built on `feature/US-00-011-SignIn` (2026-10-06): login, logout, `/auth/me`, the `current_user` and `require_role` dependencies, CSRF and the login limiter. The import, upload, decision, dashboard and export routes do not exist yet, so their matrix rows are still planned. Decisions are in ADR-0006, ADR-0012 and ADR-0013.
 
 | Field | Value |
 | --- | --- |
@@ -8,7 +8,7 @@ Built on `feature/US-00-011-SignIn` (2026-10-06): login, logout, `/auth/me`, the
 | Authorisation model | RBAC with two roles, staff and verifier; no attribute rules (the backlog names roles, not attributes) |
 | Identity source | own passwords, argon2id, seeded accounts plus open sign up (ADR-0013), no reset |
 | Tenancy | single office: no `tenant_id` anywhere (`docs/design/data-model.md` section 10) |
-| Middleware | planned: a router-level `dependencies=[Depends(current_user)]` on the API router in `app/main.py`; the health router and login route opt out by name |
+| Middleware | planned: a router-level `dependencies=[Depends(current_user)]` on the API router in `app/main.py`; the health router, login route and register route opt out by name |
 | Last reviewed | 2026-10-06, built for US-00-011, unreviewed by a second person |
 
 ## Public routes
@@ -67,7 +67,7 @@ Loads by id: 0 (no code exists to count). The matrix tests and the audit above t
 
 ## Registration
 
-`POST /api/auth/register` (ADR-0013, NOTASK-7) lets anyone create an account and choose the staff or verifier role, then signs them in. The username is trimmed and lower-cased; the password follows the same rules as login and is hashed with Argon2id inside the shared hash slots before the name is looked up. A taken name answers 409, which does say the name exists. Sign ups are limited per source. The risk that anyone can register as a verifier and approve applications is accepted (threat T-38) and must be revisited before any real student data; an access code for the verifier role is the recorded follow-up.
+`POST /api/auth/register` (ADR-0013, NOTASK-7) lets anyone create an account and choose the staff or verifier role, then signs them in. The username is trimmed and lower-cased; the password must be 10 to 256 characters and not equal to the username (login only bounds it at 1 to 256 characters) and is hashed with Argon2id inside the shared hash slots before the name is looked up. A taken name answers 409, which does say the name exists. Sign ups are limited per source. The risk that anyone can register as a verifier and approve applications is accepted (threat T-38) and must be revisited before any real student data; an access code for the verifier role is the recorded follow-up.
 
 ## Open items
 

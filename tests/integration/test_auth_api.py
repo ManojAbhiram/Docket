@@ -361,7 +361,7 @@ async def test_the_name_is_stored_trimmed_and_lower_case_and_signs_in_later(
 
 
 async def test_a_taken_name_in_another_case_is_a_409_and_creates_nothing(
-    client: AsyncClient,
+    client: AsyncClient, connection: AsyncConnection
 ) -> None:
     await client.post("/api/auth/register", json=REGISTER)
     client.cookies.clear()
@@ -370,6 +370,8 @@ async def test_a_taken_name_in_another_case_is_a_409_and_creates_nothing(
     )
     assert second.status_code == 409
     assert "docket_session" not in client.cookies
+    rows = await connection.execute(text("SELECT role FROM users WHERE username = 'asha.k'"))
+    assert rows.scalars().all() == ["verifier"]
 
 
 async def test_the_stored_password_is_an_argon2_hash(

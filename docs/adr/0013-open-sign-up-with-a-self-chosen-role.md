@@ -27,6 +27,6 @@ We will allow open sign up with a self-chosen role. The engineer chose this on 2
 ## Consequences
 
 - Easier: anyone can try the product at once, with no admin work.
-- Harder: anyone can register as a verifier and approve applications (threat T-38, accepted). Mitigations that exist are a per-source sign up limit, Argon2 hash slots, and a logged actor on every decision.
+- Harder: anyone can register as a verifier and approve applications (threat T-38, accepted). Mitigations that bear on escalation are few: every decision is logged with its actor, and the per-source sign up limit only slows bulk registration. Nothing stops a person choosing the verifier role. The Argon2 hash slots are a CPU and memory control for hashing, not a privilege control.
 - A taken username answers 409, so usernames can be enumerated. Accepted for the same reason.
 - Revisit before any real student data. Options then are an access code for the verifier role, or Option B or C once an admin role exists.

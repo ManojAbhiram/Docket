@@ -98,8 +98,8 @@ Entry points: 15. Admin screens: none beyond the verifier and staff screens behi
 | T-34 | B2 | Elevation of privilege | the API container runs as root | L | H | Dockerfile:19 | mitigated |
 | T-35 | B7 | Tampering | a vulnerable or malicious dependency enters through the lockfile | M | H | Makefile:73 | mitigated |
 | T-36 | B1, B2 | Spoofing | considered, none for the local demo: traffic is plain HTTP on localhost; a hosted deployment gets TLS from the host (ADR-0004) | | | | |
-| T-38 | E15, B6 | Elevation of privilege | an anonymous caller registers as a verifier and approves applications | H | H | accepted risk (ADR-0013, chosen by the engineer on 2026-10-07 against the recommendation of invite-only). Exists: per-source sign-up limit (`register_max_per_source`, `register_window_minutes`), Argon2 hash slots (`login_hash_concurrency`), every decision names its actor (US-00-007), password and username rules. Follow-up option: an access code required for the verifier role | accepted |
 | T-37 | E14 | Elevation of privilege | considered, none: scripts run with host access by the operator, outside the application's trust model | | | | |
+| T-38 | E15, B6 | Elevation of privilege | an anonymous caller registers as a verifier and approves applications | H | H | accepted risk (ADR-0013, chosen by the engineer on 2026-10-07 against the recommendation of invite-only). Bears on escalation: every decision names its actor (US-00-007); the per-source sign-up limit (`register_max_per_source`, `register_window_minutes`) only slows bulk registration; nothing stops a person choosing the verifier role. Resource use only, not escalation: the Argon2 hash slots (`login_hash_concurrency`) cap hashing CPU and memory. Follow-up option: an access code required for the verifier role | accepted |
 
 Categories: Spoofing, Tampering, Repudiation, Information disclosure, Denial of service, Elevation of privilege.
 
