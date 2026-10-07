@@ -218,12 +218,13 @@
   }
 }
 
-/* The one moment on the upload screen: a stored file settles into its row. Transform and opacity
-   only, from the duration and easing tokens. The default markup is the end state. */
-@keyframes docket-settle {
+/* Motion (docs/design/motion.md). Only transform and opacity move; colour may fade. Every duration and
+   easing is a token. Entrances use fill-mode "backwards", never "both", so the end state is the plain
+   markup and a hover transform is never held back by a finished animation. */
+@keyframes docket-rise {
   from {
     opacity: 0;
-    transform: translateY(4px);
+    transform: translateY(var(--rise));
   }
   to {
     opacity: 1;
@@ -231,18 +232,119 @@
   }
 }
 
-[data-motion="settle"] {
-  animation: docket-settle var(--duration-base) var(--ease-enter) both;
+@keyframes docket-fade {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
 }
 
-/* Motion is opt-out for anyone who asks the OS for less of it. */
+@keyframes docket-pop {
+  from {
+    opacity: 0.4;
+    transform: scale(0.9);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+/* A document being read: the fill climbs toward 90 percent and waits there. It never loops. */
+@keyframes docket-read-fill {
+  from {
+    transform: scaleX(0.04);
+  }
+  to {
+    transform: scaleX(0.9);
+  }
+}
+
+/* A stored file settles into its row. */
+[data-motion="settle"] {
+  --rise: 4px;
+  animation: docket-rise var(--duration-base) var(--ease-enter) backwards;
+}
+
+/* Tiles and rows enter in a short wave: --i (0 to 8) is set inline by staggerStyle(). */
+.enter {
+  animation: docket-rise var(--duration-slow) var(--ease-enter) backwards;
+  animation-delay: calc(var(--i, 0) * var(--stagger));
+}
+
+/* The review queue and compare screens: a fade only, no travel, no wave. */
+.enter-quiet {
+  animation: docket-fade var(--duration-fast) var(--ease-standard) backwards;
+}
+
+/* A new route fades up under the header. */
+.route-enter {
+  --rise: 6px;
+  animation: docket-rise var(--duration-base) var(--ease-enter) backwards;
+}
+
+/* A status badge whose status just changed. */
+.badge-changed {
+  animation: docket-pop var(--duration-base) var(--ease-enter) backwards;
+}
+
+/* Hover lift for cards and tiles. The raised shadow is a pseudo element that fades in, so the only
+   things that change are transform and opacity. An outer box-shadow is never painted inside the
+   element's own box, so the pseudo element sits over the content without covering it. */
+.lift {
+  position: relative;
+  transition: transform var(--duration-fast) var(--ease-standard);
+}
+
+.lift::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  box-shadow: var(--shadow-3);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity var(--duration-fast) var(--ease-standard);
+}
+
+@media (hover: hover) {
+  .lift:hover {
+    transform: translateY(var(--lift));
+  }
+
+  .lift:hover::after {
+    opacity: 1;
+  }
+}
+
+/* The fill of a progress bar. While a document is read it climbs and waits; when done it is full. */
+.read-fill {
+  transform-origin: left center;
+  transform: scaleX(1);
+  transition: transform var(--duration-base) var(--ease-standard);
+}
+
+.read-fill[data-state="reading"] {
+  animation: docket-read-fill 12s cubic-bezier(0.1, 0.6, 0.2, 1) forwards;
+}
+
+/* Motion is opt-out for anyone who asks the OS for less of it: every animation and transition ends
+   at once, delays included, and hover does not move anything. */
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,
   *::after {
     animation-duration: 0.01ms !important;
+    animation-delay: 0s !important;
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
+    transition-delay: 0s !important;
     scroll-behavior: auto !important;
+  }
+
+  .lift:hover {
+    transform: none;
   }
 }
