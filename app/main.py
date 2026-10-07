@@ -30,7 +30,7 @@ from app.core.telemetry import configure_tracing
 from app.db.repositories.documents import SqlDocumentStore
 from app.db.repositories.gateway_calls import SqlCallLedger
 from app.db.session import make_engine, make_session_factory
-from app.domain.auth import LoginLimiter, Passwords
+from app.domain.auth import LoginLimiter, Passwords, RegistrationLimiter
 from app.domain.pdf import PopplerRasteriser
 from app.gateway.reader import build_reader, engine_version
 from app.jobs.runner import RunningWorker, start_worker
@@ -104,6 +104,11 @@ def _start_sign_in(app: FastAPI, settings: Settings) -> None:
         source_max_failures=settings.login_source_max_failures,
         window=timedelta(minutes=settings.login_window_minutes),
         lock=timedelta(minutes=settings.login_lock_minutes),
+        clock=lambda: app.state.clock(),
+    )
+    app.state.register_limiter = RegistrationLimiter(
+        max_per_source=settings.register_max_per_source,
+        window=timedelta(minutes=settings.register_window_minutes),
         clock=lambda: app.state.clock(),
     )
 
