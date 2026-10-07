@@ -1,6 +1,7 @@
-import { Link, Outlet, useNavigate } from "@tanstack/react-router";
+import { Link, Outlet, useNavigate, useRouterState } from "@tanstack/react-router";
 import { Suspense } from "react";
 
+import { mainWidthClass } from "@/app/layout";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { Button } from "@/components/ui/button";
 import { Toaster } from "@/components/ui/sonner";
@@ -28,12 +29,13 @@ export function RootLayout() {
   const { data: me } = useMe();
   const logout = useLogout();
   const navigate = useNavigate();
+  const pathname = useRouterState({ select: (state) => state.location.pathname });
   return (
     <div className="min-h-svh bg-background text-foreground">
       <header className="border-b">
         <nav
           aria-label="Main"
-          className="mx-auto flex max-w-5xl flex-wrap items-center gap-4 px-4 py-3"
+          className={`mx-auto flex ${mainWidthClass(pathname)} flex-wrap items-center gap-4 px-4 py-3`}
         >
           <Link to="/" className="font-semibold">
             Docket
@@ -68,7 +70,7 @@ export function RootLayout() {
           </div>
         </nav>
       </header>
-      <main className="mx-auto max-w-5xl px-4 py-8">
+      <main className={`mx-auto ${mainWidthClass(pathname)} px-4 py-8`}>
         <Suspense
           fallback={
             <p role="status" aria-live="polite" className="text-muted-foreground">

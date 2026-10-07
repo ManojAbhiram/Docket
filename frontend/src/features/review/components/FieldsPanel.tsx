@@ -48,8 +48,8 @@ interface FieldsPanelProps {
 export function FieldsPanel({ fields, selectedId, onSelect, image, imageNote }: FieldsPanelProps) {
   const ordered = failedFirst(fields);
   return (
-    <div className="grid gap-6 lg:grid-cols-2">
-      <div className="order-last space-y-4 lg:order-first">
+    <div className="grid gap-6 lg:grid-cols-5">
+      <div className="order-last space-y-4 lg:order-first lg:col-span-3">
         <div className="hidden md:block">
           <Table>
             <TableHeader>
@@ -79,8 +79,12 @@ export function FieldsPanel({ fields, selectedId, onSelect, image, imageNote }: 
                       {field.label}
                     </Button>
                   </TableCell>
-                  <TableCell className="font-mono">{field.applicationValue}</TableCell>
-                  <TableCell className="font-mono">{field.documentValue || "none"}</TableCell>
+                  <TableCell className="font-mono break-words whitespace-normal">
+                    {field.applicationValue}
+                  </TableCell>
+                  <TableCell className="font-mono break-words whitespace-normal">
+                    {field.documentValue || "none"}
+                  </TableCell>
                   <TableCell>
                     <Result kind={field.kind} />
                   </TableCell>
@@ -115,7 +119,7 @@ export function FieldsPanel({ fields, selectedId, onSelect, image, imageNote }: 
           ))}
         </ul>
       </div>
-      <div className="space-y-2 lg:sticky lg:top-4 lg:self-start">
+      <div className="space-y-2 lg:sticky lg:top-4 lg:col-span-2 lg:self-start">
         {image}
         {imageNote}
       </div>
