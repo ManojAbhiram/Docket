@@ -42,6 +42,9 @@ if (typeof window.matchMedia !== "function") {
   });
 }
 
+// jsdom has no canvas either: a field crop asks for a 2d context, and a null answer draws nothing.
+HTMLCanvasElement.prototype.getContext = () => null;
+
 // jsdom has no layout; the router's scroll restoration calls this on navigation.
 Object.defineProperty(window, "scrollTo", { value: () => undefined, writable: true });
 

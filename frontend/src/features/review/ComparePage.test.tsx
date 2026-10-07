@@ -106,6 +106,19 @@ describe("the application review screen", () => {
     expect(within(nameRow!).getByText("Mismatch")).toBeInTheDocument();
   });
 
+  // Design decisions 1D, 2A and 5B, eng R2 [NOTASK-6].
+  it("shows a crop of the page beside each value the engine placed, and says when it did not", async () => {
+    serve(detail());
+    renderCompare();
+
+    await screen.findByRole("heading", { name: "SYN-APP-004" });
+
+    expect(
+      (await screen.findAllByRole("img", { name: /as read from the page/ })).length,
+    ).toBeGreaterThanOrEqual(2);
+    expect(screen.getAllByText("No position").length).toBeGreaterThanOrEqual(1);
+  });
+
   it("says why a field is flagged in words, not colour", async () => {
     serve(detail());
 

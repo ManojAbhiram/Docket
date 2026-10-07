@@ -23,7 +23,7 @@ export interface QueueRow {
 
 interface QueueViewProps {
   items: QueueRow[];
-  /** Put focus on "Review next" once there is something to review, after a saved decision. */
+  /** Put focus on "Review newest" once there is something to review, after a saved decision. */
   focusReviewNext?: boolean;
   /** Decisions this person has saved since they signed in, shown beside the count. */
   decidedThisSitting?: number;
@@ -38,7 +38,7 @@ interface QueueViewProps {
   onLoadMore?: () => void;
   /** Runs the notice's action, for example Reload. */
   onNoticeAction?: () => void;
-  /** Opens one application on S-07. "Review next" and the `n` key open the first one listed. */
+  /** Opens one application on S-07. "Review newest" and the `n` key open the first one listed. */
   onOpen?: (item: QueueRow) => void;
   /** Where "Go to the dashboard" leads from the empty queue. */
   onDashboard?: () => void;
