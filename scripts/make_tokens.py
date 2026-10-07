@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Write docs/design/tokens.json from the palette below (direction 1, instrument panel).
+"""Write docs/design/tokens.json from the palette below (deep teal).
 
 The hex values here are the source. The oklch strings are computed from them, so the two cannot
 disagree. Roles reference primitives ("neutral.900"), the way the schema asks. Run from the
@@ -18,14 +18,14 @@ from pathlib import Path
 
 PRIMITIVES: dict[str, dict[str, str]] = {
     "neutral": {
-        "0": "#ffffff", "50": "#f3f5f7", "100": "#e6eaee", "200": "#d3d9df", "300": "#a3afbb",
-        "400": "#7c8896", "500": "#6b7886", "600": "#4a5560", "700": "#2a343f", "750": "#26323e",
-        "800": "#1f2730", "850": "#171d24", "900": "#14181d", "950": "#0f1318", "1000": "#0b0e12",
+        "0": "#ffffff", "50": "#f2f7f6", "100": "#e4efed", "200": "#d3e4e1", "300": "#9db8b4",
+        "400": "#6f8a86", "500": "#5a7773", "600": "#3f5a56", "700": "#1f3a37", "750": "#234341",
+        "800": "#172c2a", "850": "#112321", "900": "#0f1f1e", "950": "#0b1514", "1000": "#070f0e",
     },
     "accent": {
-        "0": "#f2f8fc", "100": "#dbe6ee", "200": "#a9d6f0", "300": "#7cc4ee", "400": "#5bb4e5",
-        "500": "#2f93c9", "600": "#0b6fa4", "700": "#095a86", "800": "#07496d", "900": "#053a58",
-        "1000": "#032a40",
+        "0": "#f0fdfa", "100": "#d6ebe8", "200": "#99e6dc", "300": "#5eead4", "400": "#2dd4bf",
+        "500": "#14a090", "600": "#0f766e", "700": "#115e59", "800": "#134e4a", "900": "#0d3b38",
+        "1000": "#0a2a28",
     },
     "success": {
         "0": "#f1f8f3", "100": "#e3f1e8", "200": "#b6e0c6", "300": "#6fcf97", "400": "#4db77f",
@@ -34,7 +34,7 @@ PRIMITIVES: dict[str, dict[str, str]] = {
     },
     "warning": {
         "0": "#fdf7ea", "100": "#fbeed6", "200": "#f6d9a0", "300": "#f0b44c", "400": "#de9722",
-        "500": "#b87510", "600": "#8a5300", "700": "#6f4300", "800": "#553400", "900": "#3a2c10",
+        "500": "#b87510", "550": "#b45309", "600": "#8a5300", "650": "#92400e", "700": "#6f4300", "800": "#553400", "900": "#3a2c10",
         "1000": "#261c0a",
     },
     "danger": {
@@ -56,6 +56,8 @@ LIGHT = {
     "danger": "danger.600", "on-danger": "neutral.0", "danger-subtle": "danger.100",
     "info": "neutral.600", "on-info": "neutral.0", "info-subtle": "neutral.100",
     "focus": "accent.600", "selection": "accent.100",
+    "tile": "accent.600", "tile-deep": "accent.800", "tile-warn": "warning.550",
+    "on-tile": "neutral.0", "header": "accent.800", "on-header": "neutral.0",
 }  # fmt: skip
 
 DARK = {
@@ -70,6 +72,8 @@ DARK = {
     "danger": "danger.300", "on-danger": "neutral.950", "danger-subtle": "danger.900",
     "info": "neutral.300", "on-info": "neutral.950", "info-subtle": "neutral.750",
     "focus": "accent.400", "selection": "accent.800",
+    "tile": "accent.700", "tile-deep": "accent.900", "tile-warn": "warning.650",
+    "on-tile": "neutral.0", "header": "accent.900", "on-header": "neutral.100",
 }  # fmt: skip
 
 
@@ -100,9 +104,9 @@ def tokens() -> dict[str, object]:
         "meta": {
             "name": "Docket",
             "version": 1,
-            "source": "docs/design/variants/docket/approved.json (1-instrument-panel)",
+            "source": "NOTASK-9 deep teal redesign, on the instrument panel structure",
             "memorable": "The document and the application side by side, and the wrong field "
-            "obvious in seconds.",
+            "obvious in seconds, in a calm deep teal.",
         },
         "color": {"primitives": primitives, "roles": {"light": LIGHT, "dark": DARK}},
         "font": {
@@ -136,15 +140,15 @@ def tokens() -> dict[str, object]:
             "levels": {
                 "0": {"light": "none", "dark": "none"},
                 "1": {
-                    "light": "0 1px 2px rgb(20 24 29 / 0.12)",
+                    "light": "0 1px 2px rgb(15 31 30 / 0.12)",
                     "dark": "0 1px 2px rgb(0 0 0 / 0.4)",
                 },
                 "2": {
-                    "light": "0 2px 6px rgb(20 24 29 / 0.16)",
+                    "light": "0 2px 6px rgb(15 31 30 / 0.16)",
                     "dark": "0 2px 6px rgb(0 0 0 / 0.5)",
                 },
                 "3": {
-                    "light": "0 8px 24px rgb(20 24 29 / 0.2)",
+                    "light": "0 8px 24px rgb(15 31 30 / 0.2)",
                     "dark": "0 8px 24px rgb(0 0 0 / 0.6)",
                 },
             },
@@ -158,6 +162,9 @@ def tokens() -> dict[str, object]:
                 "spring": {"stiffness": 300, "damping": 30, "mass": 1},
             },
             "stagger": 40,
+            "staggerSteps": 8,
+            "rise": 8,
+            "lift": 2,
         },
         "breakpoint": {"sm": 640, "md": 768, "lg": 1024, "xl": 1440},
         "z": {"base": 0, "raised": 10, "sticky": 20, "overlay": 30, "modal": 40, "toast": 50},
