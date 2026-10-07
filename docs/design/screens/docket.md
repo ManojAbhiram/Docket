@@ -14,6 +14,7 @@ Sources: flows `docs/design/flows/docket/flows.md` (v1, same day as the PRD), th
 | Id | Screen | View | Phone arrangement | Shortcuts |
 | --- | --- | --- | --- | --- |
 | S-01 | Sign in | `auth/SignInView` | one column, 48 px primary button full width | Enter submits |
+| S-01b | Sign up | `auth/SignUpView` | one column, role choices stack, 48 px primary button full width | Enter submits |
 | S-02 | Dashboard | `reports/DashboardView` | three tiles stack, the role's primary action first | none |
 | S-03 | Import applications | `intake/ImportView` | drop area, then the button, then the refused rows in a scrolling table | none |
 | S-04 | Applications | `intake/ApplicationsView` | table becomes a card per application, two actions per card | none |

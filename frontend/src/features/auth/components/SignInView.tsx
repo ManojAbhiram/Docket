@@ -1,3 +1,5 @@
+import { Link } from "@tanstack/react-router";
+
 import { NoticeBox, type NoticeSpec } from "@/components/Notice";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -50,6 +52,11 @@ export function SignInView({ busy = false, blocked = false, notice, onSubmit }: 
           {busy ? "Signing in" : "Sign in"}
         </Button>
       </form>
+      <p className="text-sm">
+        <Link to="/sign-up" className="underline underline-offset-4">
+          Create an account
+        </Link>
+      </p>
     </div>
   );
 }

@@ -15,6 +15,7 @@ import { GalleryIndex, GalleryScreen } from "@/design/Gallery";
 import { parseGallerySearch } from "@/design/registry";
 import { AuthGate, RequireRole } from "@/features/auth/components/AuthGate";
 import { SignInPage } from "@/features/auth/components/SignInPage";
+import { SignUpPage } from "@/features/auth/components/SignUpPage";
 import { ApplicationsPage } from "@/features/intake/pages/ApplicationsPage";
 import { ImportPage } from "@/features/intake/pages/ImportPage";
 import { UploadPage } from "@/features/intake/pages/UploadPage";
@@ -47,6 +48,12 @@ const signInRoute = createRoute({
     const { reason } = signInRoute.useSearch();
     return <SignInPage ended={reason === "ended"} />;
   },
+});
+
+const signUpRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "/sign-up",
+  component: SignUpPage,
 });
 
 const statusRoute = createRoute({
@@ -167,6 +174,7 @@ const appRoutes = appRoute.addChildren([
 
 export const routeTree = rootRoute.addChildren([
   signInRoute,
+  signUpRoute,
   statusRoute,
   appRoutes,
   ...(designGalleryEnabled ? [galleryIndexRoute, galleryScreenRoute] : []),

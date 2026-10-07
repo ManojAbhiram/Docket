@@ -11,6 +11,13 @@ export const userSchema = z.object({
 });
 export type User = z.infer<typeof userSchema>;
 
+export interface RegisterInput {
+  username: string;
+  display_name: string;
+  password: string;
+  role: Role;
+}
+
 export interface Credentials {
   username: string;
   password: string;
