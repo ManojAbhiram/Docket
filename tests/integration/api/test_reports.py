@@ -7,7 +7,7 @@ rows, and every export leaves one audit row that holds no applicant data.
 import csv
 import io
 import logging
-from datetime import date
+from datetime import UTC, date, datetime
 
 import pytest
 from httpx import AsyncClient
@@ -177,6 +177,9 @@ async def test_the_export_gives_the_documented_columns_with_an_iso_date(
         "roll_number",
         "category",
         "status",
+        "decision",
+        "decided_by",
+        "decided_at",
     ]
     assert rows[1] == [
         "SYN-V-1",
@@ -186,7 +189,41 @@ async def test_the_export_gives_the_documented_columns_with_an_iso_date(
         "R-SYN-V-1",
         "General",
         "verified",
+        "",
+        "",
+        "",
     ]
+
+
+# ISSUE-007 [NOTASK-2]: a verifier's decision shows in the export, and the latest one wins.
+async def test_the_export_names_the_decision_the_verifier_and_the_time(
+    api: AsyncClient, connection: AsyncConnection
+) -> None:
+    await add_application(connection, "SYN-V-1", "verified")
+    await add_application(connection, "SYN-V-2", "verified")
+    verifier_id = await seed_user(connection, "verifier.demo", "verifier")
+    await as_role(api, connection, "staff")
+    application_id = (
+        await connection.execute(
+            text("SELECT id FROM applications WHERE application_ref = 'SYN-V-1'")
+        )
+    ).scalar_one()
+    for at in (
+        datetime(2026, 10, 7, 7, 0, 0, tzinfo=UTC),
+        datetime(2026, 10, 7, 7, 40, 25, tzinfo=UTC),
+    ):
+        await connection.execute(
+            text(
+                "INSERT INTO decisions (application_id, decided_by, action, created_at) "
+                "VALUES (:a, :u, 'approve', :at)"
+            ),
+            {"a": application_id, "u": verifier_id, "at": at},
+        )
+
+    rows = table((await api.get("/api/exports/verified.csv")).text)
+
+    assert rows[1][7:] == ["approve", "Demo verifier", "2026-10-07T07:40:25+00:00"]
+    assert rows[2][7:] == ["", "", ""]
 
 
 async def test_with_no_verified_application_the_export_is_the_header_row_only(

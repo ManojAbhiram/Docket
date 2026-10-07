@@ -2,8 +2,9 @@
 
 Index decision (database rules): one count over `applications` and one ordered read of the verified
 rows, at most a few thousand rows in one office, so no index yet; add one on `(status)` before the
-table holds tens of thousands. The audit row is written in the transaction that reads the rows, so
-an export cannot happen without its entry.
+table holds tens of thousands. The latest decision per row is read through
+`idx_decisions_application_id (application_id, created_at)`, which already exists. The audit row
+is written in the transaction that reads the rows, so an export cannot happen without its entry.
 """
 
 from dataclasses import dataclass
@@ -22,9 +23,15 @@ _COUNTS = text(
     "FROM applications WHERE erased_at IS NULL"
 )
 _VERIFIED = text(
-    "SELECT application_ref, full_name, date_of_birth, board, roll_number, category "
-    "FROM applications WHERE status = 'verified' AND erased_at IS NULL "
-    "ORDER BY application_ref"
+    "SELECT a.application_ref, a.full_name, a.date_of_birth, a.board, a.roll_number, a.category, "
+    "d.action::text, u.display_name, d.created_at "
+    "FROM applications a "
+    "LEFT JOIN LATERAL (SELECT action, decided_by, created_at FROM decisions "
+    "WHERE application_id = a.id AND action IN ('approve', 'correct') "
+    "ORDER BY created_at DESC LIMIT 1) d ON true "
+    "LEFT JOIN users u ON u.id = d.decided_by "
+    "WHERE a.status = 'verified' AND a.erased_at IS NULL "
+    "ORDER BY a.application_ref"
 )
 _AUDIT = text("INSERT INTO export_audit (exported_by, row_count) VALUES (:user, :count)")
 
@@ -61,6 +68,9 @@ class SqlReportStore:
                     board=r[3],
                     roll_number=r[4],
                     category=r[5],
+                    decision=r[6],
+                    decided_by=r[7],
+                    decided_at=r[8],
                 )
                 for r in (await session.execute(_VERIFIED)).all()
             ]

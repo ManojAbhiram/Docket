@@ -2,15 +2,16 @@
 
 A spreadsheet runs a cell that starts with `=`, `+`, `-` or `@` as a formula, and a leading tab or
 carriage return can hide one. Every cell is prefixed with an apostrophe in those cases, so the
-file shows the text instead of running it. No decision column and no verified-at time: the decision
-log arrives with US-00-007, and nothing before it records either.
+file shows the text instead of running it. The last three columns name the verifier's decision, who
+made it and when. An application verified automatically has no decision, so those cells stay empty
+rather than guess a time.
 """
 
 import csv
 import io
 from collections.abc import Sequence
 from dataclasses import dataclass
-from datetime import date
+from datetime import date, datetime
 
 HEADER = (
     "application_id",
@@ -20,13 +21,16 @@ HEADER = (
     "roll_number",
     "category",
     "status",
+    "decision",
+    "decided_by",
+    "decided_at",
 )
 _FORMULA_STARTS = ("=", "+", "-", "@", "\t", "\r")
 
 
 @dataclass(frozen=True)
 class VerifiedRow:
-    """One verified application as the export shows it."""
+    """One verified application as the export shows it, with the verifier's decision if any."""
 
     application_ref: str
     full_name: str
@@ -34,6 +38,9 @@ class VerifiedRow:
     board: str
     roll_number: str
     category: str
+    decision: str | None = None
+    decided_by: str | None = None
+    decided_at: datetime | None = None
 
 
 def neutralise(cell: str) -> str:
@@ -56,6 +63,9 @@ def render_verified_csv(rows: Sequence[VerifiedRow]) -> str:
                 neutralise(row.roll_number),
                 neutralise(row.category),
                 "verified",
+                row.decision or "",
+                neutralise(row.decided_by or ""),
+                row.decided_at.isoformat() if row.decided_at else "",
             ]
         )
     return out.getvalue()

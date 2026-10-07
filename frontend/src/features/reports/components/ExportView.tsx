@@ -39,7 +39,7 @@ export function ExportView({
     <div className="space-y-6">
       <PageHeader
         title="Export verified list"
-        description="One row per Verified application: application id, name, date of birth, board, roll number, category and status."
+        description="One row per Verified application: application id, name, date of birth, board, roll number, category and status, then the decision, who made it and when (empty for an automatic verification)."
       />
       {notice &&
         (onAction && notice.action ? (
