@@ -100,6 +100,25 @@ jobs:
             coverage.xml
           retention-days: 7
 
+  # Replays the recorded RapidOCR words: no live engine call and no model download (CONSTRAINTS.md 3.1).
+  eval-gate:
+    needs: unit
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v6
+        with:
+          version: ${{ env.UV_VERSION }}
+          python-version: ${{ env.PYTHON_VERSION }}
+          enable-cache: true
+          cache-dependency-glob: uv.lock
+      - name: install
+        run: if [ -f uv.lock ]; then uv sync --locked --all-groups; else echo "lockfile:none committed, resolving now (run uv lock and commit uv.lock)"; uv sync --all-groups; fi
+      # EVAL_ALLOW_NO_BASELINE=1 lets the job pass while evals/ocr/gate.yaml has no accepted
+      # baseline, so nothing is gated yet. Once a person accepts one, drop the flag: a plain
+      # `make eval-gate` then fails the pipeline when the score falls.
+      - run: make eval-gate EVAL_ALLOW_NO_BASELINE=1
+
   # Needs Postgres, so it is a job here and not part of make check.
   integration:
     needs: lint

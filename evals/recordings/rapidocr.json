@@ -1,0 +1,5162 @@
+{
+ "0c2e03159a5bbd9dc52a06813b568499d3effad0a75d57118425666fa5e1accb": {
+  "words": [
+   {
+    "box": [
+     246.25,
+     51.25,
+     307.5,
+     26.25
+    ],
+    "confidence": 0.99489,
+    "text": "School Transfer Certificate"
+   },
+   {
+    "box": [
+     47.5,
+     106.25,
+     52.5,
+     21.25
+    ],
+    "confidence": 0.99997,
+    "text": "Name"
+   },
+   {
+    "box": [
+     320.0,
+     107.5,
+     98.75,
+     22.5
+    ],
+    "confidence": 0.99464,
+    "text": "Tanvi Gupta"
+   },
+   {
+    "box": [
+     47.5,
+     137.5,
+     113.75,
+     20.0
+    ],
+    "confidence": 0.99955,
+    "text": "Father's name"
+   },
+   {
+    "box": [
+     321.25,
+     138.75,
+     110.0,
+     21.25
+    ],
+    "confidence": 0.99956,
+    "text": "Suresh Gupta"
+   },
+   {
+    "box": [
+     47.5,
+     168.75,
+     102.5,
+     20.0
+    ],
+    "confidence": 0.99977,
+    "text": "Date of birth"
+   },
+   {
+    "box": [
+     321.25,
+     170.0,
+     91.25,
+     20.0
+    ],
+    "confidence": 0.99999,
+    "text": "21/08/2007"
+   },
+   {
+    "box": [
+     47.5,
+     200.0,
+     92.5,
+     20.0
+    ],
+    "confidence": 0.99958,
+    "text": "TC number"
+   },
+   {
+    "box": [
+     321.25,
+     201.25,
+     135.0,
+     18.75
+    ],
+    "confidence": 0.99958,
+    "text": "SYNTC90670804"
+   },
+   {
+    "box": [
+     167.5,
+     252.5,
+     463.75,
+     20.0
+    ],
+    "confidence": 0.99662,
+    "text": "SAMPLE, SYNTHETIC DOCUMENT, NOT A REAL RECORD (SYN-APP-016)"
+   }
+  ]
+ },
+ "0df1bc853e5ca0d971781bb692a36284ed8ddef3223849c87b83a1161061a642": {
+  "words": [
+   {
+    "box": [
+     321.25,
+     50.0,
+     156.25,
+     28.75
+    ],
+    "confidence": 0.99994,
+    "text": "Identity Card"
+   },
+   {
+    "box": [
+     47.5,
+     107.5,
+     51.25,
+     20.0
+    ],
+    "confidence": 0.99998,
+    "text": "Name"
+   },
+   {
+    "box": [
+     320.0,
+     107.5,
+     106.25,
+     22.5
+    ],
+    "confidence": 0.98497,
+    "text": "Karan Reddy"
+   },
+   {
+    "box": [
+     47.5,
+     138.75,
+     102.5,
+     18.75
+    ],
+    "confidence": 0.99832,
+    "text": "Date of birth"
+   },
+   {
+    "box": [
+     321.25,
+     140.0,
+     91.25,
+     18.75
+    ],
+    "confidence": 0.99999,
+    "text": "04/07/2008"
+   },
+   {
+    "box": [
+     47.5,
+     170.0,
+     88.75,
+     20.0
+    ],
+    "confidence": 0.99986,
+    "text": "ID number"
+   },
+   {
+    "box": [
+     321.25,
+     170.0,
+     132.5,
+     20.0
+    ],
+    "confidence": 0.99997,
+    "text": "SYNID49042593"
+   },
+   {
+    "box": [
+     167.5,
+     222.5,
+     463.75,
+     18.75
+    ],
+    "confidence": 0.99067,
+    "text": "SAMPLE, SYNTHETIC DOCUMENT, NOT A REAL RECORD (SYN-APP-007)"
+   }
+  ]
+ },
+ "11bd6fe15038b3f2a714d6be8e9011b1f43f076206b7eee7775af084191fb96d": {
+  "words": [
+   {
+    "box": [
+     57.5,
+     50.0,
+     685.0,
+     27.5
+    ],
+    "confidence": 0.98382,
+    "text": "Secondary School Examination, Class X: Statement of Marks"
+   },
+   {
+    "box": [
+     43.75,
+     103.75,
+     57.5,
+     27.5
+    ],
+    "confidence": 0.99996,
+    "text": "Name"
+   },
+   {
+    "box": [
+     317.5,
+     103.75,
+     92.5,
+     28.75
+    ],
+    "confidence": 0.99992,
+    "text": "Dev Gupta"
+   },
+   {
+    "box": [
+     46.25,
+     137.5,
+     116.25,
+     22.5
+    ],
+    "confidence": 0.99945,
+    "text": "Father's name"
+   },
+   {
+    "box": [
+     318.75,
+     137.5,
+     113.75,
+     25.0
+    ],
+    "confidence": 0.973,
+    "text": "Suresh Gupta"
+   },
+   {
+    "box": [
+     46.25,
+     168.75,
+     105.0,
+     22.5
+    ],
+    "confidence": 0.96439,
+    "text": "Date of birth"
+   },
+   {
+    "box": [
+     318.75,
+     167.5,
+     96.25,
+     25.0
+    ],
+    "confidence": 1.0,
+    "text": "13/06/2007"
+   },
+   {
+    "box": [
+     45.0,
+     197.5,
+     57.5,
+     26.25
+    ],
+    "confidence": 0.99998,
+    "text": "Board"
+   },
+   {
+    "box": [
+     317.5,
+     197.5,
+     55.0,
+     26.25
+    ],
+    "confidence": 0.99995,
+    "text": "CBSE"
+   },
+   {
+    "box": [
+     46.25,
+     230.0,
+     103.75,
+     23.75
+    ],
+    "confidence": 0.99986,
+    "text": "Roll number"
+   },
+   {
+    "box": [
+     318.75,
+     230.0,
+     110.0,
+     23.75
+    ],
+    "confidence": 0.99995,
+    "text": "SYN9190260"
+   },
+   {
+    "box": [
+     45.0,
+     277.5,
+     73.75,
+     26.25
+    ],
+    "confidence": 0.99994,
+    "text": "Subject"
+   },
+   {
+    "box": [
+     503.75,
+     277.5,
+     65.0,
+     26.25
+    ],
+    "confidence": 0.99996,
+    "text": "Marks"
+   },
+   {
+    "box": [
+     45.0,
+     308.75,
+     67.5,
+     26.25
+    ],
+    "confidence": 0.99156,
+    "text": "English"
+   },
+   {
+    "box": [
+     503.75,
+     308.75,
+     31.25,
+     26.25
+    ],
+    "confidence": 1.0,
+    "text": "85"
+   },
+   {
+    "box": [
+     43.75,
+     340.0,
+     55.0,
+     26.25
+    ],
+    "confidence": 0.99996,
+    "text": "Hindi"
+   },
+   {
+    "box": [
+     503.75,
+     340.0,
+     32.5,
+     26.25
+    ],
+    "confidence": 1.0,
+    "text": "38"
+   },
+   {
+    "box": [
+     45.0,
+     371.25,
+     108.75,
+     25.0
+    ],
+    "confidence": 0.99997,
+    "text": "Mathematics"
+   },
+   {
+    "box": [
+     503.75,
+     371.25,
+     31.25,
+     26.25
+    ],
+    "confidence": 1.0,
+    "text": "38"
+   },
+   {
+    "box": [
+     45.0,
+     402.5,
+     70.0,
+     25.0
+    ],
+    "confidence": 0.99996,
+    "text": "Science"
+   },
+   {
+    "box": [
+     503.75,
+     401.25,
+     32.5,
+     27.5
+    ],
+    "confidence": 1.0,
+    "text": "35"
+   },
+   {
+    "box": [
+     46.25,
+     435.0,
+     118.75,
+     22.5
+    ],
+    "confidence": 0.99983,
+    "text": "Social Science"
+   },
+   {
+    "box": [
+     503.75,
+     432.5,
+     31.25,
+     27.5
+    ],
+    "confidence": 1.0,
+    "text": "63"
+   },
+   {
+    "box": [
+     167.5,
+     486.25,
+     465.0,
+     21.25
+    ],
+    "confidence": 0.9954,
+    "text": "SAMPLE, SYNTHETIC DOCUMENT, NOT A REAL RECORD (SYN-APP-005)"
+   }
+  ]
+ },
+ "18de30c215da717a44b9585c917b3077f7b6ebde1575ad7d1fe64e19a7b92bc3": {
+  "words": [
+   {
+    "box": [
+     246.25,
+     52.5,
+     306.25,
+     23.75
+    ],
+    "confidence": 0.99708,
+    "text": "School Transfer Certificate"
+   },
+   {
+    "box": [
+     46.25,
+     107.5,
+     52.5,
+     22.5
+    ],
+    "confidence": 0.99998,
+    "text": "Name"
+   },
+   {
+    "box": [
+     321.25,
+     107.5,
+     82.5,
+     21.25
+    ],
+    "confidence": 0.99585,
+    "text": "Latha Das"
+   },
+   {
+    "box": [
+     47.5,
+     141.25,
+     113.75,
+     18.75
+    ],
+    "confidence": 0.99924,
+    "text": "Father's name"
+   },
+   {
+    "box": [
+     321.25,
+     140.0,
+     82.5,
+     18.75
+    ],
+    "confidence": 0.99993,
+    "text": "Salim Das"
+   },
+   {
+    "box": [
+     48.75,
+     171.25,
+     101.25,
+     18.75
+    ],
+    "confidence": 0.96839,
+    "text": "Date of birth"
+   },
+   {
+    "box": [
+     321.25,
+     171.25,
+     91.25,
+     18.75
+    ],
+    "confidence": 0.99999,
+    "text": "21/02/2007"
+   },
+   {
+    "box": [
+     47.5,
+     201.25,
+     92.5,
+     21.25
+    ],
+    "confidence": 0.99987,
+    "text": "TC number"
+   },
+   {
+    "box": [
+     321.25,
+     202.5,
+     136.25,
+     17.5
+    ],
+    "confidence": 0.99967,
+    "text": "SYNTC84951656"
+   },
+   {
+    "box": [
+     167.5,
+     253.75,
+     465.0,
+     18.75
+    ],
+    "confidence": 0.99954,
+    "text": "SAMPLE, SYNTHETIC DOCUMENT, NOT A REAL RECORD (SYN-APP-008)"
+   }
+  ]
+ },
+ "67ee246a1ddba687715441474cb7e61e1e18ff866c76959f3bfea2becb5f3353": {
+  "words": [
+   {
+    "box": [
+     46.25,
+     51.25,
+     708.75,
+     25.0
+    ],
+    "confidence": 0.99382,
+    "text": "Senior School Certificate Examination, Class XII: Statement of"
+   },
+   {
+    "box": [
+     358.75,
+     73.75,
+     81.25,
+     27.5
+    ],
+    "confidence": 0.99994,
+    "text": "Marks"
+   },
+   {
+    "box": [
+     45.0,
+     130.0,
+     55.0,
+     23.75
+    ],
+    "confidence": 0.99997,
+    "text": "Name"
+   },
+   {
+    "box": [
+     318.75,
+     128.75,
+     118.75,
+     26.25
+    ],
+    "confidence": 0.99994,
+    "text": "Karan Sharma"
+   },
+   {
+    "box": [
+     46.25,
+     162.5,
+     116.25,
+     21.25
+    ],
+    "confidence": 0.99966,
+    "text": "Father's name"
+   },
+   {
+    "box": [
+     318.75,
+     160.0,
+     103.75,
+     25.0
+    ],
+    "confidence": 0.99993,
+    "text": "Anil Sharma"
+   },
+   {
+    "box": [
+     46.25,
+     193.75,
+     105.0,
+     21.25
+    ],
+    "confidence": 0.97711,
+    "text": "Date of birth"
+   },
+   {
+    "box": [
+     318.75,
+     191.25,
+     96.25,
+     25.0
+    ],
+    "confidence": 0.99999,
+    "text": "30/06/2008"
+   },
+   {
+    "box": [
+     45.0,
+     222.5,
+     56.25,
+     26.25
+    ],
+    "confidence": 0.99999,
+    "text": "Board"
+   },
+   {
+    "box": [
+     317.5,
+     221.25,
+     55.0,
+     26.25
+    ],
+    "confidence": 0.99995,
+    "text": "CBSE"
+   },
+   {
+    "box": [
+     46.25,
+     253.75,
+     102.5,
+     22.5
+    ],
+    "confidence": 0.98575,
+    "text": "Roll number"
+   },
+   {
+    "box": [
+     320.0,
+     255.0,
+     107.5,
+     22.5
+    ],
+    "confidence": 0.99997,
+    "text": "SYN7681729"
+   },
+   {
+    "box": [
+     45.0,
+     302.5,
+     73.75,
+     26.25
+    ],
+    "confidence": 0.99992,
+    "text": "Subject"
+   },
+   {
+    "box": [
+     503.75,
+     301.25,
+     63.75,
+     26.25
+    ],
+    "confidence": 0.99995,
+    "text": "Marks"
+   },
+   {
+    "box": [
+     43.75,
+     332.5,
+     70.0,
+     28.75
+    ],
+    "confidence": 0.99997,
+    "text": "English"
+   },
+   {
+    "box": [
+     503.75,
+     332.5,
+     32.5,
+     27.5
+    ],
+    "confidence": 0.99999,
+    "text": "40"
+   },
+   {
+    "box": [
+     43.75,
+     365.0,
+     55.0,
+     25.0
+    ],
+    "confidence": 0.99995,
+    "text": "Hindi"
+   },
+   {
+    "box": [
+     503.75,
+     363.75,
+     32.5,
+     27.5
+    ],
+    "confidence": 1.0,
+    "text": "95"
+   },
+   {
+    "box": [
+     46.25,
+     397.5,
+     107.5,
+     21.25
+    ],
+    "confidence": 0.99995,
+    "text": "Mathematics"
+   },
+   {
+    "box": [
+     502.5,
+     395.0,
+     32.5,
+     27.5
+    ],
+    "confidence": 0.99998,
+    "text": "51"
+   },
+   {
+    "box": [
+     45.0,
+     427.5,
+     70.0,
+     25.0
+    ],
+    "confidence": 0.99992,
+    "text": "Science"
+   },
+   {
+    "box": [
+     503.75,
+     425.0,
+     32.5,
+     28.75
+    ],
+    "confidence": 1.0,
+    "text": "45"
+   },
+   {
+    "box": [
+     46.25,
+     460.0,
+     118.75,
+     21.25
+    ],
+    "confidence": 0.97658,
+    "text": "Social Science"
+   },
+   {
+    "box": [
+     502.5,
+     456.25,
+     35.0,
+     30.0
+    ],
+    "confidence": 1.0,
+    "text": "90"
+   },
+   {
+    "box": [
+     167.5,
+     510.0,
+     465.0,
+     21.25
+    ],
+    "confidence": 0.57719,
+    "text": "SAM-- R A  ON L I 06"
+   }
+  ]
+ },
+ "7ed087118a53f1a346f260b4d1035c63835e880f4fea44f23798d90c52381930": {
+  "words": [
+   {
+    "box": [
+     321.25,
+     51.25,
+     155.0,
+     27.5
+    ],
+    "confidence": 0.99995,
+    "text": "Identity Card"
+   },
+   {
+    "box": [
+     47.5,
+     110.0,
+     51.25,
+     18.75
+    ],
+    "confidence": 0.99998,
+    "text": "Name"
+   },
+   {
+    "box": [
+     321.25,
+     108.75,
+     116.25,
+     20.0
+    ],
+    "confidence": 0.99994,
+    "text": "Karan Sharma"
+   },
+   {
+    "box": [
+     48.75,
+     140.0,
+     101.25,
+     18.75
+    ],
+    "confidence": 0.97668,
+    "text": "Date of birth"
+   },
+   {
+    "box": [
+     321.25,
+     138.75,
+     92.5,
+     21.25
+    ],
+    "confidence": 0.99999,
+    "text": "30/06/2008"
+   },
+   {
+    "box": [
+     47.5,
+     171.25,
+     88.75,
+     20.0
+    ],
+    "confidence": 0.99992,
+    "text": "ID number"
+   },
+   {
+    "box": [
+     322.5,
+     171.25,
+     131.25,
+     18.75
+    ],
+    "confidence": 0.99998,
+    "text": "SYNID68656252"
+   },
+   {
+    "box": [
+     167.5,
+     221.25,
+     465.0,
+     20.0
+    ],
+    "confidence": 0.99194,
+    "text": "SAMPLE, SYNTHETIC DOCUMENT, NOT A REAL RECORD (SYN-APP-006)"
+   }
+  ]
+ },
+ "847545d55e11b2814038c1ddcbcd210131e456b89fdf3e9439ea6d7f62aa1bf7": {
+  "words": [
+   {
+    "box": [
+     55.0,
+     50.0,
+     687.5,
+     28.75
+    ],
+    "confidence": 0.99951,
+    "text": "Secondary School Examination, Class X: Statement of Marks"
+   },
+   {
+    "box": [
+     43.75,
+     106.25,
+     57.5,
+     26.25
+    ],
+    "confidence": 0.99997,
+    "text": "Name"
+   },
+   {
+    "box": [
+     317.5,
+     105.0,
+     117.5,
+     25.0
+    ],
+    "confidence": 0.99992,
+    "text": "Latha Sharma"
+   },
+   {
+    "box": [
+     45.0,
+     137.5,
+     117.5,
+     25.0
+    ],
+    "confidence": 0.99476,
+    "text": "Father's name"
+   },
+   {
+    "box": [
+     318.75,
+     137.5,
+     116.25,
+     23.75
+    ],
+    "confidence": 0.99991,
+    "text": "Salim Sharma"
+   },
+   {
+    "box": [
+     43.75,
+     168.75,
+     107.5,
+     25.0
+    ],
+    "confidence": 0.99166,
+    "text": "Date of birth"
+   },
+   {
+    "box": [
+     318.75,
+     167.5,
+     96.25,
+     25.0
+    ],
+    "confidence": 0.99999,
+    "text": "10/12/2006"
+   },
+   {
+    "box": [
+     43.75,
+     198.75,
+     57.5,
+     26.25
+    ],
+    "confidence": 0.99999,
+    "text": "Board"
+   },
+   {
+    "box": [
+     318.75,
+     200.0,
+     182.5,
+     21.25
+    ],
+    "confidence": 0.99993,
+    "text": "Karnataka State Board"
+   },
+   {
+    "box": [
+     45.0,
+     231.25,
+     105.0,
+     23.75
+    ],
+    "confidence": 0.99995,
+    "text": "Roll number"
+   },
+   {
+    "box": [
+     318.75,
+     230.0,
+     110.0,
+     23.75
+    ],
+    "confidence": 0.99994,
+    "text": "SYN0945957"
+   },
+   {
+    "box": [
+     43.75,
+     277.5,
+     75.0,
+     28.75
+    ],
+    "confidence": 0.99993,
+    "text": "Subject"
+   },
+   {
+    "box": [
+     503.75,
+     276.25,
+     65.0,
+     28.75
+    ],
+    "confidence": 0.99992,
+    "text": "Marks"
+   },
+   {
+    "box": [
+     43.75,
+     308.75,
+     70.0,
+     28.75
+    ],
+    "confidence": 0.99997,
+    "text": "English"
+   },
+   {
+    "box": [
+     503.75,
+     308.75,
+     32.5,
+     27.5
+    ],
+    "confidence": 1.0,
+    "text": "59"
+   },
+   {
+    "box": [
+     43.75,
+     341.25,
+     55.0,
+     26.25
+    ],
+    "confidence": 0.99996,
+    "text": "Hindi"
+   },
+   {
+    "box": [
+     502.5,
+     337.5,
+     35.0,
+     31.25
+    ],
+    "confidence": 0.99998,
+    "text": "77"
+   },
+   {
+    "box": [
+     46.25,
+     373.75,
+     107.5,
+     22.5
+    ],
+    "confidence": 0.99982,
+    "text": "Mathematics"
+   },
+   {
+    "box": [
+     502.5,
+     368.75,
+     35.0,
+     30.0
+    ],
+    "confidence": 0.99999,
+    "text": "87"
+   },
+   {
+    "box": [
+     45.0,
+     403.75,
+     70.0,
+     25.0
+    ],
+    "confidence": 0.99996,
+    "text": "Science"
+   },
+   {
+    "box": [
+     503.75,
+     400.0,
+     33.75,
+     30.0
+    ],
+    "confidence": 0.99998,
+    "text": "74"
+   },
+   {
+    "box": [
+     47.5,
+     436.25,
+     117.5,
+     22.5
+    ],
+    "confidence": 0.99991,
+    "text": "Social Science"
+   },
+   {
+    "box": [
+     503.75,
+     431.25,
+     33.75,
+     30.0
+    ],
+    "confidence": 1.0,
+    "text": "56"
+   },
+   {
+    "box": [
+     167.5,
+     486.25,
+     465.0,
+     21.25
+    ],
+    "confidence": 0.67286,
+    "text": "SAM-- R   ON L S 0I)"
+   }
+  ]
+ },
+ "85b48354886220616cf4d71e3a3cecee2cc931c05bc449f05385a21c5ea206af": {
+  "words": [
+   {
+    "box": [
+     321.25,
+     48.75,
+     156.25,
+     30.0
+    ],
+    "confidence": 0.99996,
+    "text": "Identity Card"
+   },
+   {
+    "box": [
+     47.5,
+     106.25,
+     52.5,
+     21.25
+    ],
+    "confidence": 0.99997,
+    "text": "Name"
+   },
+   {
+    "box": [
+     321.25,
+     107.5,
+     85.0,
+     21.25
+    ],
+    "confidence": 0.98135,
+    "text": "Farah Rao"
+   },
+   {
+    "box": [
+     47.5,
+     137.5,
+     102.5,
+     20.0
+    ],
+    "confidence": 0.99841,
+    "text": "Date of birth"
+   },
+   {
+    "box": [
+     321.25,
+     140.0,
+     92.5,
+     18.75
+    ],
+    "confidence": 0.99999,
+    "text": "06/10/2008"
+   },
+   {
+    "box": [
+     46.25,
+     168.75,
+     90.0,
+     21.25
+    ],
+    "confidence": 0.99995,
+    "text": "ID number"
+   },
+   {
+    "box": [
+     321.25,
+     170.0,
+     132.5,
+     20.0
+    ],
+    "confidence": 0.99996,
+    "text": "SYNID38625725"
+   },
+   {
+    "box": [
+     167.5,
+     221.25,
+     465.0,
+     20.0
+    ],
+    "confidence": 0.99658,
+    "text": "SAMPLE, SYNTHETIC DOCUMENT, NOT A REAL RECORD (SYN-APP-015)"
+   }
+  ]
+ },
+ "8b708450e2a3ce71723f86289260ff70319a6a5f3d2ad44fc967984f79177b57": {
+  "words": [
+   {
+    "box": [
+     246.25,
+     51.25,
+     307.5,
+     25.0
+    ],
+    "confidence": 0.99983,
+    "text": "School Transfer Certificate"
+   },
+   {
+    "box": [
+     47.5,
+     108.75,
+     51.25,
+     20.0
+    ],
+    "confidence": 0.99999,
+    "text": "Name"
+   },
+   {
+    "box": [
+     320.0,
+     107.5,
+     110.0,
+     23.75
+    ],
+    "confidence": 0.9999,
+    "text": "Joseph Reddy"
+   },
+   {
+    "box": [
+     47.5,
+     140.0,
+     113.75,
+     20.0
+    ],
+    "confidence": 0.9998,
+    "text": "Father's name"
+   },
+   {
+    "box": [
+     321.25,
+     140.0,
+     117.5,
+     20.0
+    ],
+    "confidence": 0.99995,
+    "text": "Thomas Reddy"
+   },
+   {
+    "box": [
+     47.5,
+     170.0,
+     102.5,
+     20.0
+    ],
+    "confidence": 0.99963,
+    "text": "Date of birth"
+   },
+   {
+    "box": [
+     321.25,
+     170.0,
+     92.5,
+     20.0
+    ],
+    "confidence": 0.99999,
+    "text": "04/07/2008"
+   },
+   {
+    "box": [
+     47.5,
+     201.25,
+     92.5,
+     21.25
+    ],
+    "confidence": 0.99989,
+    "text": "TC number"
+   },
+   {
+    "box": [
+     321.25,
+     201.25,
+     136.25,
+     18.75
+    ],
+    "confidence": 0.99993,
+    "text": "SYNTC31982109"
+   },
+   {
+    "box": [
+     170.0,
+     255.0,
+     222.5,
+     16.25
+    ],
+    "confidence": 0.99759,
+    "text": "SAMPLE, SYNTHETIC DOCUMENT"
+   },
+   {
+    "box": [
+     426.25,
+     255.0,
+     205.0,
+     16.25
+    ],
+    "confidence": 0.98825,
+    "text": "A REAL RECORD (SYN-APP-007)"
+   }
+  ]
+ },
+ "8fcfafa26f00bfa55412a6ab4040a0c1ee094d43c050334a0867f95f3ad3cd10": {
+  "words": [
+   {
+    "box": [
+     321.25,
+     50.0,
+     156.25,
+     27.5
+    ],
+    "confidence": 0.99995,
+    "text": "Identity Card"
+   },
+   {
+    "box": [
+     48.75,
+     108.75,
+     48.75,
+     18.75
+    ],
+    "confidence": 0.99997,
+    "text": "Name"
+   },
+   {
+    "box": [
+     320.0,
+     107.5,
+     108.75,
+     22.5
+    ],
+    "confidence": 0.99989,
+    "text": "Vivaan Gupta"
+   },
+   {
+    "box": [
+     47.5,
+     138.75,
+     102.5,
+     20.0
+    ],
+    "confidence": 0.99977,
+    "text": "Date of birth"
+   },
+   {
+    "box": [
+     321.25,
+     138.75,
+     92.5,
+     21.25
+    ],
+    "confidence": 0.99999,
+    "text": "14/11/2008"
+   },
+   {
+    "box": [
+     46.25,
+     170.0,
+     88.75,
+     20.0
+    ],
+    "confidence": 0.97611,
+    "text": "ID number"
+   },
+   {
+    "box": [
+     321.25,
+     170.0,
+     132.5,
+     20.0
+    ],
+    "confidence": 0.99993,
+    "text": "SYNID68431272"
+   },
+   {
+    "box": [
+     168.75,
+     222.5,
+     222.5,
+     17.5
+    ],
+    "confidence": 0.98985,
+    "text": "SAMPLE, SYNTHETIC DOCUMENT"
+   },
+   {
+    "box": [
+     525.0,
+     225.0,
+     105.0,
+     15.0
+    ],
+    "confidence": 0.99921,
+    "text": "D (SYN-APP-003)"
+   }
+  ]
+ },
+ "9010ef68ea4c05ae45fec5c8ee25841d348aaf2382fa226591f344c9fcebd9ff": {
+  "words": [
+   {
+    "box": [
+     56.25,
+     48.75,
+     687.5,
+     30.0
+    ],
+    "confidence": 0.9891,
+    "text": "Secondary School Examination, Class X: Statement of Marks"
+   },
+   {
+    "box": [
+     43.75,
+     105.0,
+     57.5,
+     26.25
+    ],
+    "confidence": 0.99998,
+    "text": "Name"
+   },
+   {
+    "box": [
+     317.5,
+     105.0,
+     87.5,
+     25.0
+    ],
+    "confidence": 0.99933,
+    "text": "Latha Das"
+   },
+   {
+    "box": [
+     43.75,
+     136.25,
+     118.75,
+     26.25
+    ],
+    "confidence": 0.99974,
+    "text": "Father's name"
+   },
+   {
+    "box": [
+     318.75,
+     136.25,
+     86.25,
+     25.0
+    ],
+    "confidence": 0.99994,
+    "text": "Salim Das"
+   },
+   {
+    "box": [
+     46.25,
+     167.5,
+     106.25,
+     25.0
+    ],
+    "confidence": 0.96489,
+    "text": "Date of birth"
+   },
+   {
+    "box": [
+     318.75,
+     167.5,
+     96.25,
+     25.0
+    ],
+    "confidence": 1.0,
+    "text": "21/02/2007"
+   },
+   {
+    "box": [
+     46.25,
+     200.0,
+     55.0,
+     23.75
+    ],
+    "confidence": 0.99998,
+    "text": "Board"
+   },
+   {
+    "box": [
+     318.75,
+     198.75,
+     52.5,
+     23.75
+    ],
+    "confidence": 0.99995,
+    "text": "CBSE"
+   },
+   {
+    "box": [
+     43.75,
+     228.75,
+     105.0,
+     25.0
+    ],
+    "confidence": 0.98199,
+    "text": "Roll number"
+   },
+   {
+    "box": [
+     318.75,
+     230.0,
+     110.0,
+     23.75
+    ],
+    "confidence": 0.99984,
+    "text": "SYN0646790"
+   },
+   {
+    "box": [
+     45.0,
+     277.5,
+     73.75,
+     26.25
+    ],
+    "confidence": 0.99991,
+    "text": "Subject"
+   },
+   {
+    "box": [
+     505.0,
+     277.5,
+     63.75,
+     26.25
+    ],
+    "confidence": 0.99993,
+    "text": "Marks"
+   },
+   {
+    "box": [
+     43.75,
+     310.0,
+     68.75,
+     26.25
+    ],
+    "confidence": 0.99997,
+    "text": "English"
+   },
+   {
+    "box": [
+     505.0,
+     310.0,
+     27.5,
+     23.75
+    ],
+    "confidence": 0.99999,
+    "text": "41"
+   },
+   {
+    "box": [
+     43.75,
+     340.0,
+     55.0,
+     26.25
+    ],
+    "confidence": 0.99987,
+    "text": "Hindi"
+   },
+   {
+    "box": [
+     503.75,
+     340.0,
+     31.25,
+     26.25
+    ],
+    "confidence": 0.99996,
+    "text": "74"
+   },
+   {
+    "box": [
+     43.75,
+     371.25,
+     110.0,
+     25.0
+    ],
+    "confidence": 0.99997,
+    "text": "Mathematics"
+   },
+   {
+    "box": [
+     503.75,
+     371.25,
+     30.0,
+     26.25
+    ],
+    "confidence": 0.99999,
+    "text": "71"
+   },
+   {
+    "box": [
+     46.25,
+     403.75,
+     67.5,
+     23.75
+    ],
+    "confidence": 0.99996,
+    "text": "Science"
+   },
+   {
+    "box": [
+     503.75,
+     402.5,
+     31.25,
+     26.25
+    ],
+    "confidence": 0.7714,
+    "text": "92"
+   },
+   {
+    "box": [
+     46.25,
+     435.0,
+     118.75,
+     23.75
+    ],
+    "confidence": 0.99788,
+    "text": "Social Science"
+   },
+   {
+    "box": [
+     503.75,
+     432.5,
+     31.25,
+     27.5
+    ],
+    "confidence": 0.99998,
+    "text": "50"
+   },
+   {
+    "box": [
+     167.5,
+     486.25,
+     465.0,
+     23.75
+    ],
+    "confidence": 0.99251,
+    "text": "SAMPLE, SYNTHETIC DOCUMENT, NOT A REAL RECORD (SYN-APP-008)"
+   }
+  ]
+ },
+ "9491cb58ec2219235dc3c187f0f27afb95d406f542aa1a7d246bca6bf7d3dc6a": {
+  "words": [
+   {
+    "box": [
+     246.25,
+     51.25,
+     307.5,
+     25.0
+    ],
+    "confidence": 0.9812,
+    "text": "School Transfer Certificate"
+   },
+   {
+    "box": [
+     46.25,
+     107.5,
+     53.75,
+     20.0
+    ],
+    "confidence": 0.99997,
+    "text": "Name"
+   },
+   {
+    "box": [
+     321.25,
+     107.5,
+     91.25,
+     22.5
+    ],
+    "confidence": 0.98003,
+    "text": "Diya Gupta"
+   },
+   {
+    "box": [
+     47.5,
+     138.75,
+     115.0,
+     20.0
+    ],
+    "confidence": 0.99625,
+    "text": "Father's name"
+   },
+   {
+    "box": [
+     321.25,
+     138.75,
+     115.0,
+     21.25
+    ],
+    "confidence": 0.99995,
+    "text": "Naveen Gupta"
+   },
+   {
+    "box": [
+     48.75,
+     170.0,
+     101.25,
+     18.75
+    ],
+    "confidence": 0.98469,
+    "text": "Date of birth"
+   },
+   {
+    "box": [
+     321.25,
+     170.0,
+     91.25,
+     20.0
+    ],
+    "confidence": 1.0,
+    "text": "25/02/2007"
+   },
+   {
+    "box": [
+     47.5,
+     200.0,
+     92.5,
+     20.0
+    ],
+    "confidence": 0.99947,
+    "text": "TC number"
+   },
+   {
+    "box": [
+     321.25,
+     201.25,
+     136.25,
+     18.75
+    ],
+    "confidence": 0.99992,
+    "text": "SYNTC81004123"
+   },
+   {
+    "box": [
+     167.5,
+     252.5,
+     463.75,
+     20.0
+    ],
+    "confidence": 0.98741,
+    "text": "SAMPLE, SYNTHETIC DOCUMENT, NOT A REAL RECORD (SYN-APP-002)"
+   }
+  ]
+ },
+ "97a821d8e8646cb58ddbe2e48feeb2d8f6e2538d1d986cf66a0634c81efe2022": {
+  "words": [
+   {
+    "box": [
+     246.25,
+     51.25,
+     306.25,
+     25.0
+    ],
+    "confidence": 0.98573,
+    "text": "School Transfer Certificate"
+   },
+   {
+    "box": [
+     47.5,
+     107.5,
+     51.25,
+     20.0
+    ],
+    "confidence": 0.99998,
+    "text": "Name"
+   },
+   {
+    "box": [
+     321.25,
+     107.5,
+     102.5,
+     22.5
+    ],
+    "confidence": 0.99993,
+    "text": "Aarav Reddy"
+   },
+   {
+    "box": [
+     47.5,
+     138.75,
+     113.75,
+     20.0
+    ],
+    "confidence": 0.99762,
+    "text": "Father's name"
+   },
+   {
+    "box": [
+     321.25,
+     138.75,
+     118.75,
+     21.25
+    ],
+    "confidence": 0.9959,
+    "text": "Mahesh Reddy"
+   },
+   {
+    "box": [
+     48.75,
+     170.0,
+     101.25,
+     18.75
+    ],
+    "confidence": 0.99147,
+    "text": "Date of birth"
+   },
+   {
+    "box": [
+     321.25,
+     170.0,
+     91.25,
+     20.0
+    ],
+    "confidence": 0.99999,
+    "text": "02/06/2008"
+   },
+   {
+    "box": [
+     47.5,
+     200.0,
+     92.5,
+     20.0
+    ],
+    "confidence": 0.99971,
+    "text": "TC number"
+   },
+   {
+    "box": [
+     321.25,
+     201.25,
+     136.25,
+     18.75
+    ],
+    "confidence": 0.99971,
+    "text": "SYNTC49482225"
+   },
+   {
+    "box": [
+     167.5,
+     252.5,
+     463.75,
+     20.0
+    ],
+    "confidence": 0.98998,
+    "text": "SAMPLE, SYNTHETIC DOCUMENT, NOT A REAL RECORD (SYN-APP-012)"
+   }
+  ]
+ },
+ "9902df7e460e54822362ddf4c09afe609459a6f80459443489c48ecdd15412e0": {
+  "words": [
+   {
+    "box": [
+     57.5,
+     48.75,
+     686.25,
+     30.0
+    ],
+    "confidence": 0.99955,
+    "text": "Secondary School Examination, Class X: Statement of Marks"
+   },
+   {
+    "box": [
+     43.75,
+     103.75,
+     58.75,
+     26.25
+    ],
+    "confidence": 0.99996,
+    "text": "Name"
+   },
+   {
+    "box": [
+     318.75,
+     103.75,
+     106.25,
+     27.5
+    ],
+    "confidence": 0.97057,
+    "text": "Anjali Gupta"
+   },
+   {
+    "box": [
+     45.0,
+     135.0,
+     118.75,
+     26.25
+    ],
+    "confidence": 0.99943,
+    "text": "Father's name"
+   },
+   {
+    "box": [
+     320.0,
+     136.25,
+     112.5,
+     25.0
+    ],
+    "confidence": 0.99645,
+    "text": "Suresh Gupta"
+   },
+   {
+    "box": [
+     45.0,
+     166.25,
+     106.25,
+     25.0
+    ],
+    "confidence": 0.99928,
+    "text": "Date of birth"
+   },
+   {
+    "box": [
+     318.75,
+     165.0,
+     96.25,
+     27.5
+    ],
+    "confidence": 0.99999,
+    "text": "29/06/2006"
+   },
+   {
+    "box": [
+     45.0,
+     197.5,
+     57.5,
+     26.25
+    ],
+    "confidence": 0.99999,
+    "text": "Board"
+   },
+   {
+    "box": [
+     318.75,
+     197.5,
+     55.0,
+     26.25
+    ],
+    "confidence": 0.99996,
+    "text": "CBSE"
+   },
+   {
+    "box": [
+     46.25,
+     228.75,
+     103.75,
+     25.0
+    ],
+    "confidence": 0.99994,
+    "text": "Roll number"
+   },
+   {
+    "box": [
+     320.0,
+     231.25,
+     107.5,
+     21.25
+    ],
+    "confidence": 0.99994,
+    "text": "SYN8137170"
+   },
+   {
+    "box": [
+     43.75,
+     273.75,
+     76.25,
+     31.25
+    ],
+    "confidence": 0.99994,
+    "text": "Subject"
+   },
+   {
+    "box": [
+     502.5,
+     276.25,
+     67.5,
+     30.0
+    ],
+    "confidence": 0.99987,
+    "text": "Marks"
+   },
+   {
+    "box": [
+     45.0,
+     308.75,
+     67.5,
+     25.0
+    ],
+    "confidence": 0.99998,
+    "text": "English"
+   },
+   {
+    "box": [
+     501.25,
+     308.75,
+     36.25,
+     28.75
+    ],
+    "confidence": 0.99998,
+    "text": "97"
+   },
+   {
+    "box": [
+     43.75,
+     338.75,
+     55.0,
+     26.25
+    ],
+    "confidence": 0.99997,
+    "text": "Hindi"
+   },
+   {
+    "box": [
+     502.5,
+     338.75,
+     35.0,
+     30.0
+    ],
+    "confidence": 1.0,
+    "text": "59"
+   },
+   {
+    "box": [
+     43.75,
+     368.75,
+     110.0,
+     27.5
+    ],
+    "confidence": 0.99996,
+    "text": "Mathematics"
+   },
+   {
+    "box": [
+     501.25,
+     368.75,
+     36.25,
+     31.25
+    ],
+    "confidence": 0.99998,
+    "text": "47"
+   },
+   {
+    "box": [
+     43.75,
+     398.75,
+     71.25,
+     28.75
+    ],
+    "confidence": 0.99998,
+    "text": "Science"
+   },
+   {
+    "box": [
+     502.5,
+     401.25,
+     35.0,
+     30.0
+    ],
+    "confidence": 0.99999,
+    "text": "63"
+   },
+   {
+    "box": [
+     43.75,
+     432.5,
+     121.25,
+     26.25
+    ],
+    "confidence": 0.98793,
+    "text": "Social Science"
+   },
+   {
+    "box": [
+     501.25,
+     431.25,
+     35.0,
+     31.25
+    ],
+    "confidence": 0.99998,
+    "text": "77"
+   },
+   {
+    "box": [
+     165.0,
+     485.0,
+     466.25,
+     23.75
+    ],
+    "confidence": 0.58114,
+    "text": "SAMN-S DRL   ON L  04)"
+   }
+  ]
+ },
+ "9c2e5ef93b437fd29a8f4443a1221631e189e6d5035285372d212565f7040570": {
+  "words": [
+   {
+    "box": [
+     45.0,
+     48.75,
+     711.25,
+     28.75
+    ],
+    "confidence": 0.98671,
+    "text": "Senior School Certificate Examination, Class XII: Statement of"
+   },
+   {
+    "box": [
+     360.0,
+     73.75,
+     80.0,
+     28.75
+    ],
+    "confidence": 0.99995,
+    "text": "Marks"
+   },
+   {
+    "box": [
+     45.0,
+     128.75,
+     56.25,
+     26.25
+    ],
+    "confidence": 0.99998,
+    "text": "Name"
+   },
+   {
+    "box": [
+     318.75,
+     130.0,
+     92.5,
+     23.75
+    ],
+    "confidence": 0.96463,
+    "text": "Ishita Nair"
+   },
+   {
+    "box": [
+     46.25,
+     161.25,
+     116.25,
+     22.5
+    ],
+    "confidence": 0.99938,
+    "text": "Father's name"
+   },
+   {
+    "box": [
+     318.75,
+     160.0,
+     102.5,
+     25.0
+    ],
+    "confidence": 0.98838,
+    "text": "Suresh Nair"
+   },
+   {
+    "box": [
+     46.25,
+     192.5,
+     105.0,
+     22.5
+    ],
+    "confidence": 0.98306,
+    "text": "Date of birth"
+   },
+   {
+    "box": [
+     318.75,
+     191.25,
+     96.25,
+     25.0
+    ],
+    "confidence": 0.99999,
+    "text": "08/01/2006"
+   },
+   {
+    "box": [
+     45.0,
+     221.25,
+     56.25,
+     26.25
+    ],
+    "confidence": 0.99999,
+    "text": "Board"
+   },
+   {
+    "box": [
+     317.5,
+     221.25,
+     55.0,
+     26.25
+    ],
+    "confidence": 0.99989,
+    "text": "CBSE"
+   },
+   {
+    "box": [
+     46.25,
+     253.75,
+     103.75,
+     23.75
+    ],
+    "confidence": 0.98452,
+    "text": "Roll number"
+   },
+   {
+    "box": [
+     318.75,
+     253.75,
+     110.0,
+     23.75
+    ],
+    "confidence": 0.99996,
+    "text": "SYN9337710"
+   },
+   {
+    "box": [
+     45.0,
+     301.25,
+     73.75,
+     26.25
+    ],
+    "confidence": 0.99989,
+    "text": "Subject"
+   },
+   {
+    "box": [
+     503.75,
+     302.5,
+     65.0,
+     25.0
+    ],
+    "confidence": 0.99993,
+    "text": "Marks"
+   },
+   {
+    "box": [
+     45.0,
+     333.75,
+     67.5,
+     26.25
+    ],
+    "confidence": 0.99998,
+    "text": "English"
+   },
+   {
+    "box": [
+     503.75,
+     332.5,
+     31.25,
+     27.5
+    ],
+    "confidence": 0.99998,
+    "text": "52"
+   },
+   {
+    "box": [
+     43.75,
+     363.75,
+     55.0,
+     26.25
+    ],
+    "confidence": 0.99994,
+    "text": "Hindi"
+   },
+   {
+    "box": [
+     503.75,
+     365.0,
+     31.25,
+     25.0
+    ],
+    "confidence": 1.0,
+    "text": "65"
+   },
+   {
+    "box": [
+     45.0,
+     395.0,
+     108.75,
+     25.0
+    ],
+    "confidence": 0.99997,
+    "text": "Mathematics"
+   },
+   {
+    "box": [
+     503.75,
+     395.0,
+     31.25,
+     27.5
+    ],
+    "confidence": 0.99999,
+    "text": "93"
+   },
+   {
+    "box": [
+     46.25,
+     427.5,
+     67.5,
+     22.5
+    ],
+    "confidence": 0.99997,
+    "text": "Science"
+   },
+   {
+    "box": [
+     503.75,
+     426.25,
+     30.0,
+     27.5
+    ],
+    "confidence": 0.99998,
+    "text": "41"
+   },
+   {
+    "box": [
+     46.25,
+     458.75,
+     117.5,
+     22.5
+    ],
+    "confidence": 0.99995,
+    "text": "Social Science"
+   },
+   {
+    "box": [
+     503.75,
+     456.25,
+     31.25,
+     27.5
+    ],
+    "confidence": 1.0,
+    "text": "53"
+   },
+   {
+    "box": [
+     166.25,
+     510.0,
+     466.25,
+     22.5
+    ],
+    "confidence": 0.99962,
+    "text": "SAMPLE, SYNTHETIC DOCUMENT, NOT A REAL RECORD (SYN-APP-009)"
+   }
+  ]
+ },
+ "a06c395925c769ea8fefd0240175e13e8bd91b85d42e33b1dd4b4c60b3447a57": {
+  "words": [
+   {
+    "box": [
+     321.25,
+     50.0,
+     156.25,
+     27.5
+    ],
+    "confidence": 0.99997,
+    "text": "Identity Card"
+   },
+   {
+    "box": [
+     47.5,
+     108.75,
+     51.25,
+     20.0
+    ],
+    "confidence": 0.99999,
+    "text": "Name"
+   },
+   {
+    "box": [
+     320.0,
+     107.5,
+     92.5,
+     23.75
+    ],
+    "confidence": 0.99991,
+    "text": "Gupta Diya"
+   },
+   {
+    "box": [
+     47.5,
+     138.75,
+     102.5,
+     20.0
+    ],
+    "confidence": 0.99976,
+    "text": "Date of birth"
+   },
+   {
+    "box": [
+     321.25,
+     138.75,
+     91.25,
+     21.25
+    ],
+    "confidence": 1.0,
+    "text": "25/02/2007"
+   },
+   {
+    "box": [
+     46.25,
+     170.0,
+     88.75,
+     20.0
+    ],
+    "confidence": 0.99553,
+    "text": "ID number"
+   },
+   {
+    "box": [
+     321.25,
+     171.25,
+     131.25,
+     16.25
+    ],
+    "confidence": 0.99958,
+    "text": "SYNID68824187"
+   },
+   {
+    "box": [
+     167.5,
+     222.5,
+     463.75,
+     18.75
+    ],
+    "confidence": 0.9812,
+    "text": "SAMPLE, SYNTHETIC DOCUMENT, NOT A REAL RECORD (SYN-APP-002)"
+   }
+  ]
+ },
+ "a3cdbfac6879b873250def805d1626d6bfa85bf255be0e7fdad2786a457f5ea4": {
+  "words": [
+   {
+    "box": [
+     46.25,
+     52.5,
+     708.75,
+     23.75
+    ],
+    "confidence": 0.99983,
+    "text": "Senior School Certificate Examination, Class XII: Statement of"
+   },
+   {
+    "box": [
+     358.75,
+     73.75,
+     81.25,
+     28.75
+    ],
+    "confidence": 0.99995,
+    "text": "Marks"
+   },
+   {
+    "box": [
+     43.75,
+     128.75,
+     57.5,
+     26.25
+    ],
+    "confidence": 0.99996,
+    "text": "Name"
+   },
+   {
+    "box": [
+     318.75,
+     130.0,
+     90.0,
+     25.0
+    ],
+    "confidence": 0.98989,
+    "text": "Dev Gupta"
+   },
+   {
+    "box": [
+     45.0,
+     162.5,
+     117.5,
+     21.25
+    ],
+    "confidence": 0.99918,
+    "text": "Father's name"
+   },
+   {
+    "box": [
+     318.75,
+     160.0,
+     115.0,
+     26.25
+    ],
+    "confidence": 0.97316,
+    "text": "Suresh Gupta"
+   },
+   {
+    "box": [
+     46.25,
+     193.75,
+     105.0,
+     21.25
+    ],
+    "confidence": 0.97399,
+    "text": "Date of birth"
+   },
+   {
+    "box": [
+     318.75,
+     191.25,
+     96.25,
+     25.0
+    ],
+    "confidence": 1.0,
+    "text": "13/06/2007"
+   },
+   {
+    "box": [
+     45.0,
+     222.5,
+     57.5,
+     26.25
+    ],
+    "confidence": 0.99998,
+    "text": "Board"
+   },
+   {
+    "box": [
+     317.5,
+     221.25,
+     56.25,
+     26.25
+    ],
+    "confidence": 0.99993,
+    "text": "CBSE"
+   },
+   {
+    "box": [
+     46.25,
+     253.75,
+     102.5,
+     22.5
+    ],
+    "confidence": 0.99996,
+    "text": "Roll number"
+   },
+   {
+    "box": [
+     318.75,
+     253.75,
+     110.0,
+     23.75
+    ],
+    "confidence": 0.99985,
+    "text": "SYN9190260"
+   },
+   {
+    "box": [
+     45.0,
+     302.5,
+     73.75,
+     26.25
+    ],
+    "confidence": 0.99994,
+    "text": "Subject"
+   },
+   {
+    "box": [
+     502.5,
+     300.0,
+     67.5,
+     30.0
+    ],
+    "confidence": 0.99992,
+    "text": "Marks"
+   },
+   {
+    "box": [
+     43.75,
+     332.5,
+     70.0,
+     28.75
+    ],
+    "confidence": 0.99997,
+    "text": "English"
+   },
+   {
+    "box": [
+     502.5,
+     331.25,
+     35.0,
+     30.0
+    ],
+    "confidence": 0.99999,
+    "text": "85"
+   },
+   {
+    "box": [
+     43.75,
+     363.75,
+     55.0,
+     26.25
+    ],
+    "confidence": 0.99997,
+    "text": "Hindi"
+   },
+   {
+    "box": [
+     503.75,
+     363.75,
+     32.5,
+     27.5
+    ],
+    "confidence": 1.0,
+    "text": "38"
+   },
+   {
+    "box": [
+     46.25,
+     397.5,
+     107.5,
+     21.25
+    ],
+    "confidence": 0.99996,
+    "text": "Mathematics"
+   },
+   {
+    "box": [
+     502.5,
+     392.5,
+     35.0,
+     31.25
+    ],
+    "confidence": 0.99999,
+    "text": "38"
+   },
+   {
+    "box": [
+     45.0,
+     426.25,
+     70.0,
+     25.0
+    ],
+    "confidence": 0.99996,
+    "text": "Science"
+   },
+   {
+    "box": [
+     502.5,
+     425.0,
+     35.0,
+     30.0
+    ],
+    "confidence": 1.0,
+    "text": "35"
+   },
+   {
+    "box": [
+     46.25,
+     460.0,
+     118.75,
+     21.25
+    ],
+    "confidence": 0.9999,
+    "text": "Social Science"
+   },
+   {
+    "box": [
+     502.5,
+     456.25,
+     35.0,
+     30.0
+    ],
+    "confidence": 0.99999,
+    "text": "59"
+   },
+   {
+    "box": [
+     167.5,
+     510.0,
+     465.0,
+     21.25
+    ],
+    "confidence": 0.99366,
+    "text": "SAMPLE, SYNTHETIC DOCUMENT, NOT A REAL RECORD (SYN-APP-005)"
+   }
+  ]
+ },
+ "a5f71252b340bb3a8abb262962d3adf7ab637831807814ba82ca3ca43cf4593f": {
+  "words": [
+   {
+    "box": [
+     246.25,
+     51.25,
+     307.5,
+     25.0
+    ],
+    "confidence": 0.99923,
+    "text": "School Transfer Certificate"
+   },
+   {
+    "box": [
+     47.5,
+     106.25,
+     52.5,
+     21.25
+    ],
+    "confidence": 0.99997,
+    "text": "Name"
+   },
+   {
+    "box": [
+     320.0,
+     107.5,
+     110.0,
+     22.5
+    ],
+    "confidence": 0.99983,
+    "text": "Vivaan Gupta"
+   },
+   {
+    "box": [
+     47.5,
+     138.75,
+     113.75,
+     20.0
+    ],
+    "confidence": 0.99786,
+    "text": "Father's name"
+   },
+   {
+    "box": [
+     321.25,
+     138.75,
+     117.5,
+     21.25
+    ],
+    "confidence": 0.99997,
+    "text": "Ramesh Gupta"
+   },
+   {
+    "box": [
+     48.75,
+     170.0,
+     101.25,
+     18.75
+    ],
+    "confidence": 0.99175,
+    "text": "Date of birth"
+   },
+   {
+    "box": [
+     321.25,
+     170.0,
+     91.25,
+     20.0
+    ],
+    "confidence": 0.99999,
+    "text": "24/11/2008"
+   },
+   {
+    "box": [
+     47.5,
+     200.0,
+     92.5,
+     20.0
+    ],
+    "confidence": 0.99979,
+    "text": "TC number"
+   },
+   {
+    "box": [
+     321.25,
+     201.25,
+     136.25,
+     18.75
+    ],
+    "confidence": 0.99958,
+    "text": "SYNTC86096305"
+   },
+   {
+    "box": [
+     167.5,
+     252.5,
+     463.75,
+     20.0
+    ],
+    "confidence": 0.98499,
+    "text": "SAMPLE, SYNTHETIC DOCUMENT, NOT A REAL RECORD (SYN-APP-003)"
+   }
+  ]
+ },
+ "a676df53bbb0227d54f027a07cfecaf542c76a3dae7e282daed4d1ae6271801a": {
+  "words": [
+   {
+    "box": [
+     46.25,
+     48.75,
+     710.0,
+     30.0
+    ],
+    "confidence": 0.99567,
+    "text": "Senior School Certificate Examination, Class XII: Statement of"
+   },
+   {
+    "box": [
+     360.0,
+     73.75,
+     80.0,
+     28.75
+    ],
+    "confidence": 0.99995,
+    "text": "Marks"
+   },
+   {
+    "box": [
+     46.25,
+     130.0,
+     53.75,
+     23.75
+    ],
+    "confidence": 0.99998,
+    "text": "Name"
+   },
+   {
+    "box": [
+     318.75,
+     128.75,
+     110.0,
+     25.0
+    ],
+    "confidence": 0.99951,
+    "text": "Ritesh Reddy"
+   },
+   {
+    "box": [
+     45.0,
+     160.0,
+     117.5,
+     25.0
+    ],
+    "confidence": 0.99982,
+    "text": "Father's name"
+   },
+   {
+    "box": [
+     318.75,
+     160.0,
+     122.5,
+     26.25
+    ],
+    "confidence": 0.9993,
+    "text": "Ramesh Reddy"
+   },
+   {
+    "box": [
+     45.0,
+     191.25,
+     107.5,
+     23.75
+    ],
+    "confidence": 0.99994,
+    "text": "Date of birth"
+   },
+   {
+    "box": [
+     318.75,
+     191.25,
+     96.25,
+     25.0
+    ],
+    "confidence": 0.99996,
+    "text": "28/10/2006"
+   },
+   {
+    "box": [
+     45.0,
+     221.25,
+     57.5,
+     26.25
+    ],
+    "confidence": 0.99996,
+    "text": "Board"
+   },
+   {
+    "box": [
+     318.75,
+     222.5,
+     183.75,
+     25.0
+    ],
+    "confidence": 0.97621,
+    "text": "Karnataka State Board"
+   },
+   {
+    "box": [
+     45.0,
+     253.75,
+     103.75,
+     23.75
+    ],
+    "confidence": 0.99993,
+    "text": "Roll number"
+   },
+   {
+    "box": [
+     318.75,
+     253.75,
+     110.0,
+     23.75
+    ],
+    "confidence": 0.99997,
+    "text": "SYN4507463"
+   },
+   {
+    "box": [
+     45.0,
+     301.25,
+     72.5,
+     26.25
+    ],
+    "confidence": 0.99924,
+    "text": "Subject"
+   },
+   {
+    "box": [
+     505.0,
+     302.5,
+     63.75,
+     25.0
+    ],
+    "confidence": 0.99993,
+    "text": "Marks"
+   },
+   {
+    "box": [
+     43.75,
+     332.5,
+     68.75,
+     26.25
+    ],
+    "confidence": 0.99995,
+    "text": "English"
+   },
+   {
+    "box": [
+     505.0,
+     333.75,
+     28.75,
+     25.0
+    ],
+    "confidence": 0.99999,
+    "text": "37"
+   },
+   {
+    "box": [
+     43.75,
+     363.75,
+     53.75,
+     26.25
+    ],
+    "confidence": 0.9996,
+    "text": "Hindi"
+   },
+   {
+    "box": [
+     505.0,
+     365.0,
+     28.75,
+     25.0
+    ],
+    "confidence": 1.0,
+    "text": "56"
+   },
+   {
+    "box": [
+     45.0,
+     395.0,
+     108.75,
+     25.0
+    ],
+    "confidence": 0.99995,
+    "text": "Mathematics"
+   },
+   {
+    "box": [
+     503.75,
+     395.0,
+     31.25,
+     27.5
+    ],
+    "confidence": 0.99998,
+    "text": "86"
+   },
+   {
+    "box": [
+     43.75,
+     426.25,
+     70.0,
+     25.0
+    ],
+    "confidence": 0.99989,
+    "text": "Science"
+   },
+   {
+    "box": [
+     503.75,
+     426.25,
+     28.75,
+     27.5
+    ],
+    "confidence": 0.99996,
+    "text": "91"
+   },
+   {
+    "box": [
+     43.75,
+     456.25,
+     121.25,
+     27.5
+    ],
+    "confidence": 0.99994,
+    "text": "Social Science"
+   },
+   {
+    "box": [
+     503.75,
+     457.5,
+     31.25,
+     26.25
+    ],
+    "confidence": 0.99999,
+    "text": "85"
+   },
+   {
+    "box": [
+     165.0,
+     508.75,
+     467.5,
+     25.0
+    ],
+    "confidence": 0.99628,
+    "text": "SAMPLE, SYNTHETIC DOCUMENT, NOT A REAL RECORD (SYN-APP-010)"
+   }
+  ]
+ },
+ "a7ae802a83d21a50297c668a92bc56bb6c716318f96410e5412bae85f23342f9": {
+  "words": [
+   {
+    "box": [
+     246.25,
+     52.5,
+     306.25,
+     23.75
+    ],
+    "confidence": 0.99618,
+    "text": "School Transfer Certificate"
+   },
+   {
+    "box": [
+     47.5,
+     110.0,
+     51.25,
+     18.75
+    ],
+    "confidence": 0.99998,
+    "text": "Name"
+   },
+   {
+    "box": [
+     321.25,
+     108.75,
+     100.0,
+     21.25
+    ],
+    "confidence": 0.99996,
+    "text": "Anjali Gupta"
+   },
+   {
+    "box": [
+     47.5,
+     140.0,
+     115.0,
+     20.0
+    ],
+    "confidence": 0.99963,
+    "text": "Father's name"
+   },
+   {
+    "box": [
+     320.0,
+     138.75,
+     111.25,
+     22.5
+    ],
+    "confidence": 0.99993,
+    "text": "Suresh Gupta"
+   },
+   {
+    "box": [
+     48.75,
+     171.25,
+     101.25,
+     18.75
+    ],
+    "confidence": 0.98393,
+    "text": "Date of birth"
+   },
+   {
+    "box": [
+     321.25,
+     170.0,
+     92.5,
+     20.0
+    ],
+    "confidence": 0.99999,
+    "text": "29/06/2006"
+   },
+   {
+    "box": [
+     47.5,
+     201.25,
+     92.5,
+     21.25
+    ],
+    "confidence": 0.99983,
+    "text": "TC number"
+   },
+   {
+    "box": [
+     322.5,
+     202.5,
+     135.0,
+     17.5
+    ],
+    "confidence": 0.99992,
+    "text": "SYNTC76290250"
+   },
+   {
+    "box": [
+     167.5,
+     253.75,
+     465.0,
+     18.75
+    ],
+    "confidence": 0.99916,
+    "text": "SAMPLE, SYNTHETIC DOCUMENT, NOT A REAL RECORD (SYN-APP-004)"
+   }
+  ]
+ },
+ "b2e39ad0613a24b13b96dad23f742e8176d605aedf0823f5730321dc559333f6": {
+  "words": [
+   {
+    "box": [
+     43.75,
+     47.5,
+     712.5,
+     31.25
+    ],
+    "confidence": 0.99673,
+    "text": "Senior School Certificate Examination, Class XII: Statement of"
+   },
+   {
+    "box": [
+     360.0,
+     73.75,
+     80.0,
+     28.75
+    ],
+    "confidence": 0.99994,
+    "text": "Marks"
+   },
+   {
+    "box": [
+     43.75,
+     128.75,
+     57.5,
+     26.25
+    ],
+    "confidence": 0.99997,
+    "text": "Name"
+   },
+   {
+    "box": [
+     317.5,
+     128.75,
+     97.5,
+     27.5
+    ],
+    "confidence": 0.99948,
+    "text": "Diya Gupta"
+   },
+   {
+    "box": [
+     43.75,
+     160.0,
+     118.75,
+     25.0
+    ],
+    "confidence": 0.99972,
+    "text": "Father's name"
+   },
+   {
+    "box": [
+     316.25,
+     158.75,
+     121.25,
+     30.0
+    ],
+    "confidence": 0.9999,
+    "text": "Naveen Gupta"
+   },
+   {
+    "box": [
+     43.75,
+     191.25,
+     107.5,
+     25.0
+    ],
+    "confidence": 0.97879,
+    "text": "Date of birth"
+   },
+   {
+    "box": [
+     318.75,
+     191.25,
+     96.25,
+     25.0
+    ],
+    "confidence": 0.99999,
+    "text": "25/02/2007"
+   },
+   {
+    "box": [
+     45.0,
+     221.25,
+     56.25,
+     26.25
+    ],
+    "confidence": 0.99996,
+    "text": "Board"
+   },
+   {
+    "box": [
+     318.75,
+     222.5,
+     203.75,
+     25.0
+    ],
+    "confidence": 0.9999,
+    "text": "Maharashtra State Board"
+   },
+   {
+    "box": [
+     45.0,
+     253.75,
+     103.75,
+     25.0
+    ],
+    "confidence": 0.99989,
+    "text": "Roll number"
+   },
+   {
+    "box": [
+     318.75,
+     252.5,
+     110.0,
+     25.0
+    ],
+    "confidence": 0.99994,
+    "text": "SYN3300452"
+   },
+   {
+    "box": [
+     43.75,
+     301.25,
+     75.0,
+     27.5
+    ],
+    "confidence": 0.99041,
+    "text": "Subject"
+   },
+   {
+    "box": [
+     505.0,
+     302.5,
+     63.75,
+     25.0
+    ],
+    "confidence": 0.99995,
+    "text": "Marks"
+   },
+   {
+    "box": [
+     43.75,
+     333.75,
+     68.75,
+     26.25
+    ],
+    "confidence": 0.99995,
+    "text": "English"
+   },
+   {
+    "box": [
+     503.75,
+     333.75,
+     31.25,
+     26.25
+    ],
+    "confidence": 0.99998,
+    "text": "83"
+   },
+   {
+    "box": [
+     45.0,
+     365.0,
+     52.5,
+     23.75
+    ],
+    "confidence": 0.99995,
+    "text": "Hindi"
+   },
+   {
+    "box": [
+     503.75,
+     365.0,
+     31.25,
+     26.25
+    ],
+    "confidence": 0.99998,
+    "text": "90"
+   },
+   {
+    "box": [
+     45.0,
+     395.0,
+     108.75,
+     25.0
+    ],
+    "confidence": 0.99994,
+    "text": "Mathematics"
+   },
+   {
+    "box": [
+     503.75,
+     395.0,
+     30.0,
+     27.5
+    ],
+    "confidence": 0.99998,
+    "text": "81"
+   },
+   {
+    "box": [
+     45.0,
+     427.5,
+     68.75,
+     23.75
+    ],
+    "confidence": 0.99996,
+    "text": "Science"
+   },
+   {
+    "box": [
+     505.0,
+     427.5,
+     28.75,
+     23.75
+    ],
+    "confidence": 0.99999,
+    "text": "78"
+   },
+   {
+    "box": [
+     43.75,
+     458.75,
+     121.25,
+     23.75
+    ],
+    "confidence": 0.99998,
+    "text": "Social Science"
+   },
+   {
+    "box": [
+     503.75,
+     457.5,
+     30.0,
+     27.5
+    ],
+    "confidence": 0.99992,
+    "text": "41"
+   },
+   {
+    "box": [
+     165.0,
+     508.75,
+     467.5,
+     25.0
+    ],
+    "confidence": 0.99493,
+    "text": "SAMPLE, SYNTHETIC DOCUMENT, NOT A REAL RECORD (SYN-APP-002)"
+   }
+  ]
+ },
+ "b516aa42381a0163411bb9406a6354826e7720f71c17bf532465803f45d6c038": {
+  "words": [
+   {
+    "box": [
+     321.25,
+     48.75,
+     156.25,
+     30.0
+    ],
+    "confidence": 0.98635,
+    "text": "Identity Card"
+   },
+   {
+    "box": [
+     46.25,
+     106.25,
+     53.75,
+     21.25
+    ],
+    "confidence": 0.99999,
+    "text": "Name"
+   },
+   {
+    "box": [
+     321.25,
+     107.5,
+     101.25,
+     22.5
+    ],
+    "confidence": 0.99995,
+    "text": "Anjali Reddy"
+   },
+   {
+    "box": [
+     47.5,
+     137.5,
+     102.5,
+     20.0
+    ],
+    "confidence": 0.9994,
+    "text": "Date of birth"
+   },
+   {
+    "box": [
+     320.0,
+     137.5,
+     93.75,
+     22.5
+    ],
+    "confidence": 0.99999,
+    "text": "28/10/2006"
+   },
+   {
+    "box": [
+     47.5,
+     168.75,
+     87.5,
+     20.0
+    ],
+    "confidence": 0.99991,
+    "text": "ID number"
+   },
+   {
+    "box": [
+     321.25,
+     170.0,
+     132.5,
+     20.0
+    ],
+    "confidence": 0.99998,
+    "text": "SYNID54156024"
+   },
+   {
+    "box": [
+     167.5,
+     221.25,
+     465.0,
+     20.0
+    ],
+    "confidence": 0.98398,
+    "text": "SAMPLE, SYNTHETIC DOCUMENT, NOT A REAL RECORD (SYN-APP-010)"
+   }
+  ]
+ },
+ "c0474b5af3324d4465d98098dab548b9c9ed7dda97157b901935aa3403f53e2c": {
+  "words": [
+   {
+    "box": [
+     321.25,
+     48.75,
+     156.25,
+     30.0
+    ],
+    "confidence": 0.99995,
+    "text": "Identity Card"
+   },
+   {
+    "box": [
+     46.25,
+     106.25,
+     53.75,
+     21.25
+    ],
+    "confidence": 0.99998,
+    "text": "Name"
+   },
+   {
+    "box": [
+     321.25,
+     107.5,
+     95.0,
+     22.5
+    ],
+    "confidence": 0.99993,
+    "text": "Anjali Khan"
+   },
+   {
+    "box": [
+     47.5,
+     138.75,
+     102.5,
+     18.75
+    ],
+    "confidence": 0.9981,
+    "text": "Date of birth"
+   },
+   {
+    "box": [
+     321.25,
+     140.0,
+     91.25,
+     18.75
+    ],
+    "confidence": 0.99999,
+    "text": "24/09/2007"
+   },
+   {
+    "box": [
+     47.5,
+     170.0,
+     88.75,
+     18.75
+    ],
+    "confidence": 0.99995,
+    "text": "ID number"
+   },
+   {
+    "box": [
+     321.25,
+     170.0,
+     131.25,
+     20.0
+    ],
+    "confidence": 0.99996,
+    "text": "SYNID35078031"
+   },
+   {
+    "box": [
+     167.5,
+     221.25,
+     465.0,
+     20.0
+    ],
+    "confidence": 0.99933,
+    "text": "SAMPLE, SYNTHETIC DOCUMENT, NOT A REAL RECORD (SYN-APP-011)"
+   }
+  ]
+ },
+ "c651528e94732e027e054a530015f1710846026cd890e201926f8ef023514d7a": {
+  "words": [
+   {
+    "box": [
+     46.25,
+     48.75,
+     710.0,
+     28.75
+    ],
+    "confidence": 0.99789,
+    "text": "Senior School Certificate Examination, Class XII: Statement of"
+   },
+   {
+    "box": [
+     358.75,
+     72.5,
+     81.25,
+     30.0
+    ],
+    "confidence": 0.99995,
+    "text": "Marks"
+   },
+   {
+    "box": [
+     45.0,
+     127.5,
+     56.25,
+     26.25
+    ],
+    "confidence": 0.99998,
+    "text": "Name"
+   },
+   {
+    "box": [
+     318.75,
+     130.0,
+     93.75,
+     23.75
+    ],
+    "confidence": 0.99995,
+    "text": "Nisha Nair"
+   },
+   {
+    "box": [
+     46.25,
+     161.25,
+     116.25,
+     22.5
+    ],
+    "confidence": 0.99971,
+    "text": "Father's name"
+   },
+   {
+    "box": [
+     317.5,
+     160.0,
+     111.25,
+     26.25
+    ],
+    "confidence": 0.99997,
+    "text": "Ramesh Nair"
+   },
+   {
+    "box": [
+     46.25,
+     192.5,
+     105.0,
+     22.5
+    ],
+    "confidence": 0.9967,
+    "text": "Date of birth"
+   },
+   {
+    "box": [
+     318.75,
+     191.25,
+     96.25,
+     25.0
+    ],
+    "confidence": 0.99999,
+    "text": "24/02/2007"
+   },
+   {
+    "box": [
+     46.25,
+     222.5,
+     55.0,
+     23.75
+    ],
+    "confidence": 0.99998,
+    "text": "Board"
+   },
+   {
+    "box": [
+     318.75,
+     223.75,
+     182.5,
+     23.75
+    ],
+    "confidence": 0.9742,
+    "text": "Karnataka State Board"
+   },
+   {
+    "box": [
+     46.25,
+     253.75,
+     102.5,
+     21.25
+    ],
+    "confidence": 0.95667,
+    "text": "Roll number"
+   },
+   {
+    "box": [
+     320.0,
+     253.75,
+     107.5,
+     21.25
+    ],
+    "confidence": 0.99994,
+    "text": "SYN2930786"
+   },
+   {
+    "box": [
+     43.75,
+     301.25,
+     73.75,
+     26.25
+    ],
+    "confidence": 0.9999,
+    "text": "Subject"
+   },
+   {
+    "box": [
+     503.75,
+     302.5,
+     65.0,
+     26.25
+    ],
+    "confidence": 0.99994,
+    "text": "Marks"
+   },
+   {
+    "box": [
+     45.0,
+     332.5,
+     67.5,
+     26.25
+    ],
+    "confidence": 0.99998,
+    "text": "English"
+   },
+   {
+    "box": [
+     503.75,
+     333.75,
+     31.25,
+     27.5
+    ],
+    "confidence": 0.99999,
+    "text": "62"
+   },
+   {
+    "box": [
+     43.75,
+     363.75,
+     55.0,
+     26.25
+    ],
+    "confidence": 0.99995,
+    "text": "Hindi"
+   },
+   {
+    "box": [
+     502.5,
+     362.5,
+     35.0,
+     30.0
+    ],
+    "confidence": 0.99998,
+    "text": "36"
+   },
+   {
+    "box": [
+     46.25,
+     396.25,
+     107.5,
+     22.5
+    ],
+    "confidence": 0.99997,
+    "text": "Mathematics"
+   },
+   {
+    "box": [
+     502.5,
+     393.75,
+     35.0,
+     30.0
+    ],
+    "confidence": 0.99999,
+    "text": "67"
+   },
+   {
+    "box": [
+     45.0,
+     425.0,
+     70.0,
+     26.25
+    ],
+    "confidence": 0.99998,
+    "text": "Science"
+   },
+   {
+    "box": [
+     503.75,
+     425.0,
+     31.25,
+     28.75
+    ],
+    "confidence": 1.0,
+    "text": "63"
+   },
+   {
+    "box": [
+     46.25,
+     457.5,
+     117.5,
+     25.0
+    ],
+    "confidence": 0.99991,
+    "text": "Social Science"
+   },
+   {
+    "box": [
+     503.75,
+     457.5,
+     31.25,
+     27.5
+    ],
+    "confidence": 1.0,
+    "text": "42"
+   },
+   {
+    "box": [
+     166.25,
+     510.0,
+     466.25,
+     22.5
+    ],
+    "confidence": 0.65309,
+    "text": "SAMN-S R B  N L  I14)"
+   }
+  ]
+ },
+ "c6b744f8805a371eaa7895c220ee85d1f2a6b6412c925138882d2075012fcead": {
+  "words": [
+   {
+    "box": [
+     56.25,
+     48.75,
+     687.5,
+     30.0
+    ],
+    "confidence": 0.99772,
+    "text": "Secondary School Examination, Class X: Statement of Marks"
+   },
+   {
+    "box": [
+     43.75,
+     105.0,
+     57.5,
+     26.25
+    ],
+    "confidence": 0.99996,
+    "text": "Name"
+   },
+   {
+    "box": [
+     317.5,
+     106.25,
+     91.25,
+     25.0
+    ],
+    "confidence": 0.9936,
+    "text": "Farah Iyer"
+   },
+   {
+    "box": [
+     45.0,
+     136.25,
+     118.75,
+     26.25
+    ],
+    "confidence": 0.99973,
+    "text": "Father's name"
+   },
+   {
+    "box": [
+     316.25,
+     133.75,
+     108.75,
+     30.0
+    ],
+    "confidence": 0.97764,
+    "text": "Mahesh lyer"
+   },
+   {
+    "box": [
+     45.0,
+     167.5,
+     107.5,
+     25.0
+    ],
+    "confidence": 0.99983,
+    "text": "Date of birth"
+   },
+   {
+    "box": [
+     318.75,
+     167.5,
+     96.25,
+     25.0
+    ],
+    "confidence": 0.99999,
+    "text": "23/03/2008"
+   },
+   {
+    "box": [
+     46.25,
+     200.0,
+     55.0,
+     23.75
+    ],
+    "confidence": 0.99999,
+    "text": "Board"
+   },
+   {
+    "box": [
+     317.5,
+     197.5,
+     50.0,
+     26.25
+    ],
+    "confidence": 0.99977,
+    "text": "ICSE"
+   },
+   {
+    "box": [
+     45.0,
+     230.0,
+     105.0,
+     23.75
+    ],
+    "confidence": 0.99947,
+    "text": "Roll number"
+   },
+   {
+    "box": [
+     318.75,
+     230.0,
+     110.0,
+     23.75
+    ],
+    "confidence": 0.99983,
+    "text": "SYN0440332"
+   },
+   {
+    "box": [
+     45.0,
+     278.75,
+     73.75,
+     25.0
+    ],
+    "confidence": 0.9999,
+    "text": "Subject"
+   },
+   {
+    "box": [
+     505.0,
+     277.5,
+     63.75,
+     26.25
+    ],
+    "confidence": 0.98904,
+    "text": "Marks"
+   },
+   {
+    "box": [
+     45.0,
+     310.0,
+     67.5,
+     26.25
+    ],
+    "confidence": 0.99998,
+    "text": "English"
+   },
+   {
+    "box": [
+     503.75,
+     308.75,
+     31.25,
+     26.25
+    ],
+    "confidence": 0.87802,
+    "text": "97"
+   },
+   {
+    "box": [
+     43.75,
+     340.0,
+     55.0,
+     26.25
+    ],
+    "confidence": 0.99996,
+    "text": "Hindi"
+   },
+   {
+    "box": [
+     503.75,
+     340.0,
+     31.25,
+     26.25
+    ],
+    "confidence": 0.99999,
+    "text": "80"
+   },
+   {
+    "box": [
+     45.0,
+     371.25,
+     108.75,
+     25.0
+    ],
+    "confidence": 0.99996,
+    "text": "Mathematics"
+   },
+   {
+    "box": [
+     503.75,
+     371.25,
+     30.0,
+     26.25
+    ],
+    "confidence": 0.99998,
+    "text": "51"
+   },
+   {
+    "box": [
+     46.25,
+     403.75,
+     67.5,
+     23.75
+    ],
+    "confidence": 0.99996,
+    "text": "Science"
+   },
+   {
+    "box": [
+     503.75,
+     402.5,
+     30.0,
+     26.25
+    ],
+    "confidence": 0.99999,
+    "text": "91"
+   },
+   {
+    "box": [
+     46.25,
+     435.0,
+     118.75,
+     23.75
+    ],
+    "confidence": 0.99785,
+    "text": "Social Science"
+   },
+   {
+    "box": [
+     503.75,
+     432.5,
+     31.25,
+     27.5
+    ],
+    "confidence": 0.99999,
+    "text": "72"
+   },
+   {
+    "box": [
+     167.5,
+     486.25,
+     465.0,
+     21.25
+    ],
+    "confidence": 0.99946,
+    "text": "SAMPLE, SYNTHETIC DOCUMENT, NOT A REAL RECORD (SYN-APP-013)"
+   }
+  ]
+ },
+ "d6bff8f9e0a32f89f33328ee342fb851ac17d238a2aa477136e7cd9a9649f3f1": {
+  "words": [
+   {
+    "box": [
+     57.5,
+     50.0,
+     685.0,
+     27.5
+    ],
+    "confidence": 0.97983,
+    "text": "Secondary School Examination, Class X: Statement of Marks"
+   },
+   {
+    "box": [
+     43.75,
+     103.75,
+     57.5,
+     27.5
+    ],
+    "confidence": 0.99997,
+    "text": "Name"
+   },
+   {
+    "box": [
+     316.25,
+     103.75,
+     115.0,
+     28.75
+    ],
+    "confidence": 0.99977,
+    "text": "Vivaan Gupta"
+   },
+   {
+    "box": [
+     46.25,
+     137.5,
+     116.25,
+     22.5
+    ],
+    "confidence": 0.99947,
+    "text": "Father's name"
+   },
+   {
+    "box": [
+     318.75,
+     137.5,
+     121.25,
+     25.0
+    ],
+    "confidence": 0.99968,
+    "text": "Ramesh Gupta"
+   },
+   {
+    "box": [
+     46.25,
+     168.75,
+     105.0,
+     22.5
+    ],
+    "confidence": 0.99879,
+    "text": "Date of birth"
+   },
+   {
+    "box": [
+     318.75,
+     167.5,
+     96.25,
+     25.0
+    ],
+    "confidence": 0.99999,
+    "text": "11/12/2008"
+   },
+   {
+    "box": [
+     45.0,
+     197.5,
+     57.5,
+     26.25
+    ],
+    "confidence": 0.99998,
+    "text": "Board"
+   },
+   {
+    "box": [
+     318.75,
+     198.75,
+     48.75,
+     25.0
+    ],
+    "confidence": 0.99992,
+    "text": "ICSE"
+   },
+   {
+    "box": [
+     43.75,
+     228.75,
+     105.0,
+     25.0
+    ],
+    "confidence": 0.96443,
+    "text": "Roll number"
+   },
+   {
+    "box": [
+     318.75,
+     230.0,
+     108.75,
+     22.5
+    ],
+    "confidence": 0.99997,
+    "text": "SYN8023293"
+   },
+   {
+    "box": [
+     45.0,
+     277.5,
+     73.75,
+     26.25
+    ],
+    "confidence": 0.99993,
+    "text": "Subject"
+   },
+   {
+    "box": [
+     505.0,
+     277.5,
+     63.75,
+     26.25
+    ],
+    "confidence": 0.99995,
+    "text": "Marks"
+   },
+   {
+    "box": [
+     45.0,
+     308.75,
+     67.5,
+     26.25
+    ],
+    "confidence": 0.99998,
+    "text": "English"
+   },
+   {
+    "box": [
+     503.75,
+     308.75,
+     30.0,
+     27.5
+    ],
+    "confidence": 0.99998,
+    "text": "41"
+   },
+   {
+    "box": [
+     43.75,
+     340.0,
+     55.0,
+     26.25
+    ],
+    "confidence": 0.99992,
+    "text": "Hindi"
+   },
+   {
+    "box": [
+     503.75,
+     340.0,
+     30.0,
+     26.25
+    ],
+    "confidence": 0.99999,
+    "text": "91"
+   },
+   {
+    "box": [
+     43.75,
+     370.0,
+     110.0,
+     26.25
+    ],
+    "confidence": 0.99997,
+    "text": "Mathematics"
+   },
+   {
+    "box": [
+     503.75,
+     371.25,
+     31.25,
+     26.25
+    ],
+    "confidence": 0.99996,
+    "text": "50"
+   },
+   {
+    "box": [
+     46.25,
+     403.75,
+     67.5,
+     22.5
+    ],
+    "confidence": 0.99997,
+    "text": "Science"
+   },
+   {
+    "box": [
+     503.75,
+     402.5,
+     31.25,
+     26.25
+    ],
+    "confidence": 0.99999,
+    "text": "56"
+   },
+   {
+    "box": [
+     46.25,
+     433.75,
+     118.75,
+     25.0
+    ],
+    "confidence": 0.99996,
+    "text": "Social Science"
+   },
+   {
+    "box": [
+     503.75,
+     432.5,
+     31.25,
+     27.5
+    ],
+    "confidence": 1.0,
+    "text": "43"
+   },
+   {
+    "box": [
+     166.25,
+     486.25,
+     466.25,
+     22.5
+    ],
+    "confidence": 0.99422,
+    "text": "SAMPLE, SYNTHETIC DOCUMENT, NOT A REAL RECORD (SYN-APP-003)"
+   }
+  ]
+ },
+ "de23a0a6225a5a33414fe5b5322f486004510be6c441bf9d91bb15f42b6fafad": {
+  "words": [
+   {
+    "box": [
+     321.25,
+     50.0,
+     156.25,
+     28.75
+    ],
+    "confidence": 0.99996,
+    "text": "Identity Card"
+   },
+   {
+    "box": [
+     47.5,
+     108.75,
+     51.25,
+     18.75
+    ],
+    "confidence": 0.99998,
+    "text": "Name"
+   },
+   {
+    "box": [
+     321.25,
+     108.75,
+     112.5,
+     20.0
+    ],
+    "confidence": 0.99997,
+    "text": "Sharma Latha"
+   },
+   {
+    "box": [
+     48.75,
+     140.0,
+     101.25,
+     17.5
+    ],
+    "confidence": 0.99581,
+    "text": "Date of birth"
+   },
+   {
+    "box": [
+     322.5,
+     140.0,
+     91.25,
+     18.75
+    ],
+    "confidence": 0.99999,
+    "text": "10/12/2006"
+   },
+   {
+    "box": [
+     47.5,
+     170.0,
+     88.75,
+     20.0
+    ],
+    "confidence": 0.99992,
+    "text": "ID number"
+   },
+   {
+    "box": [
+     321.25,
+     170.0,
+     132.5,
+     18.75
+    ],
+    "confidence": 0.99998,
+    "text": "SYNID48305797"
+   },
+   {
+    "box": [
+     167.5,
+     222.5,
+     465.0,
+     18.75
+    ],
+    "confidence": 0.98841,
+    "text": "SAMPLE, SYNTHETIC DOCUMENT, NOT A REAL RECORD (SYN-APP-001)"
+   }
+  ]
+ },
+ "df76b967d002d9bbde7f4f0c39f9e31cc6b2720530b059cb8275e8712d20c6ed": {
+  "words": [
+   {
+    "box": [
+     46.25,
+     50.0,
+     708.75,
+     26.25
+    ],
+    "confidence": 0.99544,
+    "text": "Senior School Certificate Examination, Class XII: Statement of"
+   },
+   {
+    "box": [
+     360.0,
+     73.75,
+     80.0,
+     28.75
+    ],
+    "confidence": 0.99994,
+    "text": "Marks"
+   },
+   {
+    "box": [
+     43.75,
+     128.75,
+     57.5,
+     26.25
+    ],
+    "confidence": 0.99997,
+    "text": "Name"
+   },
+   {
+    "box": [
+     320.0,
+     128.75,
+     115.0,
+     26.25
+    ],
+    "confidence": 0.99299,
+    "text": "Sharma Latha"
+   },
+   {
+    "box": [
+     46.25,
+     161.25,
+     116.25,
+     22.5
+    ],
+    "confidence": 0.9996,
+    "text": "Father's name"
+   },
+   {
+    "box": [
+     320.0,
+     160.0,
+     115.0,
+     26.25
+    ],
+    "confidence": 0.98157,
+    "text": "Salim Sharma"
+   },
+   {
+    "box": [
+     46.25,
+     192.5,
+     105.0,
+     22.5
+    ],
+    "confidence": 0.99832,
+    "text": "Date of birth"
+   },
+   {
+    "box": [
+     320.0,
+     191.25,
+     95.0,
+     25.0
+    ],
+    "confidence": 0.99999,
+    "text": "10/12/2006"
+   },
+   {
+    "box": [
+     45.0,
+     221.25,
+     57.5,
+     26.25
+    ],
+    "confidence": 0.99997,
+    "text": "Board"
+   },
+   {
+    "box": [
+     318.75,
+     223.75,
+     182.5,
+     23.75
+    ],
+    "confidence": 0.97669,
+    "text": "Karnataka State Board"
+   },
+   {
+    "box": [
+     46.25,
+     253.75,
+     102.5,
+     23.75
+    ],
+    "confidence": 0.99996,
+    "text": "Roll number"
+   },
+   {
+    "box": [
+     321.25,
+     253.75,
+     106.25,
+     22.5
+    ],
+    "confidence": 0.9999,
+    "text": "SYN0945957"
+   },
+   {
+    "box": [
+     43.75,
+     301.25,
+     75.0,
+     27.5
+    ],
+    "confidence": 0.99995,
+    "text": "Subject"
+   },
+   {
+    "box": [
+     503.75,
+     302.5,
+     65.0,
+     26.25
+    ],
+    "confidence": 0.99992,
+    "text": "Marks"
+   },
+   {
+    "box": [
+     43.75,
+     331.25,
+     70.0,
+     28.75
+    ],
+    "confidence": 0.99997,
+    "text": "English"
+   },
+   {
+    "box": [
+     502.5,
+     331.25,
+     35.0,
+     31.25
+    ],
+    "confidence": 1.0,
+    "text": "59"
+   },
+   {
+    "box": [
+     43.75,
+     363.75,
+     55.0,
+     26.25
+    ],
+    "confidence": 0.99997,
+    "text": "Hindi"
+   },
+   {
+    "box": [
+     502.5,
+     362.5,
+     35.0,
+     30.0
+    ],
+    "confidence": 0.99999,
+    "text": "77"
+   },
+   {
+    "box": [
+     45.0,
+     395.0,
+     108.75,
+     23.75
+    ],
+    "confidence": 0.99969,
+    "text": "Mathematics"
+   },
+   {
+    "box": [
+     501.25,
+     393.75,
+     36.25,
+     30.0
+    ],
+    "confidence": 0.99997,
+    "text": "87"
+   },
+   {
+    "box": [
+     45.0,
+     426.25,
+     70.0,
+     25.0
+    ],
+    "confidence": 0.99997,
+    "text": "Science"
+   },
+   {
+    "box": [
+     502.5,
+     425.0,
+     35.0,
+     30.0
+    ],
+    "confidence": 0.99999,
+    "text": "74"
+   },
+   {
+    "box": [
+     46.25,
+     458.75,
+     117.5,
+     22.5
+    ],
+    "confidence": 0.99982,
+    "text": "Social Science"
+   },
+   {
+    "box": [
+     502.5,
+     456.25,
+     35.0,
+     30.0
+    ],
+    "confidence": 0.99998,
+    "text": "56"
+   },
+   {
+    "box": [
+     166.25,
+     510.0,
+     466.25,
+     22.5
+    ],
+    "confidence": 0.99856,
+    "text": "SAMPLE, SYNTHETIC DOCUMENT, NOT A REAL RECORD (SYN-APP-001)"
+   }
+  ]
+ },
+ "e144b9aea4cf720e05fb0a6572b0507c37b22e5d273edd4090b8f173f5033361": {
+  "words": [
+   {
+    "box": [
+     46.25,
+     51.25,
+     707.5,
+     25.0
+    ],
+    "confidence": 0.9974,
+    "text": "Senior School Certificate Examination, Class XII: Statement of"
+   },
+   {
+    "box": [
+     357.5,
+     72.5,
+     82.5,
+     30.0
+    ],
+    "confidence": 0.99995,
+    "text": "Marks"
+   },
+   {
+    "box": [
+     43.75,
+     130.0,
+     57.5,
+     26.25
+    ],
+    "confidence": 0.99996,
+    "text": "Name"
+   },
+   {
+    "box": [
+     318.75,
+     130.0,
+     103.75,
+     23.75
+    ],
+    "confidence": 0.99991,
+    "text": "Anjali Gupta"
+   },
+   {
+    "box": [
+     46.25,
+     162.5,
+     116.25,
+     21.25
+    ],
+    "confidence": 0.9998,
+    "text": "Father's name"
+   },
+   {
+    "box": [
+     318.75,
+     161.25,
+     113.75,
+     25.0
+    ],
+    "confidence": 0.99595,
+    "text": "Suresh Gupta"
+   },
+   {
+    "box": [
+     46.25,
+     193.75,
+     105.0,
+     21.25
+    ],
+    "confidence": 0.99094,
+    "text": "Date of birth"
+   },
+   {
+    "box": [
+     318.75,
+     191.25,
+     96.25,
+     25.0
+    ],
+    "confidence": 0.99999,
+    "text": "29/06/2006"
+   },
+   {
+    "box": [
+     46.25,
+     223.75,
+     55.0,
+     23.75
+    ],
+    "confidence": 0.99999,
+    "text": "Board"
+   },
+   {
+    "box": [
+     318.75,
+     222.5,
+     52.5,
+     23.75
+    ],
+    "confidence": 0.99994,
+    "text": "CBSE"
+   },
+   {
+    "box": [
+     45.0,
+     253.75,
+     103.75,
+     23.75
+    ],
+    "confidence": 0.99995,
+    "text": "Roll number"
+   },
+   {
+    "box": [
+     320.0,
+     255.0,
+     107.5,
+     22.5
+    ],
+    "confidence": 0.99998,
+    "text": "SYN8137170"
+   },
+   {
+    "box": [
+     46.25,
+     302.5,
+     72.5,
+     26.25
+    ],
+    "confidence": 0.99995,
+    "text": "Subject"
+   },
+   {
+    "box": [
+     503.75,
+     301.25,
+     65.0,
+     26.25
+    ],
+    "confidence": 0.99996,
+    "text": "Marks"
+   },
+   {
+    "box": [
+     45.0,
+     333.75,
+     67.5,
+     26.25
+    ],
+    "confidence": 0.99998,
+    "text": "English"
+   },
+   {
+    "box": [
+     503.75,
+     332.5,
+     31.25,
+     27.5
+    ],
+    "confidence": 0.99998,
+    "text": "97"
+   },
+   {
+    "box": [
+     43.75,
+     365.0,
+     55.0,
+     25.0
+    ],
+    "confidence": 0.99996,
+    "text": "Hindi"
+   },
+   {
+    "box": [
+     503.75,
+     363.75,
+     32.5,
+     26.25
+    ],
+    "confidence": 1.0,
+    "text": "59"
+   },
+   {
+    "box": [
+     46.25,
+     396.25,
+     107.5,
+     25.0
+    ],
+    "confidence": 0.99996,
+    "text": "Mathematics"
+   },
+   {
+    "box": [
+     503.75,
+     395.0,
+     32.5,
+     27.5
+    ],
+    "confidence": 1.0,
+    "text": "47"
+   },
+   {
+    "box": [
+     45.0,
+     427.5,
+     70.0,
+     25.0
+    ],
+    "confidence": 0.99996,
+    "text": "Science"
+   },
+   {
+    "box": [
+     503.75,
+     425.0,
+     32.5,
+     27.5
+    ],
+    "confidence": 1.0,
+    "text": "63"
+   },
+   {
+    "box": [
+     46.25,
+     460.0,
+     118.75,
+     21.25
+    ],
+    "confidence": 0.99993,
+    "text": "Social Science"
+   },
+   {
+    "box": [
+     503.75,
+     456.25,
+     32.5,
+     27.5
+    ],
+    "confidence": 0.99998,
+    "text": "77"
+   },
+   {
+    "box": [
+     167.5,
+     510.0,
+     465.0,
+     22.5
+    ],
+    "confidence": 0.58905,
+    "text": "SAM--S R BAL  N L  04)"
+   }
+  ]
+ },
+ "fc2c75ed2b03c92bf16ef2495933b2f4d94fd0f105a16d7731bc2ac95bcef0f8": {
+  "words": [
+   {
+    "box": [
+     57.5,
+     50.0,
+     685.0,
+     27.5
+    ],
+    "confidence": 0.98431,
+    "text": "Secondary School Examination, Class X: Statement of Marks"
+   },
+   {
+    "box": [
+     43.75,
+     103.75,
+     57.5,
+     26.25
+    ],
+    "confidence": 0.99998,
+    "text": "Name"
+   },
+   {
+    "box": [
+     316.25,
+     103.75,
+     96.25,
+     28.75
+    ],
+    "confidence": 0.9998,
+    "text": "Anjali Nair"
+   },
+   {
+    "box": [
+     45.0,
+     135.0,
+     118.75,
+     26.25
+    ],
+    "confidence": 0.99598,
+    "text": "Father's name"
+   },
+   {
+    "box": [
+     318.75,
+     137.5,
+     102.5,
+     23.75
+    ],
+    "confidence": 0.9987,
+    "text": "Suresh Nair"
+   },
+   {
+    "box": [
+     46.25,
+     167.5,
+     106.25,
+     23.75
+    ],
+    "confidence": 0.92863,
+    "text": "Date of birth"
+   },
+   {
+    "box": [
+     318.75,
+     168.75,
+     96.25,
+     22.5
+    ],
+    "confidence": 0.99999,
+    "text": "08/01/2006"
+   },
+   {
+    "box": [
+     46.25,
+     198.75,
+     55.0,
+     23.75
+    ],
+    "confidence": 0.99999,
+    "text": "Board"
+   },
+   {
+    "box": [
+     318.75,
+     198.75,
+     52.5,
+     23.75
+    ],
+    "confidence": 0.99985,
+    "text": "CBSE"
+   },
+   {
+    "box": [
+     45.0,
+     228.75,
+     103.75,
+     23.75
+    ],
+    "confidence": 0.99969,
+    "text": "Roll number"
+   },
+   {
+    "box": [
+     320.0,
+     231.25,
+     108.75,
+     21.25
+    ],
+    "confidence": 0.99998,
+    "text": "SYN9337710"
+   },
+   {
+    "box": [
+     43.75,
+     276.25,
+     75.0,
+     28.75
+    ],
+    "confidence": 0.9998,
+    "text": "Subject"
+   },
+   {
+    "box": [
+     505.0,
+     277.5,
+     63.75,
+     26.25
+    ],
+    "confidence": 0.99995,
+    "text": "Marks"
+   },
+   {
+    "box": [
+     45.0,
+     308.75,
+     67.5,
+     25.0
+    ],
+    "confidence": 0.99994,
+    "text": "English"
+   },
+   {
+    "box": [
+     503.75,
+     308.75,
+     31.25,
+     27.5
+    ],
+    "confidence": 0.99998,
+    "text": "52"
+   },
+   {
+    "box": [
+     43.75,
+     338.75,
+     55.0,
+     26.25
+    ],
+    "confidence": 0.99995,
+    "text": "Hindi"
+   },
+   {
+    "box": [
+     503.75,
+     340.0,
+     31.25,
+     26.25
+    ],
+    "confidence": 1.0,
+    "text": "65"
+   },
+   {
+    "box": [
+     45.0,
+     371.25,
+     108.75,
+     23.75
+    ],
+    "confidence": 0.99995,
+    "text": "Mathematics"
+   },
+   {
+    "box": [
+     503.75,
+     371.25,
+     31.25,
+     26.25
+    ],
+    "confidence": 1.0,
+    "text": "93"
+   },
+   {
+    "box": [
+     45.0,
+     402.5,
+     70.0,
+     25.0
+    ],
+    "confidence": 0.99997,
+    "text": "Science"
+   },
+   {
+    "box": [
+     503.75,
+     402.5,
+     30.0,
+     27.5
+    ],
+    "confidence": 0.99998,
+    "text": "41"
+   },
+   {
+    "box": [
+     46.25,
+     433.75,
+     118.75,
+     25.0
+    ],
+    "confidence": 0.99996,
+    "text": "Social Science"
+   },
+   {
+    "box": [
+     503.75,
+     432.5,
+     31.25,
+     27.5
+    ],
+    "confidence": 1.0,
+    "text": "53"
+   },
+   {
+    "box": [
+     166.25,
+     486.25,
+     466.25,
+     22.5
+    ],
+    "confidence": 0.6505,
+    "text": "SAMVS D DR  N L  09)"
+   }
+  ]
+ }
+}
