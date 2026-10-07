@@ -17,7 +17,7 @@ const FADING = new Set([...MOVING, "color", "background-color", "border-color"])
 function keyframeBlocks(source: string): { name: string; body: string }[] {
   const blocks: { name: string; body: string }[] = [];
   for (const match of source.matchAll(/@keyframes\s+([\w-]+)\s*{/g)) {
-    const start = (match.index ?? 0) + match[0].length;
+    const start = match.index + match[0].length;
     let depth = 1;
     let end = start;
     while (depth > 0 && end < source.length) {
@@ -35,7 +35,7 @@ function sourceFiles(dir: string): string[] {
     if (statSync(path).isDirectory()) {
       return sourceFiles(path);
     }
-    return /\.tsx$/.test(path) && !/\.test\.tsx$/.test(path) ? [path] : [];
+    return path.endsWith(".tsx") && !path.endsWith(".test.tsx") ? [path] : [];
   });
 }
 
@@ -89,7 +89,9 @@ describe("motion contract", () => {
     expect(reduced).toMatch(/animation-delay:\s*0s\s*!important/);
     expect(reduced).toMatch(/transition-duration:\s*0\.01ms\s*!important/);
     expect(reduced).toMatch(/transition-delay:\s*0s\s*!important/);
-    expect(reduced).toMatch(/\.lift:hover\s*{\s*transform:\s*none/);
+    expect(reduced).toMatch(
+      /\.lift:hover,\s*button:not\(:disabled\):active\s*{\s*transform:\s*none/,
+    );
   });
 
   it("fills entrance animations backwards so a finished one never holds a hover transform", () => {

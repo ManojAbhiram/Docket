@@ -3,6 +3,7 @@ import type { ReactNode } from "react";
 
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
 
 interface NoticeProps {
   tone?: "error" | "info";
@@ -12,13 +13,21 @@ interface NoticeProps {
   action?: ReactNode;
 }
 
-/** A message that says what happened and what to do. An error is announced to assistive tech. */
+/**
+ * A message that says what happened and what to do. An error is announced to assistive tech. It
+ * carries a 4 px bar in the tone's colour and fades in; it never travels, so a notice that appears
+ * during a fast review does not pull the eye.
+ */
 export function Notice({ tone = "error", title, children, action }: NoticeProps) {
   const Icon = tone === "error" ? CircleAlert : Info;
   return (
     <Alert
       variant={tone === "error" ? "destructive" : "default"}
       role={tone === "error" ? "alert" : "status"}
+      className={cn(
+        "enter-quiet border-l-4",
+        tone === "error" ? "border-l-destructive" : "border-l-primary",
+      )}
     >
       <Icon aria-hidden="true" />
       <AlertTitle>{title}</AlertTitle>

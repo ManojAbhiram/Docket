@@ -203,6 +203,14 @@
     outline: 2px solid var(--ring);
     outline-offset: 2px;
   }
+  /* On the deep teal header the ring is the header's own light text colour, 3:1 or better. */
+  .app-header :focus-visible {
+    outline-color: var(--header-foreground);
+  }
+  /* A pressed button gives a little under the finger. Transform only, so reduced motion is the rule below. */
+  button:not(:disabled):active {
+    transform: scale(0.98);
+  }
   h1,
   h2,
   h3 {
@@ -259,6 +267,16 @@
   }
   to {
     transform: scaleX(0.9);
+  }
+}
+
+/* The fill completes when the read ends. */
+@keyframes docket-read-done {
+  from {
+    transform: scaleX(0.9);
+  }
+  to {
+    transform: scaleX(1);
   }
 }
 
@@ -323,7 +341,10 @@
 .read-fill {
   transform-origin: left center;
   transform: scaleX(1);
-  transition: transform var(--duration-base) var(--ease-standard);
+}
+
+.read-fill:not([data-state="reading"]) {
+  animation: docket-read-done var(--duration-base) var(--ease-standard) backwards;
 }
 
 .read-fill[data-state="reading"] {
@@ -344,7 +365,8 @@
     scroll-behavior: auto !important;
   }
 
-  .lift:hover {
+  .lift:hover,
+  button:not(:disabled):active {
     transform: none;
   }
 }
