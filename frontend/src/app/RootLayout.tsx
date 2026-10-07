@@ -38,7 +38,7 @@ export function RootLayout() {
       <header className="border-b">
         <nav
           aria-label="Main"
-          className={`mx-auto flex ${mainWidthClass(pathname)} flex-wrap items-center gap-4 px-4 py-3`}
+          className={`mx-auto flex ${mainWidthClass(pathname)} flex-wrap items-center gap-x-3 gap-y-0 px-4 py-1 sm:gap-x-4 sm:py-3`}
         >
           <Link to="/" className="inline-flex min-h-11 items-center font-semibold sm:min-h-9">
             Docket
@@ -61,6 +61,7 @@ export function RootLayout() {
                 <Button
                   variant="outline"
                   size="sm"
+                  className="min-h-11 sm:min-h-8"
                   disabled={logout.isPending}
                   onClick={() => {
                     logout.mutate(undefined, {

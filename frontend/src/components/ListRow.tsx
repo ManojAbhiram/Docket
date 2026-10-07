@@ -40,7 +40,7 @@ export function ListRow({
       {selected && (
         <ChevronRight
           aria-hidden="true"
-          className="absolute top-1/2 left-0.5 size-3.5 -translate-y-1/2 text-muted-foreground"
+          className="absolute top-1/2 left-0.5 size-3 -translate-y-1/2 text-muted-foreground"
         />
       )}
       {children}
