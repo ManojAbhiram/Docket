@@ -1,9 +1,10 @@
+import { RadioGroup as RadioGroupPrimitive } from "radix-ui";
 import { useState } from "react";
 
 import { ActionNotice } from "@/components/ActionNotice";
 import { Kbd } from "@/components/Kbd";
 import type { NoticeSpec } from "@/components/Notice";
-import { Button } from "@/components/ui/button";
+import { Button, buttonVariants } from "@/components/ui/button";
 import {
   Dialog,
   DialogContent,
@@ -16,6 +17,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { useHotkeys } from "@/lib/hotkeys";
+import { cn } from "@/lib/utils";
 
 export type DecisionAction = "approve" | "correct" | "reject";
 
@@ -147,26 +149,31 @@ export function DecisionDialogView({
           </DialogDescription>
         </DialogHeader>
         {notice && <ActionNotice spec={notice} />}
-        <div role="radiogroup" aria-label="Decision" className="grid gap-2 sm:grid-cols-3">
+        <RadioGroupPrimitive.Root
+          aria-label="Decision"
+          value={action ?? ""}
+          disabled={busy}
+          orientation="horizontal"
+          className="grid gap-2 sm:grid-cols-3"
+          onValueChange={(next) => {
+            setAction(next as DecisionAction);
+            setProblem(undefined);
+          }}
+        >
           {CHOICES.map((choice) => (
-            <Button
+            <RadioGroupPrimitive.Item
               key={choice.value}
-              type="button"
-              role="radio"
-              aria-checked={action === choice.value}
-              variant={action === choice.value ? "default" : "outline"}
-              className="min-h-11 justify-between"
-              disabled={busy}
-              onClick={() => {
-                setAction(choice.value);
-                setProblem(undefined);
-              }}
+              value={choice.value}
+              className={cn(
+                buttonVariants({ variant: action === choice.value ? "default" : "outline" }),
+                "min-h-11 justify-between",
+              )}
             >
               {choice.label}
               <Kbd>{choice.key}</Kbd>
-            </Button>
+            </RadioGroupPrimitive.Item>
           ))}
-        </div>
+        </RadioGroupPrimitive.Root>
         {action === "correct" && (
           <div className="space-y-2">
             {fields && fields.length > 0 ? (

@@ -441,6 +441,28 @@ describe("deciding an application", () => {
     expect(within(picker).getByText("Name (12th marksheet): Latha Sharma")).toBeInTheDocument();
   });
 
+  // Decision 13A [NOTASK-6]: the choices are a real radio group, so the arrow keys move between them.
+  it("moves between the decision choices with the arrow keys", async () => {
+    serve(detail());
+    renderCompare();
+    const dialog = await openDialog();
+    const approve = within(dialog).getByRole("radio", { name: /Approve/ });
+    await userEvent.click(approve);
+
+    // Held down, as a hand holds it: the group moves focus a tick after the key goes down, and only
+    // checks the radio it lands on while the arrow key is still pressed.
+    await userEvent.keyboard("{ArrowRight>}");
+
+    const correct = within(dialog).getByRole("radio", { name: /Correct a value/ });
+    await waitFor(() => {
+      expect(correct).toHaveAttribute("aria-checked", "true");
+    });
+    await userEvent.keyboard("{/ArrowRight}");
+    expect(correct).toHaveFocus();
+    expect(approve).toHaveAttribute("aria-checked", "false");
+    expect(approve).toHaveAttribute("tabindex", "-1");
+  });
+
   it("corrects the chosen field with its new value", async () => {
     const served = serve(detail());
     renderCompare();
