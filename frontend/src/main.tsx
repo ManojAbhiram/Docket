@@ -3,6 +3,12 @@ import { createRoot } from "react-dom/client";
 
 import { App } from "@/app/App";
 
+// The approved faces (docs/design/DESIGN.md section 3), self-hosted: two weights, Latin subset.
+import "@fontsource/ibm-plex-sans/latin-400.css";
+import "@fontsource/ibm-plex-sans/latin-600.css";
+import "@fontsource/ibm-plex-sans-condensed/latin-400.css";
+import "@fontsource/ibm-plex-sans-condensed/latin-600.css";
+import "@fontsource/ibm-plex-mono/latin-400.css";
 import "@/index.css";
 
 // Mount only. Providers live in App, routes in app/routes.tsx.
