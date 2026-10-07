@@ -400,6 +400,34 @@ describe("deciding an application", () => {
     });
   });
 
+  // Regression: ISSUE-008 [NOTASK-2]. Two documents both carry a Name, and the picker listed
+  // "Name: Latha Sharma" twice with nothing to tell them apart.
+  it("names the document of each field the verifier can correct", async () => {
+    const base = detail();
+    const first = base.documents[0]!;
+    serve(
+      detail({
+        documents: [
+          first,
+          {
+            ...first,
+            id: "0192b1c4-1111-7c4e-9a1b-2c3d4e5f6a7b",
+            detected_type: "12th_marksheet",
+            fields: [field({ id: 21, value: "Latha Sharma" })],
+          },
+        ],
+      }),
+    );
+    renderCompare();
+    const dialog = await openDialog();
+
+    await userEvent.click(within(dialog).getByRole("radio", { name: /Correct a value/ }));
+
+    const picker = within(dialog).getByLabelText("Field");
+    expect(within(picker).getByText("Name (10th marksheet): Latha Sharmaa")).toBeInTheDocument();
+    expect(within(picker).getByText("Name (12th marksheet): Latha Sharma")).toBeInTheDocument();
+  });
+
   it("corrects the chosen field with its new value", async () => {
     const served = serve(detail());
     renderCompare();

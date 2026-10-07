@@ -5,7 +5,7 @@ import { useMe } from "@/features/auth/hooks";
 import { DecisionDialog } from "@/features/review/components/DecisionDialog";
 import { ReviewView } from "@/features/review/components/ReviewView";
 import { useApplication } from "@/features/review/hooks";
-import { fieldLabel, failedFirst, toComparison } from "@/features/review/mapping";
+import { documentTitle, failedFirst, fieldLabel, toComparison } from "@/features/review/mapping";
 import { ApiError } from "@/lib/api";
 
 /** S-07 and S-08 with their data: one application, its documents, and the verifier's decision. */
@@ -30,9 +30,10 @@ export function ComparePage() {
       .flatMap((doc) =>
         failedFirst(doc.fields.map(toComparison)).map((view) => {
           const original = doc.fields.find((field) => field.id === view.id);
+          const label = original ? fieldLabel(original) : view.label;
           return {
             id: view.id,
-            label: original ? fieldLabel(original) : view.label,
+            label: `${label} (${documentTitle(doc.detected_type)})`,
             value: view.documentValue,
           };
         }),
