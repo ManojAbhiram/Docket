@@ -2,6 +2,7 @@ import { Check, Minus, TriangleAlert, X, type LucideIcon } from "lucide-react";
 import type { ReactNode } from "react";
 
 import { ConfidenceBadge } from "@/components/ConfidenceBadge";
+import { ListRow } from "@/components/ListRow";
 import { Button } from "@/components/ui/button";
 import {
   Table,
@@ -12,7 +13,9 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import type { FieldComparison, FieldKind } from "@/features/applications/types";
+import { FieldCrop } from "@/features/review/components/FieldCrop";
 import { failedFirst } from "@/features/review/mapping";
+import type { ImageState } from "@/features/review/useImageSize";
 import { cn } from "@/lib/utils";
 
 const RESULT: Record<FieldKind, { word: string; icon: LucideIcon; tone: string }> = {
@@ -42,10 +45,19 @@ interface FieldsPanelProps {
   image: ReactNode;
   /** A line under the image, for example that the selected field has no position. */
   imageNote?: ReactNode;
+  /** The loaded page image, so each row can show a crop of where its value was read. */
+  cropSource?: ImageState;
 }
 
 /** Each field beside the application's value, with the page image next to it. */
-export function FieldsPanel({ fields, selectedId, onSelect, image, imageNote }: FieldsPanelProps) {
+export function FieldsPanel({
+  fields,
+  selectedId,
+  onSelect,
+  image,
+  imageNote,
+  cropSource,
+}: FieldsPanelProps) {
   const ordered = failedFirst(fields);
   return (
     <div className="grid gap-6 lg:grid-cols-5">
@@ -79,11 +91,14 @@ export function FieldsPanel({ fields, selectedId, onSelect, image, imageNote }: 
                       {field.label}
                     </Button>
                   </TableCell>
-                  <TableCell className="font-mono break-words whitespace-normal">
+                  <TableCell className="font-mono text-base break-words whitespace-normal">
                     {field.applicationValue}
                   </TableCell>
-                  <TableCell className="font-mono break-words whitespace-normal">
-                    {field.documentValue || "none"}
+                  <TableCell className="space-y-2 font-mono text-base break-words whitespace-normal">
+                    <span className="block">{field.documentValue || "none"}</span>
+                    {cropSource && (
+                      <FieldCrop source={cropSource} box={field.box} label={field.label} />
+                    )}
                   </TableCell>
                   <TableCell>
                     <Result kind={field.kind} />
@@ -98,7 +113,7 @@ export function FieldsPanel({ fields, selectedId, onSelect, image, imageNote }: 
         </div>
         <ul className="space-y-2 md:hidden">
           {ordered.map((field) => (
-            <li key={field.id} className="rounded-md border border-border bg-card">
+            <ListRow key={field.id} interactive selected={field.id === selectedId}>
               <Button
                 variant="ghost"
                 className="h-auto min-h-11 w-full flex-col items-stretch gap-2 p-4 text-left whitespace-normal"
@@ -111,11 +126,16 @@ export function FieldsPanel({ fields, selectedId, onSelect, image, imageNote }: 
                   {field.label}
                   <Result kind={field.kind} />
                 </span>
-                <span className="font-mono text-sm">Application: {field.applicationValue}</span>
-                <span className="font-mono text-sm">Document: {field.documentValue || "none"}</span>
+                <span className="font-mono text-base">Application: {field.applicationValue}</span>
+                <span className="font-mono text-base">
+                  Document: {field.documentValue || "none"}
+                </span>
+                {cropSource && (
+                  <FieldCrop source={cropSource} box={field.box} label={field.label} />
+                )}
                 <ConfidenceBadge confidence={field.confidence} />
               </Button>
-            </li>
+            </ListRow>
           ))}
         </ul>
       </div>

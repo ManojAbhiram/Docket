@@ -1,6 +1,7 @@
 import type { ReactNode } from "react";
 
 import { ActionNotice } from "@/components/ActionNotice";
+import { ListRow } from "@/components/ListRow";
 import type { NoticeSpec } from "@/components/Notice";
 import { PageHeader } from "@/components/PageHeader";
 import { StatusBadge, type StatusKind } from "@/components/StatusBadge";
@@ -187,10 +188,7 @@ export function ApplicationsView({
           </div>
           <ul className="space-y-2 md:hidden">
             {applications.map((application) => (
-              <li
-                key={application.id}
-                className="space-y-2 rounded-md border border-border bg-card p-4"
-              >
+              <ListRow key={application.id} className="space-y-2 p-4">
                 <div className="flex items-center justify-between gap-2">
                   <span className="font-mono">{application.ref}</span>
                   <StatusBadge status={statusOf(application)} />
@@ -215,7 +213,7 @@ export function ApplicationsView({
                     </>
                   )}
                 </div>
-              </li>
+              </ListRow>
             ))}
           </ul>
         </>

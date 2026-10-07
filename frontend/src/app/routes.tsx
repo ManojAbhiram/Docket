@@ -107,7 +107,7 @@ const compareRoute = createRoute({
 const queueRoute = createRoute({
   getParentRoute: () => appRoute,
   path: "/queue",
-  // `decided` is set when the verifier arrives from a saved decision, so focus lands on Review next.
+  // `decided` is set when the verifier arrives from a saved decision, so focus lands on Review newest.
   validateSearch: (search: Record<string, unknown>): { decided?: true } =>
     search.decided === true || search.decided === "true" ? { decided: true } : {},
   component: QueuePage,

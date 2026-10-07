@@ -7,6 +7,8 @@ import {
   useQueryClient,
 } from "@tanstack/react-query";
 
+import { reportKeys } from "@/features/reports/hooks";
+
 import { decide, fetchApplication, fetchQueue } from "./api";
 import type { DecisionInput } from "./schemas";
 
@@ -53,6 +55,7 @@ export function useDecide(id: string) {
       await Promise.all([
         client.invalidateQueries({ queryKey: reviewKeys.application(id) }),
         client.invalidateQueries({ queryKey: reviewKeys.queue() }),
+        client.invalidateQueries({ queryKey: reportKeys.dashboard() }),
       ]);
     },
   });

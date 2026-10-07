@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 
 import { ActionNotice } from "@/components/ActionNotice";
 import { Kbd } from "@/components/Kbd";
+import { ListRow } from "@/components/ListRow";
 import type { NoticeSpec } from "@/components/Notice";
 import { PageHeader } from "@/components/PageHeader";
 import { StatusBadge } from "@/components/StatusBadge";
@@ -9,7 +10,6 @@ import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { formatTime } from "@/features/applications/fixtures";
 import { useHotkeys } from "@/lib/hotkeys";
-import { cn } from "@/lib/utils";
 
 /** What a queue row needs. The gallery's summaries and the API's applications both have it. */
 export interface QueueRow {
@@ -23,8 +23,10 @@ export interface QueueRow {
 
 interface QueueViewProps {
   items: QueueRow[];
-  /** Put focus on "Review next" once there is something to review, after a saved decision. */
+  /** Put focus on "Review newest" once there is something to review, after a saved decision. */
   focusReviewNext?: boolean;
+  /** Decisions this person has saved since they signed in, shown beside the count. */
+  decidedThisSitting?: number;
   /** The server's total, so a partial page can say "20 of 611". */
   total?: number;
   loading?: boolean;
@@ -36,7 +38,7 @@ interface QueueViewProps {
   onLoadMore?: () => void;
   /** Runs the notice's action, for example Reload. */
   onNoticeAction?: () => void;
-  /** Opens one application on S-07. "Review next" and the `n` key open the first one listed. */
+  /** Opens one application on S-07. "Review newest" and the `n` key open the first one listed. */
   onOpen?: (item: QueueRow) => void;
   /** Where "Go to the dashboard" leads from the empty queue. */
   onDashboard?: () => void;
@@ -46,6 +48,7 @@ interface QueueViewProps {
 export function QueueView({
   items,
   focusReviewNext = false,
+  decidedThisSitting = 0,
   total,
   loading = false,
   offline = false,
@@ -89,7 +92,9 @@ export function QueueView({
         title="Review queue"
         description={
           !loading && items.length > 0
-            ? `${String(count)} to review${hasMore && total === undefined ? " so far" : ""}`
+            ? `${String(count)} to review${hasMore && total === undefined ? " so far" : ""}${
+                decidedThisSitting > 0 ? `, ${String(decidedThisSitting)} decided this sitting` : ""
+              }`
             : undefined
         }
         actions={
@@ -99,7 +104,7 @@ export function QueueView({
             disabled={items.length === 0 || offline}
             onClick={reviewNext}
           >
-            Review next <Kbd>n</Kbd>
+            Review newest <Kbd>n</Kbd>
           </Button>
         }
       />
@@ -127,13 +132,12 @@ export function QueueView({
       {items.length > 0 && (
         <ul className="divide-y divide-border rounded-md border border-border bg-card">
           {items.map((item, index) => (
-            <li
+            <ListRow
               key={item.id}
-              aria-current={index === selected ? "true" : undefined}
-              className={cn(
-                "grid min-h-14 items-center gap-x-4 gap-y-1 px-4 py-3 md:grid-cols-[9rem_1fr_1fr_auto_auto]",
-                index === selected && "bg-accent",
-              )}
+              variant="ruled"
+              interactive
+              selected={index === selected}
+              className="grid min-h-14 items-center gap-x-4 gap-y-1 px-4 py-3 md:grid-cols-[9rem_1fr_1fr_auto_auto]"
             >
               <span className="font-mono">{item.ref}</span>
               <span>{item.name}</span>
@@ -153,7 +157,7 @@ export function QueueView({
                   Open
                 </Button>
               </span>
-            </li>
+            </ListRow>
           ))}
         </ul>
       )}

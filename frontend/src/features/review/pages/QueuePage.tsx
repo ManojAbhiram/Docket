@@ -1,7 +1,9 @@
 import { useNavigate, useSearch } from "@tanstack/react-router";
 
+import { useDashboard } from "@/features/reports/hooks";
 import { QueueView, type QueueRow } from "@/features/review/components/QueueView";
 import { useQueue } from "@/features/review/hooks";
+import { decidedThisSitting } from "@/features/review/sitting";
 import { ApiError } from "@/lib/api";
 
 /** S-06 with its data: the review queue, a page at a time. */
@@ -9,6 +11,11 @@ export function QueuePage() {
   const navigate = useNavigate();
   const queue = useQueue();
   const { decided } = useSearch({ strict: false });
+  const dashboard = useDashboard();
+  // What is left is every application in review that no verifier has rejected (eng review R3).
+  const left = dashboard.data
+    ? Math.max(dashboard.data.needsReview - dashboard.data.rejected, 0)
+    : undefined;
   const rows: QueueRow[] =
     queue.data?.pages.flatMap((page) =>
       page.data.map((item) => ({
@@ -25,6 +32,8 @@ export function QueuePage() {
     <QueueView
       items={rows}
       focusReviewNext={decided === true}
+      decidedThisSitting={decidedThisSitting()}
+      {...(left !== undefined && { total: left })}
       loading={queue.isPending}
       loadingMore={queue.isFetchingNextPage}
       hasMore={queue.hasNextPage}

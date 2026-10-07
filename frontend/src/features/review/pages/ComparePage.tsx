@@ -6,6 +6,7 @@ import { DecisionDialog } from "@/features/review/components/DecisionDialog";
 import { ReviewView } from "@/features/review/components/ReviewView";
 import { useApplication } from "@/features/review/hooks";
 import { documentTitle, failedFirst, fieldLabel, toComparison } from "@/features/review/mapping";
+import { countDecision } from "@/features/review/sitting";
 import { ApiError } from "@/lib/api";
 
 /** S-07 and S-08 with their data: one application, its documents, and the verifier's decision. */
@@ -88,6 +89,7 @@ export function ComparePage() {
             setDeciding(false);
           }}
           onSaved={() => {
+            countDecision();
             void navigate({ to: "/queue", search: { decided: true } });
           }}
           reload={async () => (await loaded.refetch()).data?.application.status}

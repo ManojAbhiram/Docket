@@ -17,6 +17,7 @@ export default tseslint.config(
       "coverage/**",
       "playwright-report/**",
       ".lighthouseci/**",
+      ".scratch/**",
       "test-results/**",
       "node_modules/**",
       // Served as they are, outside the bundle and its type-aware rules.

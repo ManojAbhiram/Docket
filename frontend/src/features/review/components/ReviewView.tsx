@@ -18,7 +18,7 @@ import {
   toComparison,
 } from "@/features/review/mapping";
 import type { ApplicationDetail, ReviewDocument } from "@/features/review/schemas";
-import { useImageSize } from "@/features/review/useImageSize";
+import { useImageSize, type ImageState } from "@/features/review/useImageSize";
 import { useHotkeys } from "@/lib/hotkeys";
 
 const SHORTCUTS: Shortcut[] = [
@@ -166,34 +166,61 @@ function DocumentSection({ doc, selectedId, onSelect }: DocumentSectionProps) {
       ) : doc.detected_type === "unknown" ? (
         <p>This document was not recognised as a marksheet or an ID proof.</p>
       ) : (
-        <FieldsPanel
+        <ReadDocument
+          documentId={doc.id}
           fields={fields}
           selectedId={selectedId}
           onSelect={onSelect}
-          image={<LiveImage documentId={doc.id} fields={fields} selectedId={selectedId} />}
-          imageNote={
-            picked?.box === null && (
-              <p role="status" className="text-muted-foreground">
-                No position for this field. The full document is shown.
-              </p>
-            )
-          }
+          noPosition={picked?.box === null}
         />
       )}
     </section>
   );
 }
 
-interface LiveImageProps {
+interface ReadDocumentProps {
   documentId: string;
+  fields: ReturnType<typeof toComparison>[];
+  selectedId: number | undefined;
+  onSelect: (id: number) => void;
+  noPosition: boolean;
+}
+
+/** A read document: its fields, the page beside them, and a crop of the page for each value. */
+function ReadDocument({ documentId, fields, selectedId, onSelect, noPosition }: ReadDocumentProps) {
+  // One load of the page serves the image, its boxes and every crop (the page is served no-store).
+  const src = documentImageUrl(documentId);
+  const { state, retry } = useImageSize(src);
+  return (
+    <FieldsPanel
+      fields={fields}
+      selectedId={selectedId}
+      onSelect={onSelect}
+      cropSource={state}
+      image={
+        <LiveImage src={src} state={state} retry={retry} fields={fields} selectedId={selectedId} />
+      }
+      imageNote={
+        noPosition && (
+          <p role="status" className="text-muted-foreground">
+            No position for this field. The full document is shown.
+          </p>
+        )
+      }
+    />
+  );
+}
+
+interface LiveImageProps {
+  src: string;
+  state: ImageState;
+  retry: () => void;
   fields: ReturnType<typeof toComparison>[];
   selectedId: number | undefined;
 }
 
 /** The stored page, measured first so the field boxes land where the text is. */
-function LiveImage({ documentId, fields, selectedId }: LiveImageProps) {
-  const src = documentImageUrl(documentId);
-  const { state, retry } = useImageSize(src);
+function LiveImage({ src, state, retry, fields, selectedId }: LiveImageProps) {
   if (state.status === "failed") {
     return (
       <div

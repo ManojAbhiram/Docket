@@ -1,5 +1,7 @@
 import { queryOptions, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
+import { resetSitting } from "@/features/review/sitting";
+
 import { fetchMe, login, logout } from "./api";
 import type { Role, User } from "./schemas";
 
@@ -34,6 +36,7 @@ export function useLogin() {
     mutationKey: authKeys.login(),
     mutationFn: login,
     onSuccess: (user) => {
+      resetSitting();
       client.setQueryData(authKeys.me(), user);
     },
   });
@@ -46,6 +49,7 @@ export function useLogout() {
     mutationFn: logout,
     onSettled: () => {
       // Nothing a signed-out browser holds may outlive the session.
+      resetSitting();
       client.setQueryData(authKeys.me(), null);
       client.removeQueries({ predicate: (query) => query.queryKey[0] !== authKeys.all[0] });
     },

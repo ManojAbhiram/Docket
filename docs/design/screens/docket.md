@@ -18,7 +18,7 @@ Sources: flows `docs/design/flows/docket/flows.md` (v1, same day as the PRD), th
 | S-03 | Import applications | `intake/ImportView` | drop area, then the button, then the refused rows in a scrolling table | none |
 | S-04 | Applications | `intake/ApplicationsView` | table becomes a card per application, two actions per card | none |
 | S-05 | Upload documents | `intake/UploadView` | 48 px picker, then one card per document | none |
-| S-06 | Review queue | `review/QueueView` | rows stack: ref and status, name, flag, then "Open" | `j` `k` move, `n` or "Review next" opens the oldest |
+| S-06 | Review queue | `review/QueueView` | rows stack: ref and status, name, flag, then "Open" | `j` `k` move, `n` or "Review newest" opens the top row (newest change first) |
 | S-07 | Compare application | `review/CompareView` | the document first with its outline, then one card per field, failed fields first | `j` `k` field, `d` decide, `?` shortcuts |
 | S-08 | Decision dialog | `review/DecisionDialogView` | full-width dialog, the three choices stack | `a` `c` `r` choose, Esc closes |
 | S-09 | Export verified list | `reports/ExportView` | the count above a full-width 48 px button | none |

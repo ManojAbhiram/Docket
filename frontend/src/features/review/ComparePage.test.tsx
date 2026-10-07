@@ -106,6 +106,19 @@ describe("the application review screen", () => {
     expect(within(nameRow!).getByText("Mismatch")).toBeInTheDocument();
   });
 
+  // Design decisions 1D, 2A and 5B, eng R2 [NOTASK-6].
+  it("shows a crop of the page beside each value the engine placed, and says when it did not", async () => {
+    serve(detail());
+    renderCompare();
+
+    await screen.findByRole("heading", { name: "SYN-APP-004" });
+
+    expect(
+      (await screen.findAllByRole("img", { name: /as read from the page/ })).length,
+    ).toBeGreaterThanOrEqual(2);
+    expect(screen.getAllByText("No position").length).toBeGreaterThanOrEqual(1);
+  });
+
   it("says why a field is flagged in words, not colour", async () => {
     serve(detail());
 
@@ -369,7 +382,7 @@ describe("deciding an application", () => {
 
   // Regression: ISSUE-006 [NOTASK-2], design decision 3A. After a decision the verifier went on
   // looking at the application instead of going back to the queue.
-  it("returns to the review queue after a decision, with focus on Review next", async () => {
+  it("returns to the review queue after a decision, with focus on Review newest", async () => {
     serve(detail());
     server.use(
       http.get("*/api/applications", () =>
@@ -396,7 +409,7 @@ describe("deciding an application", () => {
 
     expect(await screen.findByRole("heading", { name: "Review queue" })).toBeInTheDocument();
     await waitFor(() => {
-      expect(screen.getByRole("button", { name: /Review next/ })).toHaveFocus();
+      expect(screen.getByRole("button", { name: /Review newest/ })).toHaveFocus();
     });
   });
 
@@ -426,6 +439,28 @@ describe("deciding an application", () => {
     const picker = within(dialog).getByLabelText("Field");
     expect(within(picker).getByText("Name (10th marksheet): Latha Sharmaa")).toBeInTheDocument();
     expect(within(picker).getByText("Name (12th marksheet): Latha Sharma")).toBeInTheDocument();
+  });
+
+  // Decision 13A [NOTASK-6]: the choices are a real radio group, so the arrow keys move between them.
+  it("moves between the decision choices with the arrow keys", async () => {
+    serve(detail());
+    renderCompare();
+    const dialog = await openDialog();
+    const approve = within(dialog).getByRole("radio", { name: /Approve/ });
+    await userEvent.click(approve);
+
+    // Held down, as a hand holds it: the group moves focus a tick after the key goes down, and only
+    // checks the radio it lands on while the arrow key is still pressed.
+    await userEvent.keyboard("{ArrowRight>}");
+
+    const correct = within(dialog).getByRole("radio", { name: /Correct a value/ });
+    await waitFor(() => {
+      expect(correct).toHaveAttribute("aria-checked", "true");
+    });
+    await userEvent.keyboard("{/ArrowRight}");
+    expect(correct).toHaveFocus();
+    expect(approve).toHaveAttribute("aria-checked", "false");
+    expect(approve).toHaveAttribute("tabindex", "-1");
   });
 
   it("corrects the chosen field with its new value", async () => {
