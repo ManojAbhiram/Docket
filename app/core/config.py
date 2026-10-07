@@ -57,6 +57,8 @@ class Settings(BaseSettings):
     login_window_minutes: int = Field(default=15, ge=1)
     login_lock_minutes: int = Field(default=15, ge=1)
     login_hash_concurrency: int = Field(default=2, ge=1)
+    register_max_per_source: int = Field(default=10, ge=0)
+    register_window_minutes: int = Field(default=60, ge=1)
     argon2_memory_kib: int = Field(default=65536, ge=8)
     argon2_time_cost: int = Field(default=3, ge=1)
     argon2_parallelism: int = Field(default=1, ge=1)

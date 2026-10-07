@@ -9,6 +9,10 @@ A role denial is 403, because both roles know every route exists. An unknown id 
 | Role | Resource | Action | Own / other / cross-tenant | Expected | Test |
 | --- | --- | --- | --- | --- | --- |
 | anonymous | session | login | any | 200 | TC-AUTH-anonymous-session-login |
+| anonymous | none | register | any | 200 | tests/integration/test_auth_api.py |
+| anonymous | none | register | username taken | 409 | tests/integration/test_auth_api.py |
+| anonymous | none | register | invalid body | 422 | tests/test_register_route.py |
+| anonymous | none | register | over the source limit | 429 | tests/test_register_route.py |
 | anonymous | session | logout | any | 401 | TC-AUTH-anonymous-session-logout |
 | anonymous | import | create | any | 401 | TC-AUTH-anonymous-import-create |
 | anonymous | application | read | any | 401 | TC-AUTH-anonymous-application-read |
@@ -42,4 +46,4 @@ A role denial is 403, because both roles know every route exists. An unknown id 
 | deactivated user | application | read | any | 401 | TC-AUTH-deactivated-application-read |
 | stale session version | decision | create | any | 401 | TC-AUTH-stale-decision-create |
 
-Cells: 33. Covered by a test today: the session, role-gate, deactivated and stale-session behaviour, through a test-only router (`tests/integration/test_auth_api.py`); the import and application list cells (`tests/integration/api/test_import.py`, US-00-001); the document upload and list cells (`tests/integration/api/test_documents.py`, US-00-002); the application detail and document image cells (`tests/integration/api/test_application_detail.py`, US-00-006); the decision cells (`tests/integration/api/test_decisions.py`, US-00-007); and the dashboard and export cells (`tests/integration/api/test_reports.py`, US-00-008, US-00-009). Every route in the matrix now exists. The cell count and the test count are not yet checked against each other by a script.
+Cells: 37. The register row is covered by `tests/integration/test_auth_api.py` (NOTASK-7); it has no `TC-AUTH` id because the matrix test names are still reserved, not generated. Covered by a test today: the session, role-gate, deactivated and stale-session behaviour, through a test-only router (`tests/integration/test_auth_api.py`); the import and application list cells (`tests/integration/api/test_import.py`, US-00-001); the document upload and list cells (`tests/integration/api/test_documents.py`, US-00-002); the application detail and document image cells (`tests/integration/api/test_application_detail.py`, US-00-006); the decision cells (`tests/integration/api/test_decisions.py`, US-00-007); and the dashboard and export cells (`tests/integration/api/test_reports.py`, US-00-008, US-00-009). Every route in the matrix now exists. The cell count and the test count are not yet checked against each other by a script.

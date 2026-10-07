@@ -54,8 +54,9 @@ Assumed boundaries: 4 of 7 (B4, B5, B6 and the TLS statements in B1 to B3).
 | E12 | GET /docs and /openapi.json | route | none, off in production | B2 (app/main.py:46) |
 | E13 | document processing worker (reads uploaded bytes, calls the engine) | consumer | internal | B4 |
 | E14 | seed and import scripts on the host | cron or CLI | host access | B3 |
+| E15 | POST /api/auth/register | route | none (the caller chooses the role) | B2, B6 |
 
-Entry points: 14. Admin screens: none beyond the verifier and staff screens behind E4 to E10.
+Entry points: 15. Admin screens: none beyond the verifier and staff screens behind E4 to E10.
 
 ## 4. Threats (STRIDE)
 
@@ -98,6 +99,7 @@ Entry points: 14. Admin screens: none beyond the verifier and staff screens behi
 | T-35 | B7 | Tampering | a vulnerable or malicious dependency enters through the lockfile | M | H | Makefile:73 | mitigated |
 | T-36 | B1, B2 | Spoofing | considered, none for the local demo: traffic is plain HTTP on localhost; a hosted deployment gets TLS from the host (ADR-0004) | | | | |
 | T-37 | E14 | Elevation of privilege | considered, none: scripts run with host access by the operator, outside the application's trust model | | | | |
+| T-38 | E15, B6 | Elevation of privilege | an anonymous caller registers as a verifier and approves applications | H | H | accepted risk (ADR-0013, chosen by the engineer on 2026-10-07 against the recommendation of invite-only). Bears on escalation: every decision stores its actor by user id (US-00-007), but the log, dashboard and export show `users.display_name`, which is self-chosen by an anonymous caller and not unique, so the shown name is not proof of who acted and the id is the true actor; the per-source sign-up limit (`register_max_per_source`, `register_window_minutes`) only slows bulk registration; nothing stops a person choosing the verifier role. Resource use only, not escalation: the Argon2 hash slots (`login_hash_concurrency`) cap hashing CPU and memory. Residual: register and login have no Origin or CSRF check because no session exists yet, so a cross-site request can replace the victim's session cookie with the attacker's (login CSRF) and spend the victim's source quota; accepted for now, follow-up is to apply the `verify_csrf` Origin allow-list to both routes. Follow-up option: an access code required for the verifier role | accepted |
 
 Categories: Spoofing, Tampering, Repudiation, Information disclosure, Denial of service, Elevation of privilege.
 
@@ -129,6 +131,7 @@ Not threats here and why: dependence on a third-party model API (none, ADR-0003)
 | T-21 | planned in US-00-005 | backend lead rotation | 2026-11-15 |
 | T-22 | planned: new story No personal data in logs | security champion rotation | 2026-11-15 |
 | T-23 | planned: new story Audit entry for every export | admissions office operations role | 2026-11-15 |
+| T-38 | accepted: open sign up with a self-chosen role (ADR-0013); revisit before any real student data | backend lead rotation | before any real student data |
 | T-26 | planned: new story Pin and checksum the OCR models | platform rotation | 2026-11-15 |
 | T-27 | planned in US-02-001, memory growth still to measure (ADR-0001) | platform rotation | 2026-11-15 |
 | T-28 | planned: new story No personal data in logs | security champion rotation | 2026-11-15 |

@@ -1,13 +1,14 @@
-"""Passwords, session tokens and the login limiter (US-00-011, ADR-0006, ADR-0012).
+"""Passwords, session tokens, registration rules and sign-in limiters.
 
-Nothing here touches the database or the request. A session token is random and only its SHA-256 is
-stored, so a leaked table cannot be replayed. The CSRF token is derived from the session token, so
-it needs no storage and ends with the session.
+Covers US-00-011, ADR-0006, ADR-0012, ADR-0013. Nothing here touches the database or the request.
+A session token is random and only its SHA-256 is stored, so a leaked table cannot be replayed.
+The CSRF token is derived from the session token, so it needs no storage and ends with the session.
 """
 
 import hashlib
 import hmac
 import math
+import re
 import secrets
 from collections import deque
 from collections.abc import Callable
@@ -20,6 +21,40 @@ from argon2 import PasswordHasher
 from argon2.exceptions import InvalidHashError, VerificationError
 
 Role = Literal["staff", "verifier"]
+
+USERNAME_PATTERN = re.compile(r"[a-z0-9._-]{3,64}")
+PASSWORD_MIN = 10
+DISPLAY_NAME_MAX = 120
+
+
+def check_username(raw: str) -> str:
+    """The stored form of a username: trimmed and lower case, or ValueError."""
+    name = raw.strip().lower()
+    if not USERNAME_PATTERN.fullmatch(name):
+        msg = "username must be 3 to 64 letters, digits, dots, dashes or underscores"
+        raise ValueError(msg)
+    return name
+
+
+def check_password(password: str, username: str) -> str:
+    """The password unchanged, or ValueError. The message never repeats the password."""
+    if len(password) < PASSWORD_MIN:
+        msg = f"password must be at least {PASSWORD_MIN} characters"
+        raise ValueError(msg)
+    if password.lower() == username.strip().lower():
+        msg = "password must not be the same as the username"
+        raise ValueError(msg)
+    return password
+
+
+def check_display_name(raw: str) -> str:
+    """The name shown in the decision log, trimmed, or ValueError."""
+    name = raw.strip()
+    if not name or len(name) > DISPLAY_NAME_MAX:
+        msg = f"name must be 1 to {DISPLAY_NAME_MAX} characters"
+        raise ValueError(msg)
+    return name
+
 
 _TOKEN_BYTES = 32
 _CSRF_LABEL = b"docket-csrf-v1:"
@@ -148,3 +183,46 @@ class LoginLimiter:
             entry.failures.clear()
         while len(entries) > self._max_entries:
             del entries[next(iter(entries))]
+
+
+class RegistrationLimiter:
+    """Allows a few registrations per source per window.
+
+    In memory, like LoginLimiter (ADR-0011). Only allowed attempts are counted, so a flood of
+    refused ones does not extend its own wait. The number of sources kept is capped, because the
+    sources come from whoever is attacking.
+    """
+
+    def __init__(
+        self,
+        *,
+        max_per_source: int,
+        window: timedelta,
+        clock: Callable[[], datetime],
+        max_entries: int = 10_000,
+    ) -> None:
+        self._max = max_per_source
+        self._window = window
+        self._clock = clock
+        self._max_entries = max_entries
+        self._attempts: dict[str, deque[datetime]] = {}
+
+    def try_register(self, source: str) -> int | None:
+        """None if this attempt may go ahead (and is counted), else seconds to wait."""
+        now = self._clock()
+        attempts = self._attempts.pop(source, None) or deque()
+        self._attempts[source] = attempts  # most recently used goes last
+        while attempts and now - attempts[0] > self._window:
+            attempts.popleft()
+        wait: int | None = None
+        if len(attempts) >= self._max:
+            oldest = attempts[0] if attempts else now
+            wait = max(1, math.ceil((oldest + self._window - now).total_seconds()))
+        else:
+            attempts.append(now)
+        while len(self._attempts) > self._max_entries:
+            del self._attempts[next(iter(self._attempts))]
+        return wait
+
+    def size(self) -> int:
+        return len(self._attempts)

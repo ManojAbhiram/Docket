@@ -1,4 +1,10 @@
-import { cleanup, render } from "@testing-library/react";
+import {
+  createMemoryHistory,
+  createRootRoute,
+  createRouter,
+  RouterProvider,
+} from "@tanstack/react-router";
+import { cleanup, render, waitFor } from "@testing-library/react";
 import { afterEach, describe, expect, it } from "vitest";
 
 import { allScreens } from "./registry";
@@ -18,10 +24,17 @@ describe("design gallery screens", () => {
 
   for (const spec of screens) {
     for (const [state, renderState] of Object.entries(spec.states)) {
-      it(`${spec.id} ${spec.name}: ${state} renders something`, () => {
-        render(<>{renderState()}</>);
+      it(`${spec.id} ${spec.name}: ${state} renders something`, async () => {
+        // Views may hold router links, so each state renders inside a router, as the gallery does.
+        const router = createRouter({
+          routeTree: createRootRoute({ component: () => <>{renderState()}</> }),
+          history: createMemoryHistory({ initialEntries: ["/"] }),
+        });
+        render(<RouterProvider router={router} />);
 
-        expect(document.body.textContent).toMatch(/\S/);
+        await waitFor(() => {
+          expect(document.body.textContent).toMatch(/\S/);
+        });
       });
     }
   }

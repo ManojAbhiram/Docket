@@ -2,13 +2,14 @@ import { queryOptions, useMutation, useQuery, useQueryClient } from "@tanstack/r
 
 import { resetSitting } from "@/features/review/sitting";
 
-import { fetchMe, login, logout } from "./api";
+import { fetchMe, login, logout, register } from "./api";
 import type { Role, User } from "./schemas";
 
 export const authKeys = {
   all: ["auth"] as const,
   me: () => [...authKeys.all, "me"] as const,
   login: () => [...authKeys.all, "login"] as const,
+  register: () => [...authKeys.all, "register"] as const,
   logout: () => [...authKeys.all, "logout"] as const,
 };
 
@@ -35,6 +36,18 @@ export function useLogin() {
   return useMutation<User, Error, Parameters<typeof login>[0]>({
     mutationKey: authKeys.login(),
     mutationFn: login,
+    onSuccess: (user) => {
+      resetSitting();
+      client.setQueryData(authKeys.me(), user);
+    },
+  });
+}
+
+export function useRegister() {
+  const client = useQueryClient();
+  return useMutation<User, Error, Parameters<typeof register>[0]>({
+    mutationKey: authKeys.register(),
+    mutationFn: register,
     onSuccess: (user) => {
       resetSitting();
       client.setQueryData(authKeys.me(), user);

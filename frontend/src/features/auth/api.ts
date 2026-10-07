@@ -2,13 +2,21 @@ import { z } from "zod";
 
 import { ApiError, apiFetch } from "@/lib/api";
 
-import { userSchema, type Credentials, type User } from "./schemas";
+import { userSchema, type Credentials, type RegisterInput, type User } from "./schemas";
 
 /** login starts a session. The API sets the session and anti-forgery cookies. */
 export function login(credentials: Credentials): Promise<User> {
   return apiFetch("/api/auth/login", userSchema, {
     method: "POST",
     body: JSON.stringify(credentials),
+  });
+}
+
+/** register creates an account and starts its session, like login. */
+export function register(input: RegisterInput): Promise<User> {
+  return apiFetch("/api/auth/register", userSchema, {
+    method: "POST",
+    body: JSON.stringify(input),
   });
 }
 
