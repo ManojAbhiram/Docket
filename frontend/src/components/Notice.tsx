@@ -3,7 +3,6 @@ import type { ReactNode } from "react";
 
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
-import { cn } from "@/lib/utils";
 
 interface NoticeProps {
   tone?: "error" | "info";
@@ -24,10 +23,7 @@ export function Notice({ tone = "error", title, children, action }: NoticeProps)
     <Alert
       variant={tone === "error" ? "destructive" : "default"}
       role={tone === "error" ? "alert" : "status"}
-      className={cn(
-        "enter-quiet border-l-4",
-        tone === "error" ? "border-l-destructive" : "border-l-primary",
-      )}
+      className="enter-quiet"
     >
       <Icon aria-hidden="true" />
       <AlertTitle>{title}</AlertTitle>
