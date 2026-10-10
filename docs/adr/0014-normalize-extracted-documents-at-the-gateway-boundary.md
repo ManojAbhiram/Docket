@@ -36,4 +36,3 @@ We will use a shared structured extraction result at the gateway boundary, becau
 ## Commits us to
 
 Existing Python domain dataclasses and the current gateway/worker/persistence components. No new dependency.
-
