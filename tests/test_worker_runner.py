@@ -7,9 +7,11 @@ The worker is two background tasks: one claims and reads documents, one fails do
 import asyncio
 from uuid import UUID
 
-from app.gateway import OcrResult, OcrWord
+from app.domain.extract import extract_fields
+from app.domain.processing import ProcessedDocument
+from app.gateway import OcrWord
 from app.jobs.runner import start_worker
-from app.jobs.worker import ClaimedDocument, ProcessedDocument
+from app.jobs.worker import ClaimedDocument
 
 
 class IdleStore:
@@ -43,8 +45,8 @@ class ClosableReader:
     def __init__(self) -> None:
         self.closed = False
 
-    def read(self, image: bytes) -> OcrResult:
-        return OcrResult(words=())
+    def read(self, image: bytes, *, confidence_cutoff: float) -> ProcessedDocument:
+        return ProcessedDocument(doc_type="unknown", fields=())
 
     def close(self) -> None:
         self.closed = True
@@ -92,9 +94,10 @@ class OneDocumentStore(IdleStore):
 
 
 class TitleReader(ClosableReader):
-    def read(self, image: bytes) -> OcrResult:
+    def read(self, image: bytes, *, confidence_cutoff: float) -> ProcessedDocument:
         word = OcrWord(text="Identity Card", confidence=0.9, box=(0.0, 0.0, 9.0, 9.0))
-        return OcrResult(words=(word,))
+        fields = extract_fields((word,), "id_proof", confidence_cutoff=confidence_cutoff)
+        return ProcessedDocument(doc_type="id_proof", fields=fields)
 
 
 async def test_the_settle_hook_given_to_the_worker_reaches_the_loop() -> None:

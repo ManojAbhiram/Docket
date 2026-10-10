@@ -106,7 +106,7 @@ function ImportOutcome({
 }) {
   const refused = result.refused.length;
   return (
-    <section aria-labelledby="import-result" className="space-y-4">
+    <section aria-labelledby="import-result" className="enter-quiet space-y-4">
       <h2 id="import-result" className="text-xl" tabIndex={-1}>
         Imported {result.created} of {result.read} rows.
       </h2>
@@ -117,24 +117,26 @@ function ImportOutcome({
             {refused === 1 ? "it" : "them"} in the file and import it again. Rows already created
             are skipped.
           </p>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead scope="col">Row</TableHead>
-                <TableHead scope="col">Column</TableHead>
-                <TableHead scope="col">Reason</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {result.refused.map((item) => (
-                <TableRow key={`${String(item.row)}-${item.reason}`}>
-                  <TableCell data-numeric>{item.row}</TableCell>
-                  <TableCell className="font-mono">{item.column ?? "whole row"}</TableCell>
-                  <TableCell>{REASONS[item.reason]}</TableCell>
+          <div className="overflow-hidden rounded-lg border border-border bg-card">
+            <Table>
+              <TableHeader className="bg-muted">
+                <TableRow>
+                  <TableHead scope="col">Row</TableHead>
+                  <TableHead scope="col">Column</TableHead>
+                  <TableHead scope="col">Reason</TableHead>
                 </TableRow>
-              ))}
-            </TableBody>
-          </Table>
+              </TableHeader>
+              <TableBody>
+                {result.refused.map((item) => (
+                  <TableRow key={`${String(item.row)}-${item.reason}`}>
+                    <TableCell data-numeric>{item.row}</TableCell>
+                    <TableCell className="font-mono">{item.column ?? "whole row"}</TableCell>
+                    <TableCell>{REASONS[item.reason]}</TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </div>
         </>
       )}
       <Button variant="outline" className="min-h-11 sm:min-h-9" onClick={onViewApplications}>

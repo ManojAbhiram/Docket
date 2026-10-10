@@ -1,3 +1,4 @@
+import { DIALOG_PANEL } from "@/components/dialog-style";
 import { Kbd } from "@/components/Kbd";
 import {
   Dialog,
@@ -22,7 +23,7 @@ interface ShortcutsDialogProps {
 export function ShortcutsDialog({ open, onOpenChange, shortcuts }: ShortcutsDialogProps) {
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent>
+      <DialogContent className={DIALOG_PANEL}>
         <DialogHeader>
           <DialogTitle>Keyboard shortcuts</DialogTitle>
           <DialogDescription>

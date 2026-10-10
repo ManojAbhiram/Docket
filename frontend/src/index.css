@@ -4,22 +4,25 @@
 /* Dark follows data-theme="dark" (set before first paint by /theme-init.js) or the .dark class. */
 @custom-variant dark (&:is(.dark *, [data-theme="dark"] *));
 
-/* Docket design system, direction 1 (instrument panel). Written by hand from docs/design/tokens.json,
+/* Docket design system, deep teal. Written by hand from docs/design/tokens.json (scripts/make_tokens.py),
    with shadcn's names: background = bg, foreground = text, card = surface, primary = accent,
    secondary and muted = bg-subtle, accent = accent-subtle, destructive = danger, input = border-strong,
    ring = focus, popover = overlay. Change tokens.json (make_tokens.py) first, then this file.
+   tile, tile-deep and tile-warn are the solid dashboard tiles; header is the app bar.
    Text pairs are 4.5:1 or better, ring and field edges 3:1 or better, in both themes. */
 :root {
   color-scheme: light;
-  --radius: 0.25rem;
+  --radius: 0.5rem;
   --background: #f3f5f7;
   --foreground: #14181d;
   --card: #ffffff;
   --card-foreground: #14181d;
   --popover: #ffffff;
   --popover-foreground: #14181d;
-  --primary: #0b6fa4;
+  --primary: #0f766e;
   --primary-foreground: #ffffff;
+  --primary-tile: #115e59;
+  --primary-tile-foreground: #ffffff;
   --secondary: #e6eaee;
   --secondary-foreground: #14181d;
   --muted: #e6eaee;
@@ -30,7 +33,7 @@
   --destructive-foreground: #ffffff;
   --border: #d3d9df;
   --input: #7c8896;
-  --ring: #0b6fa4;
+  --ring: #0f766e;
   --success: #1e6b3a;
   --success-foreground: #ffffff;
   --success-subtle: #e3f1e8;
@@ -41,22 +44,28 @@
   --info: #4a5560;
   --info-foreground: #ffffff;
   --info-subtle: #e6eaee;
-  --chart-1: #0b6fa4;
+  --tile: #115e59;
+  --tile-deep: #134e4a;
+  --tile-warn: #b45309;
+  --tile-foreground: #ffffff;
+  --header: #134e4a;
+  --header-foreground: #ffffff;
+  --chart-1: #0f766e;
   --chart-2: #1e6b3a;
   --chart-3: #8a5300;
   --chart-4: #b3261e;
   --chart-5: #4a5560;
   --sidebar: #e6eaee;
   --sidebar-foreground: #14181d;
-  --sidebar-primary: #0b6fa4;
+  --sidebar-primary: #0f766e;
   --sidebar-primary-foreground: #ffffff;
   --sidebar-accent: #dbe6ee;
   --sidebar-accent-foreground: #14181d;
   --sidebar-border: #d3d9df;
-  --sidebar-ring: #0b6fa4;
-  --shadow-1: 0 1px 2px rgb(20 24 29 / 0.12);
-  --shadow-2: 0 2px 6px rgb(20 24 29 / 0.16);
-  --shadow-3: 0 8px 24px rgb(20 24 29 / 0.2);
+  --sidebar-ring: #0f766e;
+  --shadow-1: 0 1px 2px rgb(15 31 30 / 0.12);
+  --shadow-2: 0 2px 6px rgb(15 31 30 / 0.16);
+  --shadow-3: 0 8px 24px rgb(15 31 30 / 0.2);
   --duration-instant: 80ms;
   --duration-fast: 150ms;
   --duration-base: 240ms;
@@ -65,6 +74,9 @@
   --ease-standard: cubic-bezier(0.2, 0, 0, 1);
   --ease-enter: cubic-bezier(0.2, 0.8, 0.2, 1);
   --ease-exit: cubic-bezier(0.4, 0, 1, 1);
+  --stagger: 40ms;
+  --rise: 8px;
+  --lift: -2px;
 }
 
 .dark,
@@ -76,8 +88,10 @@
   --card-foreground: #e6eaee;
   --popover: #26323e;
   --popover-foreground: #e6eaee;
-  --primary: #5bb4e5;
+  --primary: #5eead4;
   --primary-foreground: #0f1318;
+  --primary-tile: #134e4a;
+  --primary-tile-foreground: #e6eaee;
   --secondary: #1f2730;
   --secondary-foreground: #e6eaee;
   --muted: #1f2730;
@@ -88,7 +102,7 @@
   --destructive-foreground: #0f1318;
   --border: #2a343f;
   --input: #6b7886;
-  --ring: #5bb4e5;
+  --ring: #5eead4;
   --success: #6fcf97;
   --success-foreground: #0f1318;
   --success-subtle: #17301f;
@@ -99,19 +113,25 @@
   --info: #a3afbb;
   --info-foreground: #0f1318;
   --info-subtle: #26323e;
-  --chart-1: #5bb4e5;
+  --tile: #134e4a;
+  --tile-deep: #0b3b38;
+  --tile-warn: #92400e;
+  --tile-foreground: #e6eaee;
+  --header: #0b3b38;
+  --header-foreground: #e6eaee;
+  --chart-1: #5eead4;
   --chart-2: #6fcf97;
   --chart-3: #f0b44c;
   --chart-4: #f0857d;
   --chart-5: #a3afbb;
   --sidebar: #171d24;
   --sidebar-foreground: #e6eaee;
-  --sidebar-primary: #5bb4e5;
+  --sidebar-primary: #5eead4;
   --sidebar-primary-foreground: #0f1318;
   --sidebar-accent: #26323e;
   --sidebar-accent-foreground: #e6eaee;
   --sidebar-border: #2a343f;
-  --sidebar-ring: #5bb4e5;
+  --sidebar-ring: #5eead4;
   --shadow-1: 0 1px 2px rgb(0 0 0 / 0.4);
   --shadow-2: 0 2px 6px rgb(0 0 0 / 0.5);
   --shadow-3: 0 8px 24px rgb(0 0 0 / 0.6);
@@ -133,6 +153,8 @@
   --color-popover-foreground: var(--popover-foreground);
   --color-primary: var(--primary);
   --color-primary-foreground: var(--primary-foreground);
+  --color-primary-tile: var(--primary-tile);
+  --color-primary-tile-foreground: var(--primary-tile-foreground);
   --color-secondary: var(--secondary);
   --color-secondary-foreground: var(--secondary-foreground);
   --color-muted: var(--muted);
@@ -154,6 +176,12 @@
   --color-info: var(--info);
   --color-info-foreground: var(--info-foreground);
   --color-info-subtle: var(--info-subtle);
+  --color-tile: var(--tile);
+  --color-tile-deep: var(--tile-deep);
+  --color-tile-warn: var(--tile-warn);
+  --color-tile-foreground: var(--tile-foreground);
+  --color-header: var(--header);
+  --color-header-foreground: var(--header-foreground);
   --color-chart-1: var(--chart-1);
   --color-chart-2: var(--chart-2);
   --color-chart-3: var(--chart-3);
@@ -181,6 +209,14 @@
     outline: 2px solid var(--ring);
     outline-offset: 2px;
   }
+  /* On the deep teal header the ring is the header's own light text colour, 3:1 or better. */
+  .app-header :focus-visible {
+    outline-color: var(--header-foreground);
+  }
+  /* A pressed button gives a little under the finger. Transform only, so reduced motion is the rule below. */
+  button:not(:disabled):active {
+    transform: scale(0.98);
+  }
   h1,
   h2,
   h3 {
@@ -196,12 +232,13 @@
   }
 }
 
-/* The one moment on the upload screen: a stored file settles into its row. Transform and opacity
-   only, from the duration and easing tokens. The default markup is the end state. */
-@keyframes docket-settle {
+/* Motion (docs/design/motion.md). Only transform and opacity move; colour may fade. Every duration and
+   easing is a token. Entrances use fill-mode "backwards", never "both", so the end state is the plain
+   markup and a hover transform is never held back by a finished animation. */
+@keyframes docket-rise {
   from {
     opacity: 0;
-    transform: translateY(4px);
+    transform: translateY(var(--rise));
   }
   to {
     opacity: 1;
@@ -209,18 +246,127 @@
   }
 }
 
-[data-motion="settle"] {
-  animation: docket-settle var(--duration-base) var(--ease-enter) both;
+@keyframes docket-fade {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
 }
 
-/* Motion is opt-out for anyone who asks the OS for less of it. */
+@keyframes docket-pop {
+  from {
+    opacity: 0.4;
+    transform: scale(0.9);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+/* A document being read: the fill climbs toward 90 percent and waits there. It never loops. */
+@keyframes docket-read-fill {
+  from {
+    transform: scaleX(0.04);
+  }
+  to {
+    transform: scaleX(0.9);
+  }
+}
+
+/* The fill completes when the read ends. */
+@keyframes docket-read-done {
+  from {
+    transform: scaleX(0.9);
+  }
+  to {
+    transform: scaleX(1);
+  }
+}
+
+/* Tiles and rows enter in a short wave: --i (0 to 8) is set inline by staggerStyle(). */
+.enter {
+  animation: docket-rise var(--duration-slow) var(--ease-enter) backwards;
+  animation-delay: calc(var(--i, 0) * var(--stagger));
+}
+
+/* The review queue and compare screens: a fade only, no travel, no wave. */
+.enter-quiet {
+  animation: docket-fade var(--duration-fast) var(--ease-standard) backwards;
+}
+
+/* A new route fades up under the header. */
+.route-enter {
+  --rise: 6px;
+  animation: docket-rise var(--duration-base) var(--ease-enter) backwards;
+}
+
+/* A status badge whose status just changed. */
+.badge-changed {
+  animation: docket-pop var(--duration-base) var(--ease-enter) backwards;
+}
+
+/* Hover lift for cards and tiles. The raised shadow is a pseudo element that fades in, so the only
+   things that change are transform and opacity. An outer box-shadow is never painted inside the
+   element's own box, so the pseudo element sits over the content without covering it. */
+.lift {
+  position: relative;
+  transition: transform var(--duration-fast) var(--ease-standard);
+}
+
+.lift::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  box-shadow: var(--shadow-3);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity var(--duration-fast) var(--ease-standard);
+}
+
+@media (hover: hover) {
+  .lift:hover {
+    transform: translateY(var(--lift));
+  }
+
+  .lift:hover::after {
+    opacity: 1;
+  }
+}
+
+/* The fill of a progress bar. While a document is read it climbs and waits; when done it is full. */
+.read-fill {
+  transform-origin: left center;
+  transform: scaleX(1);
+}
+
+.read-fill:not([data-state="reading"]) {
+  animation: docket-read-done var(--duration-base) var(--ease-standard) backwards;
+}
+
+.read-fill[data-state="reading"] {
+  animation: docket-read-fill 12s cubic-bezier(0.1, 0.6, 0.2, 1) forwards;
+}
+
+/* Motion is opt-out for anyone who asks the OS for less of it: every animation and transition ends
+   at once, delays included, and hover does not move anything. */
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,
   *::after {
     animation-duration: 0.01ms !important;
+    animation-delay: 0s !important;
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
+    transition-delay: 0s !important;
     scroll-behavior: auto !important;
+  }
+
+  .lift:hover,
+  button:not(:disabled):active {
+    transform: none;
   }
 }

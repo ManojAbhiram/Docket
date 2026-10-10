@@ -1,11 +1,9 @@
 # Docket design system
 
-Version 1, 2026-10-05. Direction: `1-instrument-panel` (`docs/design/variants/docket/README.md`,
-`approved.json`), applied on the instruction "does everything done" in place of a stated choice.
-Tokens: `docs/design/tokens.json`, written by `scripts/make_tokens.py`. The CSS binding is
+Version 3, 2026-10-10 (NOTASK-11 integrates NOTASK-9). Direction: deep teal, on the structure of the approved instrument
+panel. Tokens: `docs/design/tokens.json`, written by `scripts/make_tokens.py`. The CSS binding is
 `frontend/src/index.css`, written by hand from the tokens in shadcn's names. Components:
-`docs/design/components.md`. Screens: `docs/design/screens/docket.md`. Themes: light and dark,
-section 7.
+`docs/design/components.md`. Motion: `docs/design/motion.md`. Themes: light and dark, section 7.
 
 ## 1. What the product is for
 
@@ -16,29 +14,33 @@ verifier at a desk all day, and the intake screens must still work on a phone.
 
 ## 2. Colour
 
-Cool graphite neutrals (hue about 250, low chroma), one blue accent whose job is the primary action
-and where you are, and four status colours that are never used alone: every status carries a word.
+Cool graphite neutrals, one teal accent for the primary action and where you are, solid teal tiles on
+the dashboard, and status colours that are never used alone: every status carries a word and a shape.
 
 | Role | Light | Dark | Used for |
 | --- | --- | --- | --- |
 | bg | `#f3f5f7` | `#0f1318` | the page |
 | surface | `#ffffff` | `#171d24` | tables, panels |
-| surface-raised | `#ffffff` | `#1f2730` | a row on hover, a popover trigger |
 | overlay | `#ffffff` | `#26323e` | dialogs, menus |
 | text | `#14181d` | `#e6eaee` | body |
 | text-muted | `#4a5560` | `#a3afbb` | secondary text, labels |
 | border | `#d3d9df` | `#2a343f` | separators (decorative) |
 | border-strong | `#7c8896` | `#6b7886` | field edges, 3:1 |
-| accent | `#0b6fa4` | `#5bb4e5` | primary button, link, current item, focus ring |
+| accent | `#0f766e` | `#5eead4` | primary button, link, current item, focus ring |
+| tile | `#115e59` | `#134e4a` | primary dashboard tile; white in light, off-white in dark |
+| tile-deep | `#134e4a` | `#0d3b38` | Missing documents tile, sign in panel |
+| tile-warn | `#b45309` | `#92400e` | Needs review tile |
+| header | `#134e4a` | `#0d3b38` | the app bar |
 | success | `#1e6b3a` | `#6fcf97` | Verified, Match |
 | warning | `#8a5300` | `#f0b44c` | Needs review, Low confidence |
 | danger | `#b3261e` | `#f0857d` | Mismatch, Rejected, destructive |
 | info | `#4a5560` | `#a3afbb` | Missing documents |
 
-Status meaning is paired with a word and a shape (a tick, a flag, a cross, a dash), never colour
-alone. The dark theme steps surfaces up in lightness, uses off-white text and a lighter, less
-saturated accent. Contrast, measured by `contrast.py` on `tokens.json` (not run in the session that
-wrote this): text pairs 4.5:1, focus ring and field edges 3:1.
+Text on a tile and on the header is white (light) or near white (dark header). Status meaning is
+paired with a word and a shape (a tick, a flag, a cross, a dash). The dark theme steps surfaces up
+in lightness and lightens the accent. `frontend/src/design/contrast.test.ts` reads `index.css` and
+checks every text pair at 4.5:1 and the focus ring and field edges at 3:1, in both themes, including
+the tile and header pairs.
 
 ## 3. Type
 
@@ -51,23 +53,23 @@ wrote this): text pairs 4.5:1, focus ring and field edges 3:1.
 
 Scale 1.25 (16, 20, 25), plus 14 for dense data. Two weights, 400 and 600. Figures use tabular
 numerals wherever they align. Line height 1.5 for body, 1.15 for headings. The faces are Fontsource
-packages, self-hosted (the CSP allows `font-src 'self'`); they are proposed and not installed, so
-the fallbacks (Arial Narrow, system-ui, ui-monospace) render until they are.
+packages already in `package.json` and imported in `src/main.tsx`, self-hosted (the CSP allows
+`font-src 'self'`). The fallbacks (Arial Narrow, system-ui, ui-monospace) render until they load.
 
 ## 4. Space, shape, elevation
 
 Space on 8, with one half step of 4: 4, 8, 16, 24, 32, 48, 64. Radius is a hierarchy: control 4 px,
-container 6 px, overlay 8 px. Elevation: 0 flat, 1 a pressable at rest, 2 a pressable hovered, 3 an
-overlay. **A static block never carries a shadow.** Tables, panels and the compare view are flat and
-separated by a 1 px border.
+container 8 px (`--radius`), tiles and dialogs 12 px. Elevation: 1 a tile at rest, 3 a tile or card
+lifted by the pointer and a dialog. Rows, tables and the compare view are flat and separated by a
+1 px border.
 
 ## 5. Motion
 
-One orchestrated moment per screen, 80 to 700 ms, transform and opacity only, ease-out entering and
-ease-in leaving. The dashboard counts rise once; a document row settles when it is stored; a dialog
-opens with a short fade and a 4 px rise. Under `prefers-reduced-motion` every animation becomes a
-state change (the rule is in `frontend/src/index.css`). Motion is specified in
-`docs/design/motion.md`.
+Calm and purposeful: tiles and rows enter in a short staggered wave, dashboard counts rise, cards and
+tiles lift under the pointer, a reading document shows a progress fill, a status badge pops when it
+changes, a new route fades up and a dialog opens with a fade and a short rise. Only `transform` and
+`opacity` move. The review queue and compare screens stay quiet. Under `prefers-reduced-motion` every
+animation is a state change. Full rules and the per-screen table: `docs/design/motion.md`.
 
 ## 6. Touch and keyboard
 
@@ -83,15 +85,15 @@ Light is the base. Dark is designed, not inverted. The switch is the `data-theme
 `[data-theme="dark"]` (and `.dark`), and Tailwind's `dark:` variant matches the same selector. This
 replaces the old setup in which the class and the variant could name different selectors.
 
-## 8. What was decided here that the direction left open
+## 8. What was decided here
 
-- The four status colours and `info` as a neutral slate for Missing documents, so the accent blue
-  keeps one job.
-- The dark `popover` and overlay surfaces step up to `#26323e`.
-- Table and badge text at 14 px: data, not body copy; contrast still 4.5:1.
+- Three solid tiles carry the dashboard: teal for Verified, amber for Needs review, deep teal for
+  Missing documents. Text on them is white.
+- The app bar is deep teal; focus rings inside it are the header's light text colour.
+- `info` stays a neutral for the Missing documents badge, so the accent keeps one job.
+- No thick one-sided accent borders: a selected row is a fill and a drawn chevron.
 
 ## 9. Known gaps
 
-- The faces are not installed (an AGENTS.md rule 7 decision for the engineer).
 - `design-lint` is not installed, so a stray hex or off-scale value is caught only in review.
-- The contrast measurement, the schema check and the generated system page have not been run.
+- The variants under `frontend/src/design/variants/` are the old directions and keep their own colours.

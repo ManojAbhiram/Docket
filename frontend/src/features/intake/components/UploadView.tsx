@@ -3,10 +3,13 @@ import { FileDrop } from "@/components/FileDrop";
 import { ListRow } from "@/components/ListRow";
 import type { NoticeSpec } from "@/components/Notice";
 import { PageHeader } from "@/components/PageHeader";
+import { ReadProgress, type ReadState } from "@/components/ReadProgress";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import type { DocumentStatus, UploadedDocument } from "@/features/applications/types";
+import { useChangeCount } from "@/hooks/use-change-count";
+import { cn } from "@/lib/utils";
 
 const STATUS_WORDS: Record<DocumentStatus, string> = {
   uploaded: "Uploaded",
@@ -46,6 +49,31 @@ interface UploadViewProps {
   batch?: BatchItem[];
   onFiles?: (files: File[]) => void;
   onNoticeAction?: () => void;
+}
+
+/** A word in a pill that pops once when its state changes, and stays still on a refresh. */
+function WordBadge({ word, state, bad }: { word: string; state: string; bad: boolean }) {
+  const changes = useChangeCount(state);
+  return (
+    <Badge
+      key={changes}
+      variant="outline"
+      className={cn(
+        "py-1 text-sm",
+        bad && "border-transparent bg-danger-subtle text-destructive",
+        changes > 0 && "badge-changed",
+      )}
+    >
+      {word}
+    </Badge>
+  );
+}
+
+function readState(status: DocumentStatus): ReadState {
+  if (status === "failed") {
+    return "failed";
+  }
+  return status === "read" ? "done" : "reading";
 }
 
 function summary(documents: UploadedDocument[]): string {
@@ -99,21 +127,19 @@ export function UploadView({
             Files
           </h2>
           <ul className="space-y-2">
-            {batch.map((item) => (
-              <ListRow key={item.key} className="space-y-1 p-4">
+            {batch.map((item, index) => (
+              <ListRow key={item.key} index={index} className="space-y-2 p-4">
                 <div className="flex flex-wrap items-center justify-between gap-2">
                   <span className="font-mono">{item.name}</span>
-                  <Badge
-                    variant="outline"
-                    className={
-                      item.state === "refused"
-                        ? "border-transparent bg-danger-subtle text-sm text-destructive"
-                        : "text-sm"
-                    }
-                  >
-                    {BATCH_WORDS[item.state]}
-                  </Badge>
+                  <WordBadge
+                    word={BATCH_WORDS[item.state]}
+                    state={item.state}
+                    bad={item.state === "refused"}
+                  />
                 </div>
+                {item.state === "uploading" && (
+                  <ReadProgress state="reading" label={`Uploading ${item.name}`} />
+                )}
                 {item.problem && <p role="alert">{item.problem}</p>}
               </ListRow>
             ))}
@@ -141,22 +167,20 @@ export function UploadView({
             {summary(documents)}
           </p>
           <ul className="space-y-2">
-            {documents.map((document) => (
-              <ListRow key={document.id} data-motion="settle" className="space-y-2 p-4">
+            {documents.map((document, index) => (
+              <ListRow key={document.id} index={index} className="space-y-2 p-4">
                 <div className="flex flex-wrap items-center justify-between gap-2">
                   <span className="font-mono">{document.fileName}</span>
-                  <Badge
-                    variant="outline"
-                    className={
-                      document.status === "failed"
-                        ? "border-transparent bg-danger-subtle text-sm text-destructive"
-                        : "text-sm"
-                    }
-                  >
-                    {STATUS_WORDS[document.status]}
-                    {document.detectedType ? `: ${document.detectedType}` : ""}
-                  </Badge>
+                  <WordBadge
+                    word={`${STATUS_WORDS[document.status]}${document.detectedType ? `: ${document.detectedType}` : ""}`}
+                    state={document.status}
+                    bad={document.status === "failed"}
+                  />
                 </div>
+                <ReadProgress
+                  state={readState(document.status)}
+                  label={`${document.fileName}: ${STATUS_WORDS[document.status]}`}
+                />
                 {document.problem && (
                   <div className="space-y-2">
                     <p>{document.problem}</p>

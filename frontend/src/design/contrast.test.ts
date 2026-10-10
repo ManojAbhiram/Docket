@@ -15,6 +15,7 @@ const TEXT_PAIRS: [string, string][] = [
   ["card-foreground", "card"],
   ["popover-foreground", "popover"],
   ["primary-foreground", "primary"],
+  ["primary-tile-foreground", "primary-tile"],
   ["secondary-foreground", "secondary"],
   ["muted-foreground", "background"],
   ["muted-foreground", "card"],
@@ -36,6 +37,10 @@ const TEXT_PAIRS: [string, string][] = [
   ["warning", "warning-subtle"],
   ["destructive", "danger-subtle"],
   ["info", "info-subtle"],
+  ["tile-foreground", "tile"],
+  ["tile-foreground", "tile-deep"],
+  ["tile-foreground", "tile-warn"],
+  ["header-foreground", "header"],
 ];
 const EDGE_PAIRS: [string, string][] = [
   ["input", "background"],
@@ -43,6 +48,10 @@ const EDGE_PAIRS: [string, string][] = [
   ["ring", "background"],
   ["ring", "card"],
   ["ring", "popover"],
+  ["header-foreground", "header"],
+  ["tile-foreground", "tile"],
+  ["tile-foreground", "tile-deep"],
+  ["tile-foreground", "tile-warn"],
 ];
 
 function block(source: string, opener: RegExp): Record<string, string> {
