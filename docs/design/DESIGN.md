@@ -16,7 +16,7 @@ verifier at a desk all day, and the intake screens must still work on a phone.
 
 ## 2. Colour
 
-Cool graphite neutrals (hue about 250, low chroma), one blue accent whose job is the primary action
+Cool graphite neutrals (hue about 250, low chroma), one teal accent whose job is the primary action
 and where you are, and four status colours that are never used alone: every status carries a word.
 
 | Role | Light | Dark | Used for |
@@ -29,7 +29,8 @@ and where you are, and four status colours that are never used alone: every stat
 | text-muted | `#4a5560` | `#a3afbb` | secondary text, labels |
 | border | `#d3d9df` | `#2a343f` | separators (decorative) |
 | border-strong | `#7c8896` | `#6b7886` | field edges, 3:1 |
-| accent | `#0b6fa4` | `#5bb4e5` | primary button, link, current item, focus ring |
+| accent | `#0f766e` | `#5eead4` | primary button, link, current item, focus ring |
+| primary tile | `#115e59` | `#134e4a` | primary workflow tile; white text in light, off-white in dark |
 | success | `#1e6b3a` | `#6fcf97` | Verified, Match |
 | warning | `#8a5300` | `#f0b44c` | Needs review, Low confidence |
 | danger | `#b3261e` | `#f0857d` | Mismatch, Rejected, destructive |

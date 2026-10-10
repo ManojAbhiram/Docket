@@ -15,6 +15,7 @@ const TEXT_PAIRS: [string, string][] = [
   ["card-foreground", "card"],
   ["popover-foreground", "popover"],
   ["primary-foreground", "primary"],
+  ["primary-tile-foreground", "primary-tile"],
   ["secondary-foreground", "secondary"],
   ["muted-foreground", "background"],
   ["muted-foreground", "card"],
