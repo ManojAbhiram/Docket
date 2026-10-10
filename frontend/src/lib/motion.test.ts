@@ -1,6 +1,15 @@
-import { describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 
-import { countFrame, easeOut, parseDuration } from "./motion";
+import {
+  STAGGER_STEPS,
+  countFrame,
+  easeOut,
+  parseDuration,
+  prefersReducedMotion,
+  staggerDelay,
+  staggerStep,
+  staggerStyle,
+} from "./motion";
 
 describe("parseDuration", () => {
   it("reads milliseconds and seconds with their unit", () => {
@@ -44,5 +53,44 @@ describe("easeOut", () => {
     expect(easeOut(-1)).toBe(0);
     expect(easeOut(0)).toBe(0);
     expect(easeOut(2)).toBe(1);
+  });
+});
+
+describe("staggerStep and staggerStyle", () => {
+  it("caps the wave so a long list never cascades slowly", () => {
+    expect(staggerStep(0)).toBe(0);
+    expect(staggerStep(3)).toBe(3);
+    expect(staggerStep(500)).toBe(STAGGER_STEPS);
+  });
+
+  it("treats a negative, fractional or missing index as a safe step", () => {
+    expect(staggerStep(-4)).toBe(0);
+    expect(staggerStep(2.9)).toBe(2);
+    expect(staggerStep(Number.NaN)).toBe(0);
+  });
+
+  it("hands the step to the stylesheet as --i", () => {
+    expect(staggerStyle(2)).toEqual({ "--i": 2 });
+  });
+});
+
+describe("staggerDelay", () => {
+  afterEach(() => {
+    vi.unstubAllGlobals();
+    document.documentElement.style.removeProperty("--stagger");
+  });
+
+  it("multiplies the step by the stagger token", () => {
+    document.documentElement.style.setProperty("--stagger", "40ms");
+
+    expect(staggerDelay(3)).toBe(120);
+  });
+
+  it("is zero when the person asked for less motion", () => {
+    document.documentElement.style.setProperty("--stagger", "40ms");
+    vi.stubGlobal("matchMedia", vi.fn().mockReturnValue({ matches: true }));
+
+    expect(prefersReducedMotion()).toBe(true);
+    expect(staggerDelay(3)).toBe(0);
   });
 });

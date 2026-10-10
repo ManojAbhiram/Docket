@@ -87,7 +87,7 @@ export function ExportView({
           </Button>
         </div>
       ) : (
-        <Card className="shadow-none">
+        <Card className="enter lift bg-accent shadow-none">
           <CardContent className="flex flex-wrap items-center justify-between gap-4">
             <p data-numeric>
               {verifiedCount === null && "Counting Verified applications"}

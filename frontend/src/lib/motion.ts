@@ -1,3 +1,5 @@
+import type { CSSProperties } from "react";
+
 /** Parse a CSS duration such as "240ms", " 0.24s" or "0s" into milliseconds. Anything else is 0. */
 export function parseDuration(text: string): number {
   const match = /^\s*(-?\d*\.?\d+)\s*(ms|s)\s*$/.exec(text);
@@ -37,4 +39,32 @@ export function countFrame(from: number | null, to: number, progress: number): n
     return to;
   }
   return Math.round(start + (to - start) * easeOut(progress));
+}
+
+/** The most steps a stagger adds. A long list enters in one short wave, never a slow cascade. */
+export const STAGGER_STEPS = 8;
+
+/** The step (0 to STAGGER_STEPS) a list item at `index` waits before it enters. */
+export function staggerStep(index: number): number {
+  if (!Number.isFinite(index)) {
+    return 0;
+  }
+  return Math.min(Math.max(Math.trunc(index), 0), STAGGER_STEPS);
+}
+
+/**
+ * The inline style that places an item in an entrance wave: `--i` is read by `.enter` in index.css
+ * as `animation-delay: calc(var(--i) * var(--stagger))`. Reduced motion ends the animation at once
+ * in CSS, so this needs no branch.
+ */
+export function staggerStyle(index: number): CSSProperties {
+  return { "--i": staggerStep(index) } as CSSProperties;
+}
+
+/** The delay in milliseconds a stagger step adds, from the `--stagger` token. Zero when reduced. */
+export function staggerDelay(index: number): number {
+  if (prefersReducedMotion()) {
+    return 0;
+  }
+  return staggerStep(index) * tokenDuration("--stagger");
 }

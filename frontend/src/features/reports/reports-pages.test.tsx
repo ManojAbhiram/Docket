@@ -56,6 +56,15 @@ describe("the dashboard", () => {
     expect(screen.getByText("of which 1 rejected")).toBeInTheDocument();
     expect(screen.getByText("12")).toBeInTheDocument();
     expect(screen.getByText("5")).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "See applications" })).toHaveClass(
+      "focus-visible:ring-tile-foreground",
+    );
+    expect(screen.getByRole("button", { name: "Sign out" })).toHaveClass(
+      "focus-visible:ring-header-foreground",
+    );
+    expect(screen.getByRole("button", { name: /Theme:/ })).toHaveClass(
+      "focus-visible:ring-header-foreground",
+    );
   });
 
   it("sends staff to import, export and the applications", async () => {

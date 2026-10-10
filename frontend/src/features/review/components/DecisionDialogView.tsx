@@ -2,6 +2,7 @@ import { RadioGroup as RadioGroupPrimitive } from "radix-ui";
 import { useState } from "react";
 
 import { ActionNotice } from "@/components/ActionNotice";
+import { DIALOG_PANEL } from "@/components/dialog-style";
 import { Kbd } from "@/components/Kbd";
 import type { NoticeSpec } from "@/components/Notice";
 import { Button, buttonVariants } from "@/components/ui/button";
@@ -133,6 +134,7 @@ export function DecisionDialogView({
       }}
     >
       <DialogContent
+        className={DIALOG_PANEL}
         onCloseAutoFocus={(event) => {
           const target = returnFocusTo ? document.getElementById(returnFocusTo) : null;
           if (target) {

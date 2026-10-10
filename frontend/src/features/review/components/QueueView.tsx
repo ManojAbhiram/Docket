@@ -130,14 +130,15 @@ export function QueueView({
         </div>
       )}
       {items.length > 0 && (
-        <ul className="divide-y divide-border rounded-md border border-border bg-card">
+        <ul className="divide-y divide-border overflow-hidden rounded-lg border border-border bg-card">
           {items.map((item, index) => (
             <ListRow
               key={item.id}
               variant="ruled"
+              quiet
               interactive
               selected={index === selected}
-              className="grid min-h-14 items-center gap-x-4 gap-y-1 px-4 py-3 md:grid-cols-[9rem_1fr_1fr_auto_auto]"
+              className="grid min-h-14 items-center gap-x-4 gap-y-1 px-4 py-3 transition-none md:grid-cols-[9rem_1fr_1fr_auto_auto]"
             >
               <span className="font-mono">{item.ref}</span>
               <span>{item.name}</span>

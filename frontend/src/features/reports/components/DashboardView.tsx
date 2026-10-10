@@ -1,15 +1,15 @@
-import { RefreshCw } from "lucide-react";
+import { Check, Flag, Minus, RefreshCw } from "lucide-react";
 import type { ReactNode } from "react";
 
 import { CountUp } from "@/components/CountUp";
 import { Notice, NoticeBox, type NoticeSpec } from "@/components/Notice";
 import { PageHeader } from "@/components/PageHeader";
-import { StatusBadge } from "@/components/StatusBadge";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { totalApplications } from "@/features/applications/fixtures";
 import type { DashboardCounts } from "@/features/applications/types";
+import { staggerStyle } from "@/lib/motion";
+import { cn } from "@/lib/utils";
 
 interface DashboardViewProps {
   /** Who is looking: staff import and export, a verifier works the queue. */
@@ -38,15 +38,17 @@ function AppLink({
   to,
   onNavigate,
   variant = "outline",
+  className,
   children,
 }: {
   to: string;
   onNavigate?: ((to: string) => void) | undefined;
   variant?: "default" | "outline" | "link";
+  className?: string;
   children: ReactNode;
 }) {
   return (
-    <Button asChild variant={variant} className="min-h-11 sm:min-h-9">
+    <Button asChild variant={variant} className={cn("min-h-11 sm:min-h-9", className)}>
       <a
         href={to}
         onClick={(event) => {
@@ -62,35 +64,47 @@ function AppLink({
   );
 }
 
+const TILES = {
+  verified: { tone: "bg-tile", icon: Check },
+  needs_review: { tone: "bg-tile-warn", icon: Flag },
+  missing_documents: { tone: "bg-tile-deep", icon: Minus },
+} as const;
+
+/** A solid tile: the status as a word and a shape on a deep colour, then the count. */
 function Tile({
   label,
   value,
   detail,
   status,
+  index,
   link,
 }: {
   label: string;
   value: number;
   detail?: string;
-  status: "verified" | "needs_review" | "missing_documents";
+  status: keyof typeof TILES;
+  index: number;
   link?: ReactNode;
 }) {
+  const { tone, icon: Icon } = TILES[status];
   return (
-    <Card className="shadow-none">
-      <CardHeader>
-        <CardTitle className="text-base font-semibold">
-          <StatusBadge status={status} />
-          <span className="sr-only"> {label}</span>
-        </CardTitle>
-      </CardHeader>
-      <CardContent className="space-y-1">
-        <p className="font-display text-[25px] font-semibold">
-          <CountUp value={value} format={(amount) => number.format(amount)} />
-        </p>
-        <p className="text-sm text-muted-foreground">{detail ?? label}</p>
-        {link}
-      </CardContent>
-    </Card>
+    <div
+      style={staggerStyle(index)}
+      className={cn(
+        "enter lift flex flex-col gap-1 rounded-xl p-5 text-tile-foreground shadow-(--shadow-1)",
+        tone,
+      )}
+    >
+      <p className="flex items-center gap-2 text-base font-semibold">
+        <Icon aria-hidden="true" className="size-4" />
+        {label}
+      </p>
+      <p className="font-display text-[44px] leading-none font-semibold">
+        <CountUp value={value} format={(amount) => number.format(amount)} />
+      </p>
+      <p className="text-sm">{detail ?? "applications"}</p>
+      {link}
+    </div>
   );
 }
 
@@ -181,7 +195,7 @@ export function DashboardView({
       {loading && (
         <div className="grid gap-4 sm:grid-cols-3" aria-busy="true">
           {[0, 1, 2].map((slot) => (
-            <Skeleton key={slot} className="h-28" />
+            <Skeleton key={slot} className="h-40 rounded-xl" />
           ))}
         </div>
       )}
@@ -197,14 +211,20 @@ export function DashboardView({
       )}
       {counts && total > 0 && (
         <div className="grid gap-4 sm:grid-cols-3">
-          <Tile label="Verified" value={counts.verified} status="verified" />
+          <Tile label="Verified" value={counts.verified} status="verified" index={0} />
           <Tile
             label="Needs review"
             value={counts.needsReview}
             detail={`of which ${number.format(counts.rejected)} rejected`}
             status="needs_review"
+            index={1}
             link={
-              <AppLink to={reviewTarget} variant="link" onNavigate={onNavigate}>
+              <AppLink
+                to={reviewTarget}
+                variant="link"
+                className="-ml-4 w-fit text-tile-foreground underline focus-visible:ring-tile-foreground"
+                onNavigate={onNavigate}
+              >
                 {forVerifier ? "Open the queue" : "See applications"}
               </AppLink>
             }
@@ -213,6 +233,7 @@ export function DashboardView({
             label="Missing documents"
             value={counts.missingDocuments}
             status="missing_documents"
+            index={2}
           />
         </div>
       )}

@@ -1,5 +1,6 @@
 import { Link } from "@tanstack/react-router";
 
+import { AuthShell } from "@/components/AuthShell";
 import { NoticeBox, type NoticeSpec } from "@/components/Notice";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -18,8 +19,7 @@ interface SignInViewProps {
 /** S-01: sign in with a username and password. A wrong password never says which half was wrong. */
 export function SignInView({ busy = false, blocked = false, notice, onSubmit }: SignInViewProps) {
   return (
-    <div className="mx-auto w-full max-w-sm space-y-6 py-8">
-      <h1 className="text-[25px]">Sign in to Docket</h1>
+    <AuthShell title="Sign in to Docket" description="Enter your username and password.">
       {notice && <NoticeBox spec={notice} />}
       <form
         className="space-y-4"
@@ -57,6 +57,6 @@ export function SignInView({ busy = false, blocked = false, notice, onSubmit }: 
           Create an account
         </Link>
       </p>
-    </div>
+    </AuthShell>
   );
 }

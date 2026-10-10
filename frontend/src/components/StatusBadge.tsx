@@ -1,6 +1,7 @@
 import { Ban, Check, Flag, Minus, type LucideIcon } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
+import { useChangeCount } from "@/hooks/use-change-count";
 import { cn } from "@/lib/utils";
 
 export type StatusKind = "verified" | "needs_review" | "missing_documents" | "rejected";
@@ -16,11 +17,21 @@ const STATUS: Record<StatusKind, { label: string; icon: LucideIcon; tone: string
   rejected: { label: "Rejected", icon: Ban, tone: "bg-danger-subtle text-destructive" },
 };
 
-/** A status as a word and a shape, never colour alone. */
+/**
+ * A status as a word and a shape, never colour alone. When the status of a mounted badge changes
+ * (a decision saved, a refresh that moved an application on) the new badge pops in once; a badge
+ * that first appears with its data, and a refresh that changes nothing, stay still.
+ */
 export function StatusBadge({ status }: { status: StatusKind }) {
+  const changes = useChangeCount(status);
   const { label, icon: Icon, tone } = STATUS[status];
   return (
-    <Badge variant="outline" className={cn("border-transparent text-sm", tone)}>
+    <Badge
+      key={changes}
+      variant="outline"
+      data-changed={changes > 0 ? "true" : undefined}
+      className={cn("border-transparent py-1 text-sm", tone, changes > 0 && "badge-changed")}
+    >
       <Icon aria-hidden="true" />
       {label}
     </Badge>
