@@ -41,17 +41,22 @@ excludes), the containerised one-command demo, DigiLocker, fee payment, bulk upl
 | IBM Plex fonts | Missing |
 | Every story in `docs/progress` | "in review", none closed |
 
-## Progress (updated 2026-10-07, end of day)
+## Progress (updated 2026-10-07, after the sign up and evals merges)
+
+The gap report above is the state at the start of the work. This table is the state now.
 
 | Item | State now | Where |
 | --- | --- | --- |
-| Sign up (piece 1) | Built and task-reviewed; final review, browser check and accessibility audit not run | branch `feature/NOTASK-7-AccountsSignUp`, ADR 0013 |
-| Evals: real extraction accuracy, 10-document comparison, replay gate (piece 2) | Plan written; build in progress, results not yet produced | branch `feature/NOTASK-8-Evals`, `docs/superpowers/plans/2026-10-07-evals-accuracy.md` |
-| Baseline accepted in `evals/ocr/gate.yaml` | Waiting for a person; the plan only proposes the number | `docs/progress/NOTASK-8.md` when written |
-| UI redesign, IBM Plex fonts (piece 3) | Started on its own branch, not yet verified | branch `feature/NOTASK-9-UiRedesign` |
-| Transfer certificate type (stretch) | Not started; the seed data already contains the documents | Q-007 still open |
+| Sign up (piece 1) | Merged to `main` (pull request #4). Task reviews and a final read-only review done; its blockers (source address contract, actor wording) are documented. Browser check and accessibility audit of the sign up screen not run | ADR 0013, `docs/progress/NOTASK-7.md` |
+| Evals: real extraction accuracy, 10-document comparison, replay gate (piece 2) | Merged to `main` (pull request #5). RapidOCR 0.995 on all 30, 1.0 on the 10-document set, 0.9863 on the noisiest 10; Tesseract 0.2475, 0.2027, 0.0274. No independent review of the evals code yet | `docs/testing/extraction-accuracy.md`, `docs/progress/NOTASK-8.md` |
+| Baseline in `evals/ocr/gate.yaml` | Not accepted. A person must set `accepted_baseline: 0.995` and drop `EVAL_ALLOW_NO_BASELINE=1` from the CI step; until then CI gates nothing on accuracy | `docs/progress/NOTASK-8.md` |
+| Runner-up comparison | Tesseract needed three adjustments to be scored, and its page segmentation mode was chosen on the comparison set, which favours it. `pytesseract` is not in `pyproject.toml` | `docs/progress/NOTASK-8.md` |
+| UI redesign, deep teal (piece 3) | In progress, not merged: tokens, motion layer and shared components committed; screens being finished; fonts still on the old stack; no full gate, accessibility audit or browser check yet | branch `feature/NOTASK-9-UiRedesign` |
+| IBM Plex fonts | Not added; a package or font files need the engineer's decision (no new dependency without it) | piece 3 |
+| Transfer certificate type (stretch) | The seed data and the classifier already handle it and the eval counts it; the product decision in Q-007 is still open | `docs/product/questions.md` |
+| CI replay with no live engine call | Done for the eval gate (it replays a 68 KB recording); the models are still downloaded on first live use (DEBT-004) | `docs/DEBT.md` |
 | Password reset, containerised one-command demo | Out of scope here | none |
-| Every story in `docs/progress` still "in review" | Unchanged | none |
+| Every story in `docs/progress` still "in review" | Unchanged; to be closed by the engineer after review | none |
 
 ## Piece 1: accounts
 

@@ -4,9 +4,27 @@ The standard every AI coding agent follows in this repository (Claude Code,
 Cursor, Codex, Gemini CLI, Copilot). It loads into every session, so it holds
 only what applies on every turn; the skills carry each step's detail.
 
-Each step of the workflow names one skill, from Bearing or from another
-installed pack. Unsure which one: `workflow` names the next step and its
+Each step of the workflow names one skill, from Bearing, Superpowers, gstack,
+or another installed pack. Unsure which one: `workflow` names the next step and its
 skill.
+
+## Skill packs
+
+- Bearing owns task setup, workflow routing, technology decisions, handoff,
+  and the definition of done.
+- Use installed Superpowers skills for brainstorming, writing and executing
+  plans, test-driven development, systematic debugging, code review, and
+  verification before completion when relevant to the task.
+- Use installed gstack skills for product and engineering plan reviews,
+  code review, browser inspection, QA, and design review when relevant to
+  the task.
+- Discover each pack in the current agent's available skills or installed
+  skill directories, and read the relevant `SKILL.md` before using it.
+  If a required skill is unavailable, report it rather than inventing its
+  instructions or claiming it ran.
+- These packs supplement Bearing's workflow. Repository ground rules still
+  apply, including to branch-finishing, shipping, and deployment skills.
+  Prepare prohibited commands for the engineer; never execute them.
 
 ## Ground rules
 
