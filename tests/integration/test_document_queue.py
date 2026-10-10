@@ -14,7 +14,7 @@ from sqlalchemy.ext.asyncio import AsyncConnection, AsyncSession, async_sessionm
 
 from app.db.repositories.documents import SqlDocumentStore
 from app.domain.extract import ExtractedField
-from app.jobs.worker import ProcessedDocument
+from app.domain.processing import ProcessedDocument
 
 pytestmark = pytest.mark.integration
 

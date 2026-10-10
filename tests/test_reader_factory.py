@@ -48,19 +48,45 @@ def test_the_reader_reads_through_the_gateway_and_logs_one_call(tmp_path: Path) 
     ledger = MemoryLedger()
     reader = build_reader(settings_for(tmp_path), ledger)
 
-    result = reader.read(IMAGE)
+    result = reader.read(IMAGE, confidence_cutoff=0.95)
 
-    assert [word.text for word in result.words] == ["Latha Sharma"]
+    assert result.doc_type == "unknown"
+    assert result.fields == ()
     assert [(r.engine, r.outcome) for r in ledger.records] == [("recorded", "ok")]
+
+
+def test_the_gateway_classifies_and_extracts_a_shared_result_before_the_worker(
+    tmp_path: Path,
+) -> None:
+    settings = settings_for(tmp_path)
+    assert settings.gateway_recording is not None
+    words = [
+        {"text": "Identity Card", "confidence": 0.99, "box": [10, 0, 150, 22]},
+        {"text": "Name", "confidence": 0.99, "box": [10, 60, 60, 22]},
+        {"text": "Latha Sharma", "confidence": 0.94, "box": [220, 60, 160, 22]},
+    ]
+    settings.gateway_recording.write_text(
+        json.dumps({hashlib.sha256(IMAGE).hexdigest(): {"words": words}}), encoding="utf-8"
+    )
+    ledger = MemoryLedger()
+    reader = build_reader(settings, ledger)
+
+    result = reader.read(IMAGE, confidence_cutoff=0.95)
+
+    assert result.doc_type == "id_proof"
+    assert result.fields[0].field_name == "name"
+    assert result.fields[0].value == "Latha Sharma"
+    assert result.fields[0].review_reason == "low_confidence"
+    assert [(record.engine, record.outcome) for record in ledger.records] == [("recorded", "ok")]
 
 
 def test_the_reader_refuses_a_call_past_the_configured_cap(tmp_path: Path) -> None:
     ledger = MemoryLedger()
     reader = build_reader(settings_for(tmp_path, gateway_call_cap=1), ledger)
-    reader.read(IMAGE)
+    reader.read(IMAGE, confidence_cutoff=0.95)
 
     with pytest.raises(CallCapReachedError):
-        reader.read(IMAGE)
+        reader.read(IMAGE, confidence_cutoff=0.95)
 
     assert [r.outcome for r in ledger.records] == ["ok", "refused"]
 

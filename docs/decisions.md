@@ -5,6 +5,7 @@ table is the index. `tech-decision` maintains it.
 
 | Date | Key | Choice | Recommended | Why it was chosen | ADR | Status |
 | --- | --- | --- | --- | --- | --- | --- |
+| 2026-10-10 | document extraction contract | Shared structured result normalized at gateway | Shared result | both engines feed one worker/store without invented OCR evidence; user selected D3/3A | ADR-0014 | Accepted |
 | 2026-10-05 | vision approach (OCR engine) | RapidOCR + OpenCV preprocessing, 640 px cap | RapidOCR + preprocessing | only measured option that reads the synthetic pages (100% value presence, CER 0.0003) against Tesseract's best 36%; memory unmeasured past 30 pages | ADR-0001 | Accepted |
 | 2026-10-05 | vision approach (field extraction) | Rules over OCR boxes + format validators | Rules + validators | deterministic, free, no extra RAM; validators decide Needs review | ADR-0002 | Accepted |
 | 2026-10-05 | llm provider and models (fallback) | None in v1, gateway left swappable | None in v1 | nothing fails that a fallback would fix; every option costs RAM or sends images to a third party | ADR-0003 | Accepted |

@@ -12,14 +12,14 @@ from functools import partial
 from typing import Protocol
 from uuid import UUID
 
-from app.gateway import OcrResult
+from app.domain.processing import ProcessedDocument
 from app.jobs.worker import DocumentStore, process_next, run_loop, sweep_loop
 
 _GRACE_SECONDS = 5.0
 
 
 class ClosableReader(Protocol):
-    def read(self, image: bytes) -> OcrResult: ...
+    def read(self, image: bytes, *, confidence_cutoff: float) -> ProcessedDocument: ...
 
     def close(self) -> None: ...
 

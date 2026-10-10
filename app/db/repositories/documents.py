@@ -11,7 +11,8 @@ from uuid import UUID
 from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
-from app.jobs.worker import ClaimedDocument, ProcessedDocument
+from app.domain.processing import ProcessedDocument
+from app.jobs.worker import ClaimedDocument
 
 _CLAIM = text(
     """

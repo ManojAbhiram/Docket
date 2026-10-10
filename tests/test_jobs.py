@@ -10,12 +10,13 @@ from uuid import UUID, uuid4
 
 import pytest
 
-from app.domain.extract import ExtractedField
+from app.domain.classify import classify
+from app.domain.extract import ExtractedField, extract_fields
+from app.domain.processing import ProcessedDocument
 from app.gateway import CallCapReachedError, EngineError, OcrResult, OcrWord
 from app.gateway.process import EngineTimeoutError
 from app.jobs.worker import (
     ClaimedDocument,
-    ProcessedDocument,
     ReadTimeoutError,
     process_next,
     run_loop,
@@ -78,12 +79,14 @@ class FakeReader:
         self.error = error
         self.images: list[bytes] = []
 
-    def read(self, image: bytes) -> OcrResult:
+    def read(self, image: bytes, *, confidence_cutoff: float) -> ProcessedDocument:
         self.images.append(image)
         if self.error is not None:
             raise self.error
         assert self.result is not None
-        return self.result
+        doc_type = classify(self.result.words)
+        fields = extract_fields(self.result.words, doc_type, confidence_cutoff=confidence_cutoff)
+        return ProcessedDocument(doc_type=doc_type, fields=fields)
 
 
 def one_document(store: MemoryStore) -> UUID:

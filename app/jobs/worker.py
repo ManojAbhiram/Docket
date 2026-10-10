@@ -16,9 +16,8 @@ from uuid import UUID
 import structlog
 
 from app.core.errors import DomainError
-from app.domain.classify import classify
-from app.domain.extract import ExtractedField, extract_fields
-from app.gateway import CallCapReachedError, EngineError, OcrResult
+from app.domain.processing import ProcessedDocument
+from app.gateway import CallCapReachedError, EngineError
 from app.gateway.process import EngineTimeoutError
 
 log = structlog.get_logger()
@@ -33,14 +32,6 @@ class ClaimedDocument:
 
     id: UUID
     image: bytes
-
-
-@dataclass(frozen=True)
-class ProcessedDocument:
-    """What reading a document produced: its type and every field it carries."""
-
-    doc_type: str
-    fields: tuple[ExtractedField, ...]
 
 
 class ReadTimeoutError(DomainError):
@@ -66,7 +57,7 @@ class DocumentStore(Protocol):
 class Reader(Protocol):
     """The gateway call for one image, with the engine, ledger and cap already chosen."""
 
-    def read(self, image: bytes) -> OcrResult: ...
+    def read(self, image: bytes, *, confidence_cutoff: float) -> ProcessedDocument: ...
 
 
 async def process_next(
@@ -86,7 +77,9 @@ async def process_next(
     if document is None:
         return "idle"
     try:
-        result = await asyncio.to_thread(reader.read, document.image)
+        result = await asyncio.to_thread(
+            reader.read, document.image, confidence_cutoff=confidence_cutoff
+        )
     except CallCapReachedError:
         return await _failed(store, document.id, "cap_reached", settle)
     except ReadTimeoutError:
@@ -94,12 +87,10 @@ async def process_next(
     except EngineError as exc:
         reason = "timeout" if isinstance(exc.__cause__, EngineTimeoutError) else "engine_error"
         return await _failed(store, document.id, reason, settle)
-    doc_type = classify(result.words)
-    fields = extract_fields(result.words, doc_type, confidence_cutoff=confidence_cutoff)
-    if not await store.complete(document.id, ProcessedDocument(doc_type=doc_type, fields=fields)):
+    if not await store.complete(document.id, result):
         log.warning("worker.result_discarded", document_id=str(document.id))
         return "stale"
-    log.info("document.read", document_id=str(document.id), doc_type=doc_type)
+    log.info("document.read", document_id=str(document.id), doc_type=result.doc_type)
     await _settle(settle, document.id)
     return "read"
 
