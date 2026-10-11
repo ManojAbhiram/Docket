@@ -233,6 +233,9 @@ CREATE TABLE documents (
     is_current boolean NOT NULL DEFAULT true,
     sha256 text NOT NULL,
     size_bytes integer NOT NULL,
+    requested_mode text NOT NULL DEFAULT 'free',
+    read_engine text,
+    fallback_reason text,
     created_at timestamptz NOT NULL DEFAULT now(),
     updated_at timestamptz NOT NULL DEFAULT now(),
     CONSTRAINT documents_pkey PRIMARY KEY (id),
@@ -240,7 +243,9 @@ CREATE TABLE documents (
     CONSTRAINT chk_documents_sha256_hex CHECK (sha256 ~ '^[0-9a-f]{64}$'),
     CONSTRAINT chk_documents_size_range CHECK (size_bytes BETWEEN 1 AND 8388608),
     CONSTRAINT chk_documents_failure_only_when_failed CHECK (failure_reason IS NULL OR status = 'failed'),
-    CONSTRAINT chk_documents_text_lengths CHECK (failure_reason IS NULL OR length(failure_reason) <= 120)
+    CONSTRAINT chk_documents_text_lengths CHECK (failure_reason IS NULL OR length(failure_reason) <= 120),
+    CONSTRAINT chk_documents_requested_mode CHECK (requested_mode IN ('free', 'vision')),
+    CONSTRAINT chk_documents_provenance_lengths CHECK ((read_engine IS NULL OR length(read_engine) <= 40) AND (fallback_reason IS NULL OR length(fallback_reason) <= 80))
 );
 COMMENT ON TABLE documents IS 'One uploaded scan or photo for an application. Serves US-00-002, US-00-003, US-00-005.';
 COMMENT ON COLUMN documents.id IS 'Surrogate key used in URLs.';
@@ -253,6 +258,9 @@ COMMENT ON COLUMN documents.failure_reason IS 'A short reason code when processi
 COMMENT ON COLUMN documents.is_current IS 'False once a newer document of the same type replaced it. The older one is kept.';
 COMMENT ON COLUMN documents.sha256 IS 'SHA-256 of the uploaded bytes, hex, to spot a repeated upload.';
 COMMENT ON COLUMN documents.size_bytes IS 'Size of the uploaded file in bytes, at most 8 MiB.';
+COMMENT ON COLUMN documents.requested_mode IS 'What the uploader asked for: free (local OCR) or vision (OpenRouter). Added by migration 0003.';
+COMMENT ON COLUMN documents.read_engine IS 'The engine that read the document, null until it is read. Added by migration 0003.';
+COMMENT ON COLUMN documents.fallback_reason IS 'A short reason code when the requested engine was not used, never provider text. Added by migration 0003.';
 COMMENT ON COLUMN documents.created_at IS 'When the file was uploaded.';
 COMMENT ON COLUMN documents.updated_at IS 'Last status change.';
 -- Foreign-key index: the documents of one application, newest first for the review screen.
@@ -355,6 +363,7 @@ COMMENT ON COLUMN gateway_calls.created_at IS 'When the call was made.';
 CREATE INDEX idx_gateway_calls_document_id ON gateway_calls (document_id);
 -- Exactly one successful call per document, a retry after an error is allowed.
 CREATE UNIQUE INDEX uq_gateway_calls_document_ok ON gateway_calls (document_id) WHERE outcome = 'ok';
+CREATE INDEX idx_gateway_calls_engine_created_at ON gateway_calls (engine, created_at);
 
 -- decisions: the append-only log of verifier decisions.
 -- Serves US-00-007
