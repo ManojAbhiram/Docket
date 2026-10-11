@@ -23,8 +23,10 @@ def etag_for(updated_at: datetime) -> str:
 
 def parse_etag(header: str) -> datetime:
     """The instant an `If-Match` value names. Anything else, or a time with no zone, is refused."""
+    # A proxy that compresses a response makes its ETag weak (W/"..."); the version is the same.
+    value = header.strip().removeprefix("W/")
     try:
-        parsed = datetime.fromisoformat(header.strip().strip('"'))
+        parsed = datetime.fromisoformat(value.strip('"'))
     except ValueError as exc:
         msg = "If-Match is not a version this API gave out"
         raise InvalidEtagError(msg) from exc

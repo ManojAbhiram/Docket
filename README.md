@@ -125,3 +125,7 @@ web app.
 Not built yet: an accuracy report on the 30 labelled documents (`evals/ocr/gate.yaml` has no
 accepted baseline), field crops beside each value, the IBM Plex fonts, and a one-command demo that
 runs the API and the web app in containers.
+
+## Deploy
+
+A production-shaped stack (Postgres, migration, API, nginx) is in `docker-compose.prod.yml`. The steps, the checks after deploying, rollback, backup and the open decisions are in `docs/runbooks/deploy.md`.

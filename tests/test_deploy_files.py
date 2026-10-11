@@ -61,3 +61,10 @@ def test_the_production_example_holds_placeholders_only() -> None:
 
     assert "OPENROUTER_API_KEY=\n" in example
     assert "sk-or" not in example
+
+
+def test_nginx_does_not_compress_the_api_so_its_etag_stays_strong() -> None:
+    conf = _text("frontend/nginx.conf.template")
+    api_block = conf.split("location /api/ {", 1)[1].split("}", 1)[0]
+
+    assert "gzip off;" in api_block

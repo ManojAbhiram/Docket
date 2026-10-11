@@ -1,0 +1,19 @@
+# Keep secrets, scratch work and heavy folders out of the build context.
+.git
+.env
+.env.*
+!.env.example
+.scratch
+.gstack
+.bearing
+.venv
+node_modules
+frontend
+data
+docs
+tests
+evals
+coverage.xml
+junit.xml
+**/__pycache__
+**/*.pyc

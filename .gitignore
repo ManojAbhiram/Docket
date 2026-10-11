@@ -34,3 +34,6 @@ build/
 
 # generated synthetic dataset (python -m seed); rebuilt from a fixed seed
 data/seed/
+
+# Filled-in production settings hold secrets.
+deploy/production.env

@@ -27,3 +27,10 @@ def test_an_etag_without_quotes_is_accepted_too() -> None:
 def test_an_etag_that_is_not_ours_or_has_no_timezone_is_refused(header: str) -> None:
     with pytest.raises(InvalidEtagError):
         parse_etag(header)
+
+
+# Regression: ISSUE-002 [NOTASK-17], found by the production smoke test on 2026-10-11. A proxy that
+# compresses a response turns its strong ETag into a weak one (W/"..."), and the API refused it, so
+# every decision made behind nginx failed with 422.
+def test_a_weak_etag_made_by_a_compressing_proxy_names_the_same_version() -> None:
+    assert parse_etag(f"W/{etag_for(STAMP)}") == STAMP

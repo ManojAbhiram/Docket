@@ -1,0 +1,69 @@
+# Production-shaped stack: Postgres, a one-off migration, the API and the web container.
+# Only the web container is published; the API is reachable only through it (same origin).
+#   cp deploy/production.env.example deploy/production.env   # then fill in the placeholders
+#   docker compose --env-file deploy/production.env -f docker-compose.prod.yml up -d --build
+# See docs/runbooks/deploy.md.
+services:
+  postgres:
+    image: postgres:16
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: docket
+      POSTGRES_USER: docket
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD in deploy/production.env}
+    volumes: [pgdata:/var/lib/postgresql/data]
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U docket -d docket"]
+      interval: 5s
+      retries: 12
+
+  migrate:
+    build: .
+    image: docket-api:${DOCKET_VERSION:-local}
+    command: ["alembic", "upgrade", "head"]
+    environment:
+      DATABASE_URL: postgresql+asyncpg://docket:${POSTGRES_PASSWORD}@postgres:5432/docket
+    depends_on:
+      postgres: {condition: service_healthy}
+    restart: "no"
+
+  api:
+    image: docket-api:${DOCKET_VERSION:-local}
+    restart: unless-stopped
+    # Measured: the API plus RapidOCR peaks near 450 MB (docs/performance/NOTASK-17-memory.md).
+    mem_limit: ${API_MEM_LIMIT:-640m}
+    environment:
+      ENV: production
+      DATABASE_URL: postgresql+asyncpg://docket:${POSTGRES_PASSWORD}@postgres:5432/docket
+      LOG_FORMAT: json
+      GATEWAY_ENGINE: rapidocr
+      WORKER_ENABLED: "true"
+      WEB_CONCURRENCY: "1"
+      SESSION_COOKIE_SECURE: "true"
+      ALLOWED_ORIGINS: ${PUBLIC_ORIGIN:?set PUBLIC_ORIGIN, for example https://docket.example.com}
+      # Trust the web container's X-Forwarded-For so the sign-in limiter sees each user's address.
+      # Safe only because the API port is not published.
+      FORWARDED_ALLOW_IPS: "*"
+      # Vision stays off while these are empty (ADR-0015).
+      OPENROUTER_API_KEY: ${OPENROUTER_API_KEY:-}
+      OPENROUTER_MODEL: ${OPENROUTER_MODEL:-}
+    depends_on:
+      migrate: {condition: service_completed_successfully}
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request as u; u.urlopen('http://127.0.0.1:8080/healthz', timeout=3)"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+
+  web:
+    build: ./frontend
+    image: docket-web:${DOCKET_VERSION:-local}
+    restart: unless-stopped
+    environment:
+      API_UPSTREAM: http://api:8080
+    ports: ["${WEB_PORT:-8081}:8080"]
+    depends_on:
+      api: {condition: service_healthy}
+
+volumes:
+  pgdata: {}
