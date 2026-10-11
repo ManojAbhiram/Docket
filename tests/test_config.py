@@ -49,7 +49,8 @@ def test_sync_driver_is_rejected() -> None:
         Settings(_env_file=None, database_url="postgresql://postgres:postgres@localhost/test")
 
 
-@pytest.mark.parametrize("model", ["vendor/paid", "", "vendor/model:free ", " :free"])
+# A blank model is not here on purpose: blank means Vision is off (test_settings_secrets.py).
+@pytest.mark.parametrize("model", ["vendor/paid", "vendor/model:free ", " :free"])
 def test_vision_rejects_models_outside_the_free_policy(model: str) -> None:
     # NOTASK-17: an arbitrary paid model previously passed startup validation.
     with pytest.raises(ValidationError, match="openrouter_model"):

@@ -101,6 +101,14 @@ class Settings(BaseSettings):
             raise ValueError(msg)
         return value
 
+    @field_validator("openrouter_api_key", "openrouter_model", mode="before")
+    @classmethod
+    def _blank_means_unset(cls, value: object) -> object:
+        """An empty value, as `.env.example` and the compose file leave it, keeps Vision off."""
+        if isinstance(value, str) and not value.strip():
+            return None
+        return value
+
     @field_validator("openrouter_model")
     @classmethod
     def _free_vision_model(cls, value: str | None) -> str | None:
