@@ -44,7 +44,7 @@ export function RootLayout() {
         >
           <Link
             to="/"
-            className="mr-2 inline-flex min-h-11 items-center font-display text-lg font-semibold sm:min-h-9"
+            className="mr-2 inline-flex min-h-11 items-center font-display text-lg font-semibold lg:min-h-9"
           >
             Docket
           </Link>
@@ -53,7 +53,7 @@ export function RootLayout() {
               <Link
                 key={link.to}
                 to={link.to}
-                className="inline-flex min-h-11 items-center rounded-md px-3 text-sm transition-colors duration-(--duration-fast) hover:bg-header-foreground/15 sm:min-h-9"
+                className="inline-flex min-h-11 items-center rounded-md px-3 text-sm transition-colors duration-(--duration-fast) hover:bg-header-foreground/15 lg:min-h-9"
                 activeProps={{
                   className: "bg-header-foreground/20 font-semibold",
                   "aria-current": "page",
@@ -71,7 +71,7 @@ export function RootLayout() {
                 <Button
                   variant="ghost"
                   size="sm"
-                  className={`min-h-11 border border-header-foreground/40 sm:min-h-8 ${ON_HEADER}`}
+                  className={`min-h-11 border border-header-foreground/40 lg:min-h-8 ${ON_HEADER}`}
                   disabled={logout.isPending}
                   onClick={() => {
                     logout.mutate(undefined, {

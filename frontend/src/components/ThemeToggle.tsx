@@ -22,7 +22,7 @@ export function ThemeToggle({ className }: { className?: string }) {
       type="button"
       variant="ghost"
       size="sm"
-      className={cn("min-h-11 sm:min-h-8", className)}
+      className={cn("min-h-11 lg:min-h-8", className)}
       aria-label={`Theme: ${LABEL[choice]}. Switch to ${LABEL[next]}`}
       onClick={() => {
         applyChoice(next);
