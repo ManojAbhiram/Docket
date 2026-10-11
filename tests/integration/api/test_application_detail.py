@@ -416,3 +416,25 @@ async def test_an_application_that_is_not_flagged_has_no_reason(
     data = (await api.get("/api/applications")).json()["data"]
 
     assert data[0]["flag_reason"] is None
+
+
+async def test_each_document_says_what_was_asked_for_and_what_actually_read_it(
+    api: AsyncClient, connection: AsyncConnection
+) -> None:
+    await as_verifier(api, connection)
+    application_id = await flagged_application(connection)
+    await connection.execute(
+        text(
+            "UPDATE documents SET requested_mode = 'vision', read_engine = 'rapidocr', "
+            "fallback_reason = 'vision_cap_reached' WHERE application_id = :id"
+        ),
+        {"id": application_id},
+    )
+
+    document = (await api.get(f"/api/applications/{application_id}")).json()["documents"][0]
+
+    assert (document["requested_mode"], document["read_engine"], document["fallback_reason"]) == (
+        "vision",
+        "rapidocr",
+        "vision_cap_reached",
+    )
