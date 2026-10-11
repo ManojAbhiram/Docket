@@ -8,6 +8,8 @@ The provider's own message is never kept, because it can echo a value from the p
 import base64
 import json
 import re
+import time
+from collections.abc import Callable
 from typing import Literal, cast
 
 import httpx
@@ -77,11 +79,14 @@ class VisionReader:
         cap: int,
         timeout_seconds: float,
         transport: httpx.BaseTransport | None = None,
+        clock: Callable[[], float] = time.monotonic,
     ) -> None:
         self._key = api_key
         self._model = model
         self._ledger = ledger
         self._cap = cap
+        self._deadline_seconds = timeout_seconds
+        self._clock = clock
         self._client = httpx.Client(timeout=timeout_seconds, transport=transport)
 
     def read(self, image: bytes, *, confidence_cutoff: float) -> ProcessedDocument:
@@ -101,7 +106,6 @@ class VisionReader:
     def _ask(self, image: bytes) -> ProcessedDocument:
         try:
             response = self._post(image)
-            response.raise_for_status()
         except httpx.TimeoutException as exc:
             raise VisionTimeoutError from exc
         except httpx.HTTPStatusError as exc:
@@ -116,7 +120,14 @@ class VisionReader:
         )
 
     def _post(self, image: bytes) -> httpx.Response:
-        return self._client.post(
+        """One request that must finish within the deadline in total, not per read.
+
+        httpx times out each read, and a provider that trickles keep-alive bytes resets that
+        timer, so the whole call is held to a deadline checked as each piece arrives.
+        """
+        deadline = self._clock() + self._deadline_seconds
+        with self._client.stream(
+            "POST",
             ENDPOINT,
             headers={"Authorization": f"Bearer {self._key}"},
             json={
@@ -132,7 +143,14 @@ class VisionReader:
                     }
                 ],
             },
-        )
+        ) as response:
+            response.raise_for_status()
+            body = bytearray()
+            for piece in response.iter_bytes():
+                if self._clock() > deadline:
+                    raise VisionTimeoutError
+                body += piece
+            return httpx.Response(response.status_code, content=bytes(body))
 
 
 def _data_url(image: bytes) -> str:
