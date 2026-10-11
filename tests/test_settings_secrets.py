@@ -93,3 +93,24 @@ def test_the_call_cap_must_be_at_least_one() -> None:
 
 def test_the_default_engine_is_the_recorded_one_so_nothing_reaches_a_model_by_accident() -> None:
     assert make().gateway_engine == "recorded"
+
+
+def test_the_printed_settings_never_show_the_openrouter_key() -> None:
+    settings = make(
+        openrouter_api_key="sk-or-v1-not-a-real-key", openrouter_model="vendor/model:free"
+    )
+
+    assert "sk-or-v1-not-a-real-key" not in repr(settings)
+    assert "sk-or-v1-not-a-real-key" not in str(settings.model_dump())
+
+
+def test_vision_needs_both_a_key_and_a_model() -> None:
+    assert make().vision_configured is False
+    assert make(openrouter_api_key="sk-or-v1-x").vision_configured is False
+    assert make(openrouter_model="vendor/model:free").vision_configured is False
+    both = make(openrouter_api_key="sk-or-v1-x", openrouter_model="vendor/model:free")
+    assert both.vision_configured is True
+
+
+def test_the_vision_cap_stays_under_the_free_daily_limit() -> None:
+    assert make().openrouter_daily_cap == 40

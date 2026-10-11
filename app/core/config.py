@@ -8,7 +8,7 @@ from functools import lru_cache
 from pathlib import Path
 from typing import Literal, Self
 
-from pydantic import Field, PostgresDsn, field_validator, model_validator
+from pydantic import Field, PostgresDsn, SecretStr, field_validator, model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 _EXAMPLE_PASSWORDS = frozenset({None, "", "postgres", "password", "changeme"})
@@ -36,6 +36,12 @@ class Settings(BaseSettings):
     gateway_engine: str = "recorded"
     gateway_call_cap: int = Field(default=1000, ge=1)
     gateway_recording: Path | None = None
+    # Opt-in OpenRouter Vision (ADR-0015). Both unset means Vision is unavailable. The cap sits
+    # under the free tier's 50 requests a day, counted over a rolling 24 hours.
+    openrouter_api_key: SecretStr | None = Field(default=None, repr=False)
+    openrouter_model: str | None = None
+    openrouter_daily_cap: int = Field(default=40, ge=1)
+    openrouter_timeout_seconds: float = Field(default=60.0, gt=0)
     # The document worker runs inside the API process (ADR-0011). Off unless asked for.
     worker_enabled: bool = False
     worker_idle_seconds: float = Field(default=2.0, gt=0)
@@ -62,6 +68,11 @@ class Settings(BaseSettings):
     argon2_memory_kib: int = Field(default=65536, ge=8)
     argon2_time_cost: int = Field(default=3, ge=1)
     argon2_parallelism: int = Field(default=1, ge=1)
+
+    @property
+    def vision_configured(self) -> bool:
+        """True when a key and a model are set, the only case in which Vision can be chosen."""
+        return self.openrouter_api_key is not None and self.openrouter_model is not None
 
     @property
     def origins(self) -> frozenset[str]:
