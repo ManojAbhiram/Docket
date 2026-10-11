@@ -40,7 +40,7 @@ class Settings(BaseSettings):
     # under the free tier's 50 requests a day, counted over a rolling 24 hours.
     openrouter_api_key: SecretStr | None = Field(default=None, repr=False)
     openrouter_model: str | None = None
-    openrouter_daily_cap: int = Field(default=40, ge=1)
+    openrouter_daily_cap: int = Field(default=40, ge=1, le=40)
     openrouter_timeout_seconds: float = Field(default=60.0, gt=0)
     # The document worker runs inside the API process (ADR-0011). Off unless asked for.
     worker_enabled: bool = False
@@ -98,6 +98,17 @@ class Settings(BaseSettings):
         """The whole stack is async; a sync driver here would block the loop."""
         if value.scheme != "postgresql+asyncpg":
             msg = f"DATABASE_URL must use postgresql+asyncpg://, got {value.scheme}://"
+            raise ValueError(msg)
+        return value
+
+    @field_validator("openrouter_model")
+    @classmethod
+    def _free_vision_model(cls, value: str | None) -> str | None:
+        """Refuse model identifiers outside ADR-0015's opt-in free-model policy."""
+        if value is not None and (
+            not value.endswith(":free") or not value.removesuffix(":free").strip()
+        ):
+            msg = "OPENROUTER_MODEL must name a free model ending in :free"
             raise ValueError(msg)
         return value
 

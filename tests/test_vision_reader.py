@@ -5,6 +5,7 @@ transport: no test reaches the network. The model's own words never leave the re
 """
 
 import base64
+import gzip
 import json
 from collections.abc import Callable, Iterator
 from decimal import Decimal
@@ -294,3 +295,75 @@ def test_a_trickling_answer_that_finishes_inside_the_deadline_is_read() -> None:
     reader, _ = reader_with(trickling(MARKSHEET), clock=ticking(0, 1, 2, 3, 4))
 
     assert reader.read(IMAGE, confidence_cutoff=0.9).doc_type == "10th_marksheet"
+
+
+# Regression MANUAL-VIS-02 [NOTASK-17]: token limits do not bound provider HTTP bytes.
+def test_an_oversized_valid_provider_answer_is_rejected_and_logged_safely() -> None:
+    body = reply(MARKSHEET).content
+    body += b" " * (65_537 - len(body))
+    reader, ledger = reader_with(lambda _request: httpx.Response(200, content=body))
+
+    with pytest.raises(EngineError) as raised:
+        reader.read(IMAGE, confidence_cutoff=0.9)
+
+    assert isinstance(raised.value.__cause__, VisionBadAnswerError)
+    assert ledger.records[0].error_class == "VisionBadAnswerError"
+
+
+def test_a_valid_provider_answer_at_the_response_cap_is_allowed() -> None:
+    body = reply(MARKSHEET).content
+    body += b" " * (65_536 - len(body))
+    reader, _ = reader_with(lambda _request: httpx.Response(200, content=body))
+
+    assert reader.read(IMAGE, confidence_cutoff=0.9).doc_type == "10th_marksheet"
+
+
+class PaddedAnswer(httpx.SyncByteStream):
+    def __init__(self) -> None:
+        self.padding_read = 0
+        self.closed = False
+
+    def __iter__(self) -> Iterator[bytes]:
+        yield reply(MARKSHEET).content
+        for _ in range(100):
+            self.padding_read += 1
+            yield b" " * 4_096
+
+    def close(self) -> None:
+        self.closed = True
+
+
+def test_oversized_stream_without_content_length_is_closed_before_reading_the_rest() -> None:
+    stream = PaddedAnswer()
+    reader, _ = reader_with(lambda _request: httpx.Response(200, stream=stream))
+
+    with pytest.raises(EngineError) as raised:
+        reader.read(IMAGE, confidence_cutoff=0.9)
+
+    assert isinstance(raised.value.__cause__, VisionBadAnswerError)
+    assert stream.padding_read < 100
+    assert stream.closed
+
+
+def test_encoded_provider_body_is_refused_before_decompression() -> None:
+    body = gzip.compress(reply(MARKSHEET).content)
+    reader, _ = reader_with(
+        lambda _request: httpx.Response(
+            200, stream=httpx.ByteStream(body), headers={"Content-Encoding": "gzip"}
+        )
+    )
+
+    with pytest.raises(EngineError) as raised:
+        reader.read(IMAGE, confidence_cutoff=0.9)
+
+    assert isinstance(raised.value.__cause__, VisionBadAnswerError)
+
+
+# Regression [NOTASK-17]: chunk coalescing must not hide slow keep-alive bytes from the deadline.
+def test_small_streamed_pieces_are_checked_against_the_deadline_individually() -> None:
+    reader, _ = reader_with(trickling(MARKSHEET), clock=ticking(0, 1, 2, 6))
+
+    with pytest.raises(EngineError) as raised:
+        reader.read(IMAGE, confidence_cutoff=0.9)
+
+    assert isinstance(raised.value.__cause__, VisionTimeoutError)

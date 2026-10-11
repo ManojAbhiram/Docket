@@ -12,7 +12,7 @@ from starlette.datastructures import UploadFile
 from starlette.types import Message
 
 from app.core.errors import DomainError
-from app.domain.uploads import read_capped
+from app.domain.uploads import UploadTooLargeError, read_capped
 
 # Room for the multipart boundaries and part headers around the file itself.
 _OVERHEAD = 8_192
@@ -69,10 +69,13 @@ async def read_one_file(request: Request, *, cap: int, max_fields: int = 1) -> U
         if not isinstance(part, UploadFile):
             msg = "send the file as a multipart part named file"
             raise MissingFileError(msg)
+        data = await part.read(cap + 1)
+        if len(data) > cap:
+            raise UploadTooLargeError("the file is over the size cap")
         return UploadedFile(
             name=part.filename or "",
             content_type=part.content_type or "",
-            data=await part.read(),
+            data=data,
             fields={key: value for key, value in form.items() if isinstance(value, str)},
         )
     finally:

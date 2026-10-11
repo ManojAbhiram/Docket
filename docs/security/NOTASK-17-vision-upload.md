@@ -1,6 +1,6 @@
 # Vision upload security assessment [NOTASK-17]
 
-**Partial.** Independent static review of the Vision upload path on 2026-10-11. Runtime attacks, production systems, provider accounts and dependency vulnerability scanning were not exercised. Memory tuning later added shared admission for the first finding, with local regression evidence described below. The remaining recommendations are proposed.
+**Partial.** Independent static review of the Vision upload path on 2026-10-11. Runtime attacks, production systems, provider accounts and dependency vulnerability scanning were not exercised. Memory tuning later added shared admission for the first finding. The owner then requested the remaining supported findings be fixed; local repair evidence for all three is described below. Other observations remain separate follow-up decisions.
 
 ## Provenance and assurance
 
@@ -10,11 +10,11 @@ This review traced authentication and CSRF, multipart reading, mode validation, 
 
 ## Findings
 
-| ID | Severity | Confidence | Evidence | Location | Impact |
+| ID | Original severity | Confidence | Evidence and current manual status | Original location | Original impact |
 | --- | --- | --- | --- | --- | --- |
-| MANUAL-VIS-01 | Medium | High for missing admission control; exhaustion threshold unmeasured | Static | `app/api/documents/router.py:69`, `app/domain/uploads.py:131`, `app/db/repositories/uploads.py:107` | Concurrent staff uploads allocate full decoded images before deduplication and can exhaust the 512 MB host |
-| MANUAL-VIS-02 | Medium | High for missing byte bound; malicious upstream prerequisite | Static | `app/gateway/vision.py:148` | An oversized provider response consumes unbounded API memory |
-| MANUAL-VIS-03 | Low | High | Static | `app/api/uploads.py:56`, `app/api/uploads.py:75` | Multipart allowance permits a file slightly larger than its configured cap |
+| MANUAL-VIS-01 | Medium | High for missing admission control; exhaustion threshold unmeasured | Static; shared admission repair locally checked | `app/api/documents/router.py:69`, `app/domain/uploads.py:131`, `app/db/repositories/uploads.py:107` | Concurrent staff uploads allocate full decoded images before deduplication and can exhaust the 512 MB host |
+| MANUAL-VIS-02 | Medium | High for missing byte bound; malicious upstream prerequisite | Static; response bound repaired, local regressions | `app/gateway/vision.py:148` | An oversized provider response consumes unbounded API memory |
+| MANUAL-VIS-03 | Low | High | Static; parsed file cap repaired, local regressions | `app/api/uploads.py:56`, `app/api/uploads.py:75` | Multipart allowance permits a file slightly larger than its configured cap |
 
 ### MANUAL-VIS-01: Upload normalization has no aggregate memory limit
 
@@ -47,7 +47,11 @@ Proposed repair: check actual file-part length against `cap` after parsing, reta
 ## Other observations
 
 - The claimed total Vision deadline is approximate. `app/gateway/vision.py:128-153` checks time only after `iter_bytes()` yields, and HTTPX phase timeouts at `:90` can permit an outstanding read to finish after the deadline. The same applies to entering the stream, and final completion is not checked separately. This does not establish an indefinitely trickling read, because yielded pieces are checked. A strict total bound would require the remaining deadline to constrain blocking operations. This is a timeout-contract limitation, without a demonstrated attack against the fixed provider.
-- `app/core/config.py:42-44` accepts any configured model string and any positive daily cap. `vision_configured` at `:73-75` checks presence, not the accepted `:free` policy. An operator can accidentally configure a paid model or raise the cap beyond ADR-0015. This is an operator policy gap, not caller-controlled model selection, and no charge was demonstrated. Fail-fast validation against the accepted free-model policy is a proposed follow-up.
+- The operator policy gap was repaired in the follow-up: `app/core/config.py` now rejects model
+  identifiers without a nonempty `:free` suffix and rejects daily caps above ADR-0015's 40-call
+  limit. Five assertions failed before validation was added; all 31 configuration and secret
+  representation tests passed afterward. This enforces the accepted identifier policy; it does
+  not independently certify provider prices or live model availability.
 - `app/gateway/core.py:75-81` reserves call slots in process memory, keyed by ledger identity. It does not coordinate multiple API workers. The current single-worker deployment intention and serial queue are countercontrols; rolling call limits should be re-evaluated before increasing worker count. No multi-worker cap bypass was reproduced.
 
 ## Controls traced
@@ -68,6 +72,16 @@ Proposed repair: check actual file-part length against `cap` after parsing, reta
 
 ## Verification and gaps
 
+### Follow-up scanner prerequisite check
+
+The trusted helper's fresh `doctor --repo .` check on 2026-10-11 found static snapshots ready,
+but formal execution remains unavailable: the host has not delegated CPU, memory and PID
+controllers; the universal `uv.lock` needs a qualified runtime-specific export; no reviewed
+immutable Linux amd64 scanner images are qualified, including Semgrep. No scanner image was
+downloaded, no host isolation setting was changed and no replacement audit run was started.
+These prerequisites must be supplied before helper-authenticated runtime or scanner evidence
+can be claimed. The earlier persistence failure remains part of the original audit record.
+
 ### Fresh manual review of memory admission
 
 Memory tuning subsequently added `app/core/compute.py`. `compute_slot` acquires the existing hashing semaphore and its lease shields native work, deferring release to native task completion when a caller is cancelled. `app/api/documents/router.py` now acquires that admission before body reading, retains it through normalization, persistence and status recomputation, and drops raw upload bytes after hashing and measuring them. Body reading has a 30 second ceiling; admission, processing and persistence together use the existing configured read timeout and return the existing safe 503 envelope on expiry. The upload API contract records that outcome in `api/openapi.yaml`.
@@ -76,8 +90,18 @@ The same admission now protects password verification/hashing in `app/api/auth/r
 
 Evidence: the original parent regression failed because the upload body was read while admission was occupied. A second regression failed with `assert 2 == 1`: a second upload buffered its body while the first waited for persistence. Keeping admission through persistence made the 23 document regression checks pass. Those three admission/timeout checks now live in `tests/integration/api/test_upload_memory.py`, leaving existing document tests in their original file. `tests/test_compute.py` covers cancellation while native work is still running, late native failure, normal failure and cancellation while waiting for admission. `tests/test_jobs.py` covers local-reader waiting and Vision reads proceeding without CPU admission. A focused unit run reported `45 passed`; Ruff reported `All checks passed!`; mypy reported `Success: no issues found in 91 source files`.
 
-These are local regression observations and fresh manual source review. MANUAL-VIS-01's original snapshot finding is retained for traceability; its missing aggregate normalization admission has been addressed in this worktree. This is not helper-certified finding closure or an authenticated CSO repair bundle. The configured semaphore can still be raised by an operator; multi-process deployment needs a separate total budget, and provider response memory remains unbounded under MANUAL-VIS-02. No live overload attack or general guarantee for all upload/provider inputs follows from the focused regressions.
+These are local regression observations and fresh manual source review. MANUAL-VIS-01's original snapshot finding is retained for traceability; its missing aggregate normalization admission has been addressed. This is not helper-certified finding closure or an authenticated CSO repair bundle. The configured semaphore can still be raised by an operator; multi-process deployment needs a separate total budget. No live overload attack or general guarantee for all upload/provider inputs follows from the focused regressions.
+
+### Subsequent repair of response and file bounds
+
+For MANUAL-VIS-02, `app/gateway/vision.py` now admits at most 65,536 bytes for the complete provider response. This independent ceiling leaves ample space for a 600-token structured answer plus provider metadata while bounding memory before JSON parsing. Each received piece is checked against the remaining budget before accumulation. The reader requests `Accept-Encoding: identity` and rejects other content encodings before stream decoding, preventing compressed responses from expanding before the byte check. Oversized or encoded responses raise the existing `VisionBadAnswerError`, recorded as a safe class name, and the existing worker fallback reads the document locally. Providers that ignore the identity request now use fallback instead of Vision; no live-provider compatibility claim is made.
+
+Transport pieces remain uncoalesced so every yielded keep-alive piece still receives the existing deadline check. A regression caught that requesting fixed-size HTTPX chunks could hide tiny pieces until a buffer filled; preserving transport yields corrected that introduced regression. HTTPX's underlying read timeout still limits blocking reads separately, so the total-time limitation in Other observations remains.
+
+For MANUAL-VIS-03, `app/api/uploads.py` now reads at most `cap + 1` bytes from the parsed file and raises the existing 413 `UploadTooLargeError` when the actual file exceeds `cap`. Multipart header allowance remains independent, and the form is still closed in the existing `finally` path. Both document and CSV import callers receive the correction through their shared helper.
+
+Red evidence before these fixes: the focused Vision/file tests reported `4 failed, 30 passed`; oversized valid provider JSON, a no-length response stream, an encoded response and a file one byte over its cap were all accepted. The subsequent deadline regression also failed because coalesced pieces hid expiry. After the repairs, the two focused files reported `35 passed`; legal responses exactly at 65,536 bytes and files exactly at their configured cap still pass. Stream rejection closes the response before consuming its remaining padding, and error ledger records retain safe error classes. These local fake-transport and multipart regressions establish the corrected bounds, without closing the original helper findings or producing an authenticated repair bundle.
 
 The initial scan used source inspection only. Existing tests were located, including `tests/test_upload_reader.py`, `tests/test_uploads.py`, `tests/test_vision_reader.py`, `tests/test_vision_routing.py`, `tests/integration/api/test_documents_vision.py` and `tests/integration/test_document_queue.py`. The later memory repair exercised focused unit and upload/authentication integration regressions. The parent task reports its broader gates with their own provenance. Passing functional tests does not constitute attack reproduction.
 
-Not run: multipart cap reproduction; concurrent upload memory attack; malicious response simulation; decoder exploit testing; live OpenRouter calls; production database, deployment and bucket checks; external advisory lookups; dependency scanners; qualified runtime CSO reproduction or repair validation. No repair bundle or release clearance is delivered. Any follow-up CSO current-source recheck must supply fresh evidence for each original boundary.
+Not run: concurrent upload memory attack; live hostile-provider response testing; decoder exploit testing; live OpenRouter calls; production database, deployment and bucket checks; external advisory lookups; dependency scanners; qualified runtime CSO reproduction or repair validation. Multipart file-cap reproduction and fake streamed-response rejection were exercised locally as recorded above. No repair bundle or release clearance is delivered. Any follow-up CSO current-source recheck must supply fresh evidence for each original boundary.
