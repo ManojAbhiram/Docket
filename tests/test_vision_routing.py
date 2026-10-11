@@ -4,6 +4,7 @@ Vision is opt-in and only ever a first try: when it cannot answer, the document 
 local OCR and the safe reason is kept, so an upload is never lost to the provider.
 """
 
+import threading
 from dataclasses import dataclass, field
 from uuid import UUID, uuid4
 
@@ -174,3 +175,34 @@ async def test_the_fallback_reason_names_why_vision_could_not_answer(
     await process_next(store, local, confidence_cutoff=CUTOFF, vision_reader=Reader(error=failure))
 
     assert store.completed[document_id].fallback_reason == reason
+
+
+class Stuck:
+    """A Vision reader whose read never returns until released, as a blocked network read does."""
+
+    deadline_seconds = 0.05
+
+    def __init__(self) -> None:
+        self.release = threading.Event()
+
+    def read(self, image: bytes, *, confidence_cutoff: float) -> ProcessedDocument:
+        self.release.wait(timeout=5)
+        return VISION_DOC
+
+
+# NOTASK-17 security review: the Vision deadline was only checked as bytes arrived, so a read
+# blocked mid-piece could outlive it. The worker now stops waiting at the deadline plus a grace.
+async def test_a_vision_read_that_never_returns_is_cut_off_and_read_locally() -> None:
+    store, local, stuck = Store(), Reader(LOCAL_DOC), Stuck()
+    document_id = queued(store, "vision")
+
+    try:
+        outcome = await process_next(
+            store, local, confidence_cutoff=CUTOFF, vision_reader=stuck, vision_grace_seconds=0.05
+        )
+    finally:
+        stuck.release.set()
+
+    assert outcome == "read"
+    assert store.completed[document_id].fallback_reason == "vision_timeout"
+    assert local.reads == 1

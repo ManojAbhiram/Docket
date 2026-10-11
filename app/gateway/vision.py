@@ -103,6 +103,11 @@ class VisionReader:
             units=lambda document: len(document.fields),
         )
 
+    @property
+    def deadline_seconds(self) -> float:
+        """The most seconds one call may take in total, read by the worker for its own cutoff."""
+        return self._deadline_seconds
+
     def close(self) -> None:
         self._client.close()
 

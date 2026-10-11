@@ -46,7 +46,7 @@ Proposed repair: check actual file-part length against `cap` after parsing, reta
 
 ## Other observations
 
-- The claimed total Vision deadline is approximate. `app/gateway/vision.py:128-153` checks time only after `iter_bytes()` yields, and HTTPX phase timeouts at `:90` can permit an outstanding read to finish after the deadline. The same applies to entering the stream, and final completion is not checked separately. This does not establish an indefinitely trickling read, because yielded pieces are checked. A strict total bound would require the remaining deadline to constrain blocking operations. This is a timeout-contract limitation, without a demonstrated attack against the fixed provider.
+- The claimed total Vision deadline is approximate. `app/gateway/vision.py:128-153` checks time only after `iter_bytes()` yields, and HTTPX phase timeouts at `:90` can permit an outstanding read to finish after the deadline. The same applies to entering the stream, and final completion is not checked separately. This does not establish an indefinitely trickling read, because yielded pieces are checked. A strict total bound would require the remaining deadline to constrain blocking operations. This is a timeout-contract limitation, without a demonstrated attack against the fixed provider. **Repaired 2026-10-11:** the worker now stops waiting for a Vision read at its deadline plus a 2 second grace (`app/jobs/worker.py:_vision_read`) and reads the page locally with reason `vision_timeout`; the blocked thread is bounded by the client's own timeouts. Regression: `tests/test_vision_routing.py:test_a_vision_read_that_never_returns_is_cut_off_and_read_locally`.
 - The operator policy gap was repaired in the follow-up: `app/core/config.py` now rejects model
   identifiers without a nonempty `:free` suffix and rejects daily caps above ADR-0015's 40-call
   limit. Five assertions failed before validation was added; all 31 configuration and secret
@@ -105,3 +105,9 @@ Red evidence before these fixes: the focused Vision/file tests reported `4 faile
 The initial scan used source inspection only. Existing tests were located, including `tests/test_upload_reader.py`, `tests/test_uploads.py`, `tests/test_vision_reader.py`, `tests/test_vision_routing.py`, `tests/integration/api/test_documents_vision.py` and `tests/integration/test_document_queue.py`. The later memory repair exercised focused unit and upload/authentication integration regressions. The parent task reports its broader gates with their own provenance. Passing functional tests does not constitute attack reproduction.
 
 Not run: concurrent upload memory attack; live hostile-provider response testing; decoder exploit testing; live OpenRouter calls; production database, deployment and bucket checks; external advisory lookups; dependency scanners; qualified runtime CSO reproduction or repair validation. Multipart file-cap reproduction and fake streamed-response rejection were exercised locally as recorded above. No repair bundle or release clearance is delivered. Any follow-up CSO current-source recheck must supply fresh evidence for each original boundary.
+
+
+## Remaining limits (2026-10-11)
+
+- Scanner evidence is unavailable for environmental reasons that code cannot fix: the CSO run finished partial, Semgrep has no qualified Linux amd64 image, and the host lacks delegated cgroup controllers. Rerun the scan when those are supplied. The manual review above stands in the meantime and is labelled partial.
+- Not exercised: concurrent upload memory attack beyond the admission tests, live hostile-provider responses, decoder exploits, and external advisory lookups.
