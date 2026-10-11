@@ -2,6 +2,7 @@
 
 import threading
 import time
+from collections.abc import Callable
 
 from app.gateway.types import (
     CallCapReachedError,
@@ -20,28 +21,46 @@ _in_flight: dict[int, int] = {}
 
 def read_document(image: bytes, *, engine: Engine, ledger: CallLedger, cap: int) -> OcrResult:
     """Read one image: refuse past the cap, otherwise run the engine and log the call."""
+    return run_call(
+        engine.name,
+        lambda: engine.read(image),
+        ledger=ledger,
+        cap=cap,
+        units=lambda result: len(result.words),
+    )
+
+
+def run_call[T](
+    engine_name: str,
+    work: Callable[[], T],
+    *,
+    ledger: CallLedger,
+    cap: int,
+    units: Callable[[T], int],
+) -> T:
+    """Run one engine call under the cap and log it. Any failure is an `EngineError`."""
     if not _reserve_slot(ledger, cap):
-        ledger.record(CallRecord(engine=engine.name, outcome="refused", duration_ms=0, units=0))
+        ledger.record(CallRecord(engine=engine_name, outcome="refused", duration_ms=0, units=0))
         msg = "the call cap is reached"
         raise CallCapReachedError(msg)
     started = time.perf_counter()
     try:
         try:
-            result = engine.read(image)
+            result = work()
         except Exception as exc:
             ledger.record(
                 CallRecord(
-                    engine=engine.name, outcome="error", duration_ms=_since(started), units=0
+                    engine=engine_name, outcome="error", duration_ms=_since(started), units=0
                 )
             )
             msg = "the engine could not read the image"
             raise EngineError(msg) from exc
         ledger.record(
             CallRecord(
-                engine=engine.name,
+                engine=engine_name,
                 outcome="ok",
                 duration_ms=_since(started),
-                units=len(result.words),
+                units=units(result),
             )
         )
         return result

@@ -11,3 +11,6 @@ class ProcessedDocument:
 
     doc_type: str
     fields: tuple[ExtractedField, ...]
+    # Which engine read it, and why a requested engine was not used (a safe reason code).
+    engine: str | None = None
+    fallback_reason: str | None = None
