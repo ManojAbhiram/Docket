@@ -15,6 +15,21 @@ function rateLimited(error: ApiError): SignInOutcome {
   };
 }
 
+const PASSWORD_REASONS: readonly [string, string][] = [
+  ["password must be at least 8 characters", "The password needs at least 8 characters."],
+  ["password must contain a capital letter", "The password needs a capital letter."],
+  ["password must contain a special character", "The password needs a special character."],
+];
+
+/** The first password rule the server named, or null. The body is the raw response text. */
+function passwordReason(details: unknown): string | null {
+  if (typeof details !== "string") {
+    return null;
+  }
+  const hit = PASSWORD_REASONS.find(([serverText]) => details.includes(serverText));
+  return hit ? hit[1] : null;
+}
+
 /** What to tell the person when creating an account did not work. */
 export function registerOutcome(error: unknown): SignInOutcome {
   if (error instanceof ApiError) {
@@ -27,10 +42,19 @@ export function registerOutcome(error: unknown): SignInOutcome {
       };
     }
     if (error.status === 422) {
+      const reason = passwordReason(error.details);
+      if (reason) {
+        return {
+          notice: {
+            title: "Choose a stronger password.",
+            body: reason,
+          },
+        };
+      }
       return {
         notice: {
           title: "Check the form.",
-          body: "Use 3 or more letters, digits, dots, dashes or underscores for the username, and at least 10 characters for the password.",
+          body: "Use 3 or more letters, digits, dots, dashes or underscores for the username, and at least 8 characters with a capital letter and a special character for the password.",
         },
       };
     }

@@ -336,7 +336,7 @@ async def test_a_state_changing_gated_route_needs_the_csrf_token(
 REGISTER = {
     "username": "  Asha.K  ",
     "display_name": "Asha Kumar",
-    "password": "a-long-phrase-1",
+    "password": "A-long-phrase-1",
     "role": "verifier",
 }
 
@@ -356,7 +356,7 @@ async def test_the_name_is_stored_trimmed_and_lower_case_and_signs_in_later(
 ) -> None:
     await client.post("/api/auth/register", json=REGISTER)
     client.cookies.clear()
-    again = await sign_in(client, "asha.k", "a-long-phrase-1")
+    again = await sign_in(client, "asha.k", "A-long-phrase-1")
     assert again.status_code == 200
 
 
@@ -383,4 +383,4 @@ async def test_the_stored_password_is_an_argon2_hash(
     )
     stored = row.scalar_one()
     assert stored.startswith("$argon2id$")
-    assert "a-long-phrase-1" not in stored
+    assert "A-long-phrase-1" not in stored

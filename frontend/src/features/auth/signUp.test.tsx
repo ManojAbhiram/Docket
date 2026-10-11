@@ -21,7 +21,7 @@ function renderSignUp() {
 async function fill(user: ReturnType<typeof userEvent.setup>, role: "Staff" | "Verifier") {
   await user.type(await screen.findByLabelText("Your name"), "Asha Kumar");
   await user.type(screen.getByLabelText("Username"), "asha.k");
-  await user.type(screen.getByLabelText("Password"), "a-long-phrase-1");
+  await user.type(screen.getByLabelText("Password"), "A-long-phrase-1");
   await user.click(screen.getByRole("radio", { name: new RegExp(role) }));
   await user.click(screen.getByRole("button", { name: "Create account" }));
 }
@@ -53,6 +53,33 @@ describe("signing up", () => {
     expect(await screen.findByText("That username is taken.")).toBeInTheDocument();
   });
 
+  it.each([
+    ["password must be at least 8 characters", "The password needs at least 8 characters."],
+    ["password must contain a capital letter", "The password needs a capital letter."],
+    ["password must contain a special character", "The password needs a special character."],
+  ])("names the password rule on a 422: %s", async (message, shown) => {
+    fakeSession();
+    server.use(
+      http.post("*/api/auth/register", () =>
+        HttpResponse.json(
+          {
+            error: {
+              code: "validation_error",
+              message: "request failed validation",
+              details: {
+                errors: [{ loc: ["body"], msg: `Value error, ${message}`, type: "value_error" }],
+              },
+            },
+          },
+          { status: 422 },
+        ),
+      ),
+    );
+    renderSignUp();
+    await fill(userEvent.setup(), "Staff");
+    expect(await screen.findByText(shown)).toBeInTheDocument();
+  });
+
   it("shows the too many attempts notice on a 429 and disables the button", async () => {
     fakeSession();
     server.use(
@@ -82,7 +109,7 @@ describe("signing up", () => {
     const user = userEvent.setup();
     await user.type(await screen.findByLabelText("Your name"), "Asha Kumar");
     await user.type(screen.getByLabelText("Username"), "asha.k");
-    await user.type(screen.getByLabelText("Password"), "a-long-phrase-1");
+    await user.type(screen.getByLabelText("Password"), "A-long-phrase-1");
     await user.click(screen.getByRole("button", { name: "Create account" }));
     expect(calls).toHaveLength(0);
     expect(screen.getByRole("button", { name: "Create account" })).toBeInTheDocument();

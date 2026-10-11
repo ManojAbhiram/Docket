@@ -92,7 +92,7 @@ paths:
         content:
           application/json:
             schema: { $ref: '#/components/schemas/RegisterRequest' }
-            example: { username: asha.k, display_name: Asha Kumar, password: "a-long-phrase-1", role: verifier }
+            example: { username: asha.k, display_name: Asha Kumar, password: "A-long-phrase-1", role: verifier }
       responses:
         '200':
           description: Account created and signed in; the session cookie is set
@@ -751,9 +751,9 @@ components:
       properties:
         username: { type: string, minLength: 3, maxLength: 64 }
         display_name: { type: string, minLength: 1, maxLength: 120 }
-        password: { type: string, minLength: 10, maxLength: 256, writeOnly: true }
+        password: { type: string, minLength: 8, maxLength: 256, writeOnly: true, description: "At least 8 characters, one capital letter and one special character (not a letter, digit or space). Not the same as the username." }
         role: { type: string, enum: [staff, verifier] }
-      example: { username: asha.k, display_name: Asha Kumar, password: "a-long-phrase-1", role: verifier }
+      example: { username: asha.k, display_name: Asha Kumar, password: "A-long-phrase-1", role: verifier }
     User:
       type: object
       required: [id, display_name, role]
