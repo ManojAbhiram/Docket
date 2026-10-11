@@ -1,8 +1,8 @@
 """Sign in, sign up, sign out and who am I (api/openapi.yaml: /auth/login, /auth/register,
 /auth/logout, /auth/me)."""
 
-import asyncio
 from datetime import timedelta
+from functools import partial
 from typing import Annotated, Any
 
 from fastapi import APIRouter, Depends, Request, Response
@@ -16,6 +16,7 @@ from app.api.auth.deps import (
     verify_csrf,
 )
 from app.api.auth.schemas import LoginRequest, RegisterRequest, UserOut
+from app.core.compute import compute_slot
 from app.core.config import Settings
 from app.core.errors import (
     ConflictError,
@@ -69,8 +70,8 @@ async def login(
     user = await store.find_user(body.username)
     usable = user is not None and user.is_active
     stored = user.password_hash if user is not None and usable else state.dummy_hash
-    async with state.hash_slots:
-        matched = await asyncio.to_thread(passwords.verify, stored, body.password)
+    async with compute_slot(state.hash_slots) as lease:
+        matched = await lease.run(partial(passwords.verify, stored, body.password))
     if user is None or not usable or not matched:
         limiter.record_failure(body.username, source)
         raise UnauthorizedError("username or password is wrong")
@@ -105,8 +106,8 @@ async def register(
         raise TooManyAttemptsError(
             "too many sign ups from here, try again later", headers={"Retry-After": str(wait)}
         )
-    async with state.hash_slots:
-        stored = await asyncio.to_thread(passwords.hash, body.password)
+    async with compute_slot(state.hash_slots) as lease:
+        stored = await lease.run(partial(passwords.hash, body.password))
     if not await store.create_user(body.username, body.display_name, body.role, stored):
         raise ConflictError("that username is taken")
     user = await store.find_user(body.username)

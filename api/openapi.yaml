@@ -350,6 +350,8 @@ paths:
       description: >-
         Staff role only. JPEG, PNG or PDF up to 8 MiB, checked by declared type and by the first bytes of the file.
         The file is stored and read in the background. Identical bytes already stored for this application return 200 with the existing document.
+        Upload buffering and normalization share memory admission with password hashing and local OCR.
+        Capacity or processing timeout returns 503; body reading is limited to 30 seconds.
       tags: [documents]
       x-story-ids: [US-00-002]
       parameters:
@@ -402,6 +404,7 @@ paths:
         '415': { $ref: '#/components/responses/UnsupportedMediaType' }
         '422': { $ref: '#/components/responses/ValidationFailed' }
         '500': { $ref: '#/components/responses/InternalError' }
+        '503': { $ref: '#/components/responses/ServiceUnavailable' }
 
   /applications/{id}/decisions:
     parameters:

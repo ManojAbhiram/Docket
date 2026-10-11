@@ -10,6 +10,7 @@ from collections.abc import Iterator
 
 import pytest
 
+from app.core.config import Settings
 from app.gateway import EngineError
 from app.gateway.process import EngineTimeoutError, ProcessEngine
 from tests.process_fakes import make_engine
@@ -113,3 +114,31 @@ def test_closing_ends_the_child() -> None:
     with pytest.raises(ProcessLookupError):
         os.kill(child, 0)
     assert engine.child_pid is None
+
+
+def test_default_recycling_releases_the_child_after_each_page() -> None:
+    # NOTASK-17: retained native OCR allocations must not accumulate across pages.
+    settings = Settings(
+        _env_file=None, database_url="postgresql+asyncpg://postgres:postgres@localhost/test"
+    )
+    engine = ProcessEngine(
+        make_engine, name="fake", read_timeout=3.0, recycle_after=settings.engine_recycle_after
+    )
+    try:
+        engine.read(b"page")
+
+        assert engine.child_pid is None
+    finally:
+        engine.close()
+
+
+def test_a_failed_page_also_releases_the_child_at_the_recycle_limit() -> None:
+    # NOTASK-17: a failed read must release OCR memory before another compute operation.
+    engine = ProcessEngine(make_engine, name="fake", read_timeout=3.0, recycle_after=1)
+    try:
+        with pytest.raises(EngineError):
+            engine.read(b"boom")
+
+        assert engine.child_pid is None
+    finally:
+        engine.close()

@@ -8,6 +8,7 @@ JPEG (ADR-0010, ADR-0007). Nothing here reads the document: it is queued with st
 
 import asyncio
 from dataclasses import asdict
+from functools import partial
 from typing import Annotated
 from uuid import UUID
 
@@ -20,8 +21,9 @@ from app.api.auth.deps import current_user, get_settings_from_app, require_role,
 from app.api.documents.deps import get_rasteriser, get_upload_store
 from app.api.documents.schemas import DocumentListOut, DocumentOut
 from app.api.uploads import InvalidModeError, VisionUnavailableError, read_one_file
+from app.core.compute import compute_slot
 from app.core.config import Settings
-from app.core.errors import ErrorEnvelope, NotFoundError
+from app.core.errors import ErrorEnvelope, NotFoundError, ServiceUnavailableError
 from app.db.repositories.application_detail import SqlReviewStore
 from app.db.repositories.uploads import SqlUploadStore
 from app.domain.auth import SessionUser
@@ -42,7 +44,7 @@ router = APIRouter(tags=["documents"])
     "/applications/{application_id}/documents",
     status_code=202,
     response_model=DocumentOut,
-    responses={code: {"model": ErrorEnvelope} for code in (401, 403, 404, 409, 413, 415, 422)},
+    responses={code: {"model": ErrorEnvelope} for code in (401, 403, 404, 409, 413, 415, 422, 503)},
 )
 async def upload_document(
     application_id: UUID,
@@ -57,25 +59,41 @@ async def upload_document(
     """Store one page image against the application, or return the one already stored."""
     if not await store.application_exists(application_id):
         raise NotFoundError("no such application")
-    upload = await read_one_file(request, cap=settings.upload_max_bytes, max_fields=2)
-    mode = upload.fields.get("mode", "free")
-    if mode not in {"free", "vision"}:
-        msg = "mode must be free or vision"
-        raise InvalidModeError(msg)
-    if mode == "vision" and not settings.vision_configured:
-        msg = "Vision is not set up on this server"
-        raise VisionUnavailableError(msg)
-    declared = check_declared_type(upload.content_type.split(";")[0].strip().lower(), upload.data)
-    stored = await asyncio.to_thread(_page_image, upload.data, declared, rasteriser)
-    record, created = await store.add_document(
-        application_id,
-        user.id,
-        source_content_type=declared,
-        sha256=sha256_hex(upload.data),
-        size_bytes=len(upload.data),
-        stored=stored,
-        mode=mode,
-    )
+    # Hold admission before reading bytes, including while a cancelled native decoder finishes.
+    try:
+        async with asyncio.timeout(settings.read_timeout_seconds):
+            async with compute_slot(request.app.state.hash_slots) as lease:
+                async with asyncio.timeout(30):
+                    upload = await read_one_file(
+                        request, cap=settings.upload_max_bytes, max_fields=2
+                    )
+                mode = upload.fields.get("mode", "free")
+                if mode not in {"free", "vision"}:
+                    msg = "mode must be free or vision"
+                    raise InvalidModeError(msg)
+                if mode == "vision" and not settings.vision_configured:
+                    msg = "Vision is not set up on this server"
+                    raise VisionUnavailableError(msg)
+                declared = check_declared_type(
+                    upload.content_type.split(";")[0].strip().lower(), upload.data
+                )
+                stored = await lease.run(partial(_page_image, upload.data, declared, rasteriser))
+                sha256 = sha256_hex(upload.data)
+                size_bytes = len(upload.data)
+                del upload
+                record, created = await store.add_document(
+                    application_id,
+                    user.id,
+                    source_content_type=declared,
+                    sha256=sha256,
+                    size_bytes=size_bytes,
+                    stored=stored,
+                    mode=mode,
+                )
+                if created:
+                    await store.recompute_status(application_id)
+    except TimeoutError as exc:
+        raise ServiceUnavailableError("upload capacity or processing timed out") from exc
     log.info(
         "document.uploaded",
         document_id=str(record.id),
@@ -84,9 +102,7 @@ async def upload_document(
         mode=mode,
         created=created,
     )
-    if created:
-        await store.recompute_status(application_id)
-    else:
+    if not created:
         response.status_code = 200
     return DocumentOut.model_validate(asdict(record))
 

@@ -89,6 +89,7 @@ def _start_document_worker(app: FastAPI, settings: Settings) -> RunningWorker | 
         SqlDocumentStore(factory),
         build_reader(settings, ledger),
         vision_reader=build_vision_reader(settings, vision_ledger),
+        compute_slots=app.state.hash_slots,
         confidence_cutoff=settings.review_confidence_cutoff,
         idle_seconds=settings.worker_idle_seconds,
         sweep_interval_seconds=settings.sweep_interval_seconds,

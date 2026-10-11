@@ -47,7 +47,8 @@ class Settings(BaseSettings):
     worker_idle_seconds: float = Field(default=2.0, gt=0)
     sweep_interval_seconds: float = Field(default=60.0, gt=0)
     read_timeout_seconds: float = Field(default=120.0, gt=0)
-    engine_recycle_after: int = Field(default=500, ge=1)
+    # Native OCR allocations grow across pages; release them before the next read.
+    engine_recycle_after: int = Field(default=1, ge=1)
     review_confidence_cutoff: float = Field(default=0.9804, ge=0, le=1)
     name_match_threshold: float = Field(default=0.85, ge=0, le=1)
     import_max_bytes: int = Field(default=5_000_000, ge=1_000)
@@ -62,7 +63,7 @@ class Settings(BaseSettings):
     login_source_max_failures: int = Field(default=20, ge=1)
     login_window_minutes: int = Field(default=15, ge=1)
     login_lock_minutes: int = Field(default=15, ge=1)
-    login_hash_concurrency: int = Field(default=2, ge=1)
+    login_hash_concurrency: int = Field(default=1, ge=1)
     register_max_per_source: int = Field(default=10, ge=0)
     register_window_minutes: int = Field(default=60, ge=1)
     argon2_memory_kib: int = Field(default=65536, ge=8)
