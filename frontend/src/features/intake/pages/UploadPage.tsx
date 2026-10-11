@@ -2,6 +2,7 @@ import { useNavigate, useParams } from "@tanstack/react-router";
 import { useState } from "react";
 
 import type { NoticeSpec } from "@/components/Notice";
+import { FALLBACK_WORDS } from "@/features/applications/readWords";
 import type { UploadedDocument } from "@/features/applications/types";
 import { UploadView } from "@/features/intake/components/UploadView";
 import {
@@ -32,13 +33,6 @@ const FAILURE_WORDS: Record<string, string> = {
 const ENGINE_WORDS: Record<string, string> = {
   rapidocr: "Read on this machine",
   openrouter: "Read by OpenRouter Vision",
-};
-
-const FALLBACK_WORDS: Record<string, string> = {
-  vision_cap_reached: "Vision's daily limit was reached, so this page was read on this machine.",
-  vision_timeout: "Vision took too long, so this page was read on this machine.",
-  vision_error: "Vision could not read the page, so it was read on this machine.",
-  vision_unavailable: "Vision is not set up, so this page was read on this machine.",
 };
 
 function shown(document: DocumentBody, position: number): UploadedDocument {

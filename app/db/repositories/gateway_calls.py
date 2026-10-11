@@ -20,8 +20,8 @@ _COUNT = text(
 )
 _INSERT = text(
     "INSERT INTO gateway_calls (engine, engine_version, preprocess, duration_ms, outcome, units, "
-    "cost) VALUES (:engine, :engine_version, :preprocess, :duration_ms, "
-    "CAST(:outcome AS call_outcome), :units, :cost)"
+    "cost, error_class) VALUES (:engine, :engine_version, :preprocess, :duration_ms, "
+    "CAST(:outcome AS call_outcome), :units, :cost, :error_class)"
 )
 
 
@@ -83,5 +83,6 @@ class SqlCallLedger:
                     "outcome": record.outcome,
                     "units": record.units,
                     "cost": record.cost,
+                    "error_class": record.error_class,
                 },
             )

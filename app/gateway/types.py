@@ -34,6 +34,8 @@ class CallRecord:
     duration_ms: int
     units: int
     cost: Decimal = Decimal(0)
+    # The class name of what failed, never its message: a message can echo a value from the page.
+    error_class: str | None = None
 
 
 class Engine(Protocol):

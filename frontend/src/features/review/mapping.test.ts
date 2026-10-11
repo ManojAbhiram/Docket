@@ -132,6 +132,26 @@ describe("provenanceWords", () => {
     ]);
   });
 
+  it.each([
+    [
+      "vision_rate_limited",
+      "Vision is busy right now (free-tier limit), so this page was read on this machine.",
+    ],
+    [
+      "vision_upstream_error",
+      "Vision's provider had a problem, so this page was read on this machine.",
+    ],
+    [
+      "vision_bad_answer",
+      "Vision gave an answer that could not be used, so this page was read on this machine.",
+    ],
+  ])("explains %s in words", (reason, words) => {
+    expect(provenanceWords({ ...read, read_engine: "rapidocr", fallback_reason: reason })).toEqual([
+      "Read on this machine.",
+      words,
+    ]);
+  });
+
   it("says nothing before a document is read", () => {
     expect(provenanceWords({ ...read, status: "uploaded", read_engine: null })).toEqual([]);
   });

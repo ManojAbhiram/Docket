@@ -6,14 +6,21 @@ transport: no test reaches the network. The model's own words never leave the re
 
 import base64
 import json
-from collections.abc import Callable
+from collections.abc import Callable, Iterator
 from decimal import Decimal
 
 import httpx
 import pytest
 
 from app.gateway import CallCapReachedError, CallRecord, EngineError
-from app.gateway.vision import ENGINE_NAME, VisionReader
+from app.gateway.vision import (
+    ENGINE_NAME,
+    VisionBadAnswerError,
+    VisionRateLimitedError,
+    VisionReader,
+    VisionTimeoutError,
+    VisionUpstreamError,
+)
 
 IMAGE = b"\x89PNG synthetic page"
 MODEL = "google/gemma-4-31b-it:free"
@@ -53,6 +60,7 @@ def reader_with(
     handler: Callable[[httpx.Request], httpx.Response],
     ledger: MemoryLedger | None = None,
     cap: int = 5,
+    clock: Callable[[], float] | None = None,
 ) -> tuple[VisionReader, MemoryLedger]:
     ledger = ledger or MemoryLedger()
     reader = VisionReader(
@@ -62,6 +70,7 @@ def reader_with(
         cap=cap,
         timeout_seconds=5.0,
         transport=httpx.MockTransport(handler),
+        **({} if clock is None else {"clock": clock}),
     )
     return reader, ledger
 
@@ -194,3 +203,94 @@ def test_past_the_cap_no_request_is_made() -> None:
 
     assert calls == []
     assert [r.outcome for r in ledger.records] == ["refused"]
+
+
+# Regression: ISSUE-001 [NOTASK-16], found by /qa on 2026-10-11. Seven of nine live free-model
+# calls failed and every one was reported as a generic vision_error, so a rate limit, a provider
+# fault and an unusable answer could not be told apart by a user, a log or the call ledger.
+# Report: .gstack/qa-reports/run-20261011T100920Z/
+def http_status(status: int) -> Callable[[httpx.Request], httpx.Response]:
+    return lambda _request: httpx.Response(status, json={"error": {"message": "x"}})
+
+
+def error_body(code: int) -> Callable[[httpx.Request], httpx.Response]:
+    return lambda _request: httpx.Response(200, json={"error": {"code": code, "message": "x"}})
+
+
+@pytest.mark.parametrize(
+    ("handler", "cause"),
+    [
+        (http_status(429), VisionRateLimitedError),
+        (http_status(500), VisionUpstreamError),
+        (error_body(429), VisionRateLimitedError),
+        (error_body(502), VisionUpstreamError),
+        (lambda _r: httpx.Response(200, json={"id": "gen-1"}), VisionBadAnswerError),
+        (lambda _r: httpx.Response(200, json={"choices": []}), VisionBadAnswerError),
+        (lambda _r: reply("not json at all"), VisionBadAnswerError),
+        (lambda _r: reply({"document_type": "passport", "fields": {}}), VisionBadAnswerError),
+    ],
+    ids=["http-429", "http-500", "body-429", "body-502", "no-choices", "empty", "not-json", "type"],
+)
+def test_each_failure_names_its_cause_in_the_call_log(
+    handler: Callable[[httpx.Request], httpx.Response], cause: type[Exception]
+) -> None:
+    reader, ledger = reader_with(handler)
+
+    with pytest.raises(EngineError) as raised:
+        reader.read(IMAGE, confidence_cutoff=0.9)
+
+    assert isinstance(raised.value.__cause__, cause)
+    assert ledger.records[0].error_class == cause.__name__
+
+
+def test_a_connection_failure_is_an_upstream_error() -> None:
+    def handler(request: httpx.Request) -> httpx.Response:
+        raise httpx.ConnectError("down", request=request)
+
+    reader, ledger = reader_with(handler)
+
+    with pytest.raises(EngineError) as raised:
+        reader.read(IMAGE, confidence_cutoff=0.9)
+
+    assert isinstance(raised.value.__cause__, VisionUpstreamError)
+    assert ledger.records[0].error_class == "VisionUpstreamError"
+
+
+class Trickle(httpx.SyncByteStream):
+    """A body that arrives in pieces, as a provider's keep-alive bytes do before the answer."""
+
+    def __init__(self, answer: object) -> None:
+        self._pieces = [b" ", b" ", json.dumps(answer).encode()]
+
+    def __iter__(self) -> Iterator[bytes]:
+        yield from self._pieces
+
+
+def trickling(answer: object) -> Callable[[httpx.Request], httpx.Response]:
+    body = {"choices": [{"message": {"content": json.dumps(answer)}}]}
+    return lambda _request: httpx.Response(200, stream=Trickle(body))
+
+
+def ticking(*seconds: float) -> Callable[[], float]:
+    values = iter(seconds)
+    return lambda: next(values)
+
+
+# Regression: ISSUE-002 [NOTASK-16], found by /qa on 2026-10-11. The timeout was httpx's per read,
+# and a provider that trickles bytes resets it, so a call ran 161 s or more against a 90 s setting.
+# The sweeper then failed the document as interrupted and the serial worker stalled the queue.
+# Report: .gstack/qa-reports/run-20261011T100920Z/
+def test_a_provider_that_trickles_bytes_past_the_deadline_is_a_timeout() -> None:
+    reader, ledger = reader_with(trickling(MARKSHEET), clock=ticking(0, 40, 80, 120))
+
+    with pytest.raises(EngineError) as raised:
+        reader.read(IMAGE, confidence_cutoff=0.9)
+
+    assert isinstance(raised.value.__cause__, VisionTimeoutError)
+    assert [r.outcome for r in ledger.records] == ["error"]
+
+
+def test_a_trickling_answer_that_finishes_inside_the_deadline_is_read() -> None:
+    reader, _ = reader_with(trickling(MARKSHEET), clock=ticking(0, 1, 2, 3, 4))
+
+    assert reader.read(IMAGE, confidence_cutoff=0.9).doc_type == "10th_marksheet"

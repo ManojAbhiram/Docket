@@ -1,3 +1,4 @@
+import { FALLBACK_WORDS } from "@/features/applications/readWords";
 import type { Box, FieldComparison, FieldKind } from "@/features/applications/types";
 
 import type { ReviewDocument, ReviewField } from "./schemas";
@@ -99,13 +100,6 @@ export function failureSentence(reason: string | null): string {
   return (reason === null ? undefined : FAILURES[reason]) ?? "Reading failed.";
 }
 
-const FALLBACKS: Record<string, string> = {
-  vision_cap_reached: "Vision's daily limit was reached, so this page was read on this machine.",
-  vision_timeout: "Vision took too long, so this page was read on this machine.",
-  vision_error: "Vision could not read the page, so it was read on this machine.",
-  vision_unavailable: "Vision is not set up, so this page was read on this machine.",
-};
-
 /** What read a document and, if Vision was asked for and not used, why. Empty until it is read. */
 export function provenanceWords(
   doc: Pick<ReviewDocument, "status" | "read_engine" | "fallback_reason">,
@@ -117,6 +111,6 @@ export function provenanceWords(
     doc.read_engine === "openrouter"
       ? "Read by OpenRouter Vision. A person must check every field."
       : "Read on this machine.";
-  const why = doc.fallback_reason === null ? undefined : FALLBACKS[doc.fallback_reason];
+  const why = doc.fallback_reason === null ? undefined : FALLBACK_WORDS[doc.fallback_reason];
   return why === undefined ? [by] : [by, why];
 }

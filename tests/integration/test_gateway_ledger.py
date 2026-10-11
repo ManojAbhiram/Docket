@@ -143,3 +143,28 @@ async def test_an_unscoped_ledger_still_counts_every_call_ever_made(
     await insert_call(connection, "rapidocr", age_hours=1)
 
     assert await asyncio.to_thread(ledger_for(factory).calls_made) == 2
+
+
+# Regression: ISSUE-001 [NOTASK-16], found by /qa on 2026-10-11. `error_class` existed in the schema
+# but was never written, so a failed call said nothing about why.
+async def test_a_failed_call_keeps_the_class_of_its_failure_and_an_ok_call_has_none(
+    factory: async_sessionmaker[AsyncSession], connection: AsyncConnection
+) -> None:
+    ledger = ledger_for(factory)
+
+    await asyncio.to_thread(
+        ledger.record,
+        CallRecord(
+            engine="openrouter",
+            outcome="error",
+            duration_ms=5,
+            units=0,
+            error_class="VisionRateLimitedError",
+        ),
+    )
+    await asyncio.to_thread(
+        ledger.record, CallRecord(engine="openrouter", outcome="ok", duration_ms=5, units=3)
+    )
+
+    result = await connection.execute(text("SELECT error_class FROM gateway_calls ORDER BY id"))
+    assert [row[0] for row in result.all()] == ["VisionRateLimitedError", None]
