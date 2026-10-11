@@ -10,11 +10,13 @@ import asyncio
 import contextlib
 from collections.abc import Awaitable, Callable
 from dataclasses import dataclass, replace
+from functools import partial
 from typing import Literal, Protocol
 from uuid import UUID
 
 import structlog
 
+from app.core.compute import compute_slot
 from app.core.errors import DomainError
 from app.domain.processing import ProcessedDocument
 from app.gateway import CallCapReachedError, EngineError
@@ -25,6 +27,7 @@ log = structlog.get_logger()
 
 Outcome = Literal["idle", "read", "failed", "stale"]
 STALE_AFTER_SECONDS = 300
+VISION_GRACE_SECONDS = 2.0
 
 
 @dataclass(frozen=True)
@@ -70,6 +73,8 @@ async def process_next(
     confidence_cutoff: float,
     settle: Callable[[UUID], Awaitable[None]] | None = None,
     vision_reader: Reader | None = None,
+    vision_grace_seconds: float = VISION_GRACE_SECONDS,
+    compute_slots: asyncio.Semaphore | None = None,
 ) -> Outcome:
     """Handle the oldest waiting document, if there is one.
 
@@ -81,7 +86,9 @@ async def process_next(
     if document is None:
         return "idle"
     try:
-        result = await _read(document, reader, vision_reader, confidence_cutoff)
+        result = await _read(
+            document, reader, vision_reader, confidence_cutoff, compute_slots, vision_grace_seconds
+        )
     except CallCapReachedError:
         return await _failed(store, document.id, "cap_reached", settle)
     except ReadTimeoutError:
@@ -102,28 +109,54 @@ async def _read(
     reader: Reader,
     vision_reader: Reader | None,
     confidence_cutoff: float,
+    compute_slots: asyncio.Semaphore | None,
+    vision_grace_seconds: float,
 ) -> ProcessedDocument:
     """Read with the engine asked for. Vision is a first try: any failure falls back to the
     local reader and keeps a safe reason, so an upload is never lost to the provider."""
     if document.mode != "vision":
-        return await asyncio.to_thread(
-            reader.read, document.image, confidence_cutoff=confidence_cutoff
-        )
+        return await _local_read(reader, document.image, confidence_cutoff, compute_slots)
     reason = "vision_unavailable"
     if vision_reader is not None:
         try:
-            return await asyncio.to_thread(
-                vision_reader.read, document.image, confidence_cutoff=confidence_cutoff
+            return await _vision_read(
+                vision_reader, document.image, confidence_cutoff, vision_grace_seconds
             )
         except CallCapReachedError:
             reason = "vision_cap_reached"
         except EngineError as exc:
             reason = _vision_reason(exc)
+        except TimeoutError:
+            reason = "vision_timeout"
         log.warning("document.vision_fallback", document_id=str(document.id), reason_code=reason)
-    local = await asyncio.to_thread(
-        reader.read, document.image, confidence_cutoff=confidence_cutoff
-    )
+    local = await _local_read(reader, document.image, confidence_cutoff, compute_slots)
     return replace(local, fallback_reason=reason)
+
+
+async def _vision_read(
+    reader: Reader, image: bytes, cutoff: float, grace_seconds: float
+) -> ProcessedDocument:
+    """Wait for Vision no longer than its own deadline plus a grace.
+
+    The reader checks its deadline as bytes arrive, so a read blocked mid-piece could outlive it.
+    The thread cannot be killed, but it is bounded by the client's own timeouts, and the page no
+    longer waits for it.
+    """
+    work = asyncio.to_thread(reader.read, image, confidence_cutoff=cutoff)
+    deadline: float | None = getattr(reader, "deadline_seconds", None)
+    if deadline is None:
+        return await work
+    return await asyncio.wait_for(work, timeout=deadline + grace_seconds)
+
+
+async def _local_read(
+    reader: Reader, image: bytes, cutoff: float, slots: asyncio.Semaphore | None
+) -> ProcessedDocument:
+    work = partial(reader.read, image, confidence_cutoff=cutoff)
+    if slots is None:
+        return await asyncio.to_thread(work)
+    async with compute_slot(slots) as lease:
+        return await lease.run(work)
 
 
 _VISION_REASONS = {

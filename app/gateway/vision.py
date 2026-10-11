@@ -24,6 +24,9 @@ from app.gateway.types import CallLedger
 ENGINE_NAME = "openrouter"
 ENDPOINT = "https://openrouter.ai/api/v1/chat/completions"
 MAX_TOKENS = 600
+# A 600-token answer needs only a few KiB. Leave room for provider metadata, then bound the
+# entire envelope independently of the model's requested token limit.
+MAX_RESPONSE_BYTES = 64 * 1024
 _TOO_MANY_REQUESTS = 429
 
 _PROMPT = (
@@ -100,6 +103,11 @@ class VisionReader:
             units=lambda document: len(document.fields),
         )
 
+    @property
+    def deadline_seconds(self) -> float:
+        """The most seconds one call may take in total, read by the worker for its own cutoff."""
+        return self._deadline_seconds
+
     def close(self) -> None:
         self._client.close()
 
@@ -129,7 +137,7 @@ class VisionReader:
         with self._client.stream(
             "POST",
             ENDPOINT,
-            headers={"Authorization": f"Bearer {self._key}"},
+            headers={"Authorization": f"Bearer {self._key}", "Accept-Encoding": "identity"},
             json={
                 "model": self._model,
                 "max_tokens": MAX_TOKENS,
@@ -145,10 +153,18 @@ class VisionReader:
             },
         ) as response:
             response.raise_for_status()
+            # Refuse servers ignoring identity before HTTPX can inflate compressed chunks.
+            # This small structured answer needs no compression; refusal uses local OCR fallback.
+            if response.headers.get("content-encoding", "identity").strip().lower() != "identity":
+                raise VisionBadAnswerError
             body = bytearray()
+            # Preserve transport yields: coalescing tiny keep-alive pieces can hide the deadline.
+            # No admitted piece may exceed the remaining response budget.
             for piece in response.iter_bytes():
                 if self._clock() > deadline:
                     raise VisionTimeoutError
+                if len(body) + len(piece) > MAX_RESPONSE_BYTES:
+                    raise VisionBadAnswerError
                 body += piece
             return httpx.Response(response.status_code, content=bytes(body))
 

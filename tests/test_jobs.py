@@ -89,6 +89,37 @@ class FakeReader:
         return ProcessedDocument(doc_type=doc_type, fields=fields)
 
 
+async def test_local_reader_waits_for_shared_memory_capacity() -> None:
+    store = MemoryStore(queue=[ClaimedDocument(uuid4(), b"page")])
+    reader = FakeReader(ID_CARD)
+    slots = asyncio.Semaphore(1)
+    async with slots:
+        pending = asyncio.create_task(
+            process_next(store, reader, confidence_cutoff=CUTOFF, compute_slots=slots)
+        )
+        await asyncio.sleep(0)
+        assert reader.images == []
+    assert await asyncio.wait_for(pending, timeout=3) == "read"
+    assert reader.images == [b"page"]
+
+
+async def test_vision_network_read_does_not_hold_compute_capacity() -> None:
+    store = MemoryStore(queue=[ClaimedDocument(uuid4(), b"page", mode="vision")])
+    local = FakeReader(ID_CARD)
+    vision = FakeReader(ID_CARD)
+    slots = asyncio.Semaphore(1)
+    async with slots:
+        outcome = await asyncio.wait_for(
+            process_next(
+                store, local, confidence_cutoff=CUTOFF, vision_reader=vision, compute_slots=slots
+            ),
+            timeout=3,
+        )
+    assert outcome == "read"
+    assert local.images == []
+    assert vision.images == [b"page"]
+
+
 def one_document(store: MemoryStore) -> UUID:
     document_id = uuid4()
     store.queue.append(ClaimedDocument(id=document_id, image=b"page"))

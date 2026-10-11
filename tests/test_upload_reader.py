@@ -68,3 +68,21 @@ async def test_a_request_without_a_part_named_file_is_refused() -> None:
 
     with pytest.raises(MissingFileError):
         await read_one_file(request_with(body), cap=1_000)
+
+
+# Regression MANUAL-VIS-03 [NOTASK-17]: multipart allowance must not enlarge the file cap.
+async def test_a_file_one_byte_over_cap_is_refused_inside_the_multipart_allowance() -> None:
+    body = multipart(("file", "scan.csv", "text/csv", b"x" * 1_001))
+    assert len(body) < 1_000 + 8_192
+
+    with pytest.raises(UploadTooLargeError):
+        await read_one_file(request_with(body), cap=1_000)
+
+
+async def test_a_file_exactly_at_cap_is_allowed_with_multipart_headers() -> None:
+    data = b"x" * 1_000
+    body = multipart(("file", "scan.csv", "text/csv", data))
+
+    upload = await read_one_file(request_with(body), cap=1_000)
+
+    assert upload.data == data

@@ -85,11 +85,11 @@ class ProcessEngine:
                 msg = "the engine process stopped"
                 raise EngineError(msg) from exc
             self._served += 1
+            if self._served >= self._recycle_after:
+                self._stop_child()
             if kind == "error":
                 msg = f"the engine failed with {payload}"
                 raise EngineError(msg)
-            if self._served >= self._recycle_after:
-                self._stop_child()
             return OcrResult(
                 words=tuple(OcrWord(text=t, confidence=c, box=b) for t, c, b in payload)
             )

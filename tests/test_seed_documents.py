@@ -163,3 +163,50 @@ def test_every_roll_number_starts_with_syn(dataset: Dataset) -> None:
 
     assert printed
     assert all(roll.startswith("SYN") for roll in printed + applied)
+
+
+# Real-data exclusion cannot be proven by comparing with a list of real data (none may be held), so
+# it is shown by provenance: every identifier and page is marked synthetic and the generator has no
+# way to read outside data (AC-US-02-003-4, NOTASK-17 audit).
+@pytest.mark.parametrize("seed", [1, 2, 20261005])
+def test_every_identifier_and_page_is_marked_synthetic(seed: int) -> None:
+    from seed.pages import render_html
+
+    data = build_dataset(seed=seed)
+    apps = {a.application_id: a for a in data.applications}
+
+    assert all(ref.startswith("SYN-APP-") for ref in apps)
+    assert all(d.document_id.startswith("SYN-DOC-") for d in data.documents)
+    assert all(
+        d.printed_id_number.startswith(("SYNID", "SYNTC"))
+        for d in data.documents
+        if d.printed_id_number
+    )
+    pages = [render_html(d, apps[d.application_id]) for d in data.documents]
+    assert all("SYNTHETIC DOCUMENT" in page for page in pages)
+
+
+def _imports_and_calls(source: str) -> tuple[set[str], set[str]]:
+    import ast
+
+    tree = ast.parse(source)
+    imported: set[str] = set()
+    called: set[str] = set()
+    for node in ast.walk(tree):
+        if isinstance(node, ast.Import):
+            imported |= {alias.name.split(".")[0] for alias in node.names}
+        elif isinstance(node, ast.ImportFrom):
+            imported.add((node.module or "").split(".")[0])
+        elif isinstance(node, ast.Call):
+            called.add(getattr(node.func, "attr", getattr(node.func, "id", "")))
+    return imported, called
+
+
+@pytest.mark.parametrize("module", ["seed/dataset.py", "seed/pages.py"])
+def test_the_generator_has_no_way_to_read_outside_data(module: str) -> None:
+    from pathlib import Path
+
+    imported, called = _imports_and_calls(Path(module).read_text(encoding="utf-8"))
+
+    assert not called & {"open", "read_text", "read_bytes", "urlopen", "connect"}
+    assert not imported & {"socket", "urllib", "httpx", "requests", "sqlite3"}

@@ -54,6 +54,7 @@ def start_worker(
     sweep_interval_seconds: float,
     settle: Callable[[UUID], Awaitable[None]] | None = None,
     vision_reader: ClosableReader | None = None,
+    compute_slots: asyncio.Semaphore | None = None,
 ) -> RunningWorker:
     """Create both tasks on the running loop."""
     stop = asyncio.Event()
@@ -64,6 +65,7 @@ def start_worker(
         confidence_cutoff=confidence_cutoff,
         settle=settle,
         vision_reader=vision_reader,
+        compute_slots=compute_slots,
     )
     worker = RunningWorker(reader=reader, stop_signal=stop, vision_reader=vision_reader)
     worker.tasks = [

@@ -34,7 +34,17 @@ class RapidOcrEngine:
         from rapidocr.utils.output import RapidOCROutput
 
         logging.getLogger("RapidOCR").setLevel(logging.WARNING)
-        self._ocr = RapidOCR()
+        # ONNX arenas retain large buffers; serial batches and no upscaling keep a page bounded.
+        self._ocr = RapidOCR(
+            params={
+                "EngineConfig.onnxruntime.intra_op_num_threads": 1,
+                "EngineConfig.onnxruntime.inter_op_num_threads": 1,
+                "EngineConfig.onnxruntime.enable_cpu_mem_arena": False,
+                "Det.limit_type": "max",
+                "Rec.rec_batch_num": 1,
+                "Cls.cls_batch_num": 1,
+            }
+        )
         self._output_type = RapidOCROutput
 
     def read(self, image: bytes) -> OcrResult:

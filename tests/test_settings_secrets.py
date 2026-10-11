@@ -114,3 +114,21 @@ def test_vision_needs_both_a_key_and_a_model() -> None:
 
 def test_the_vision_cap_stays_under_the_free_daily_limit() -> None:
     assert make().openrouter_daily_cap == 40
+
+
+# Regression: ISSUE-001 [NOTASK-17], found by the production smoke test on 2026-10-11. The
+# free-model check rejected an empty OPENROUTER_MODEL, which is how .env.example and the compose
+# file leave Vision off, so the API refused to start with the example settings.
+@pytest.mark.parametrize("blank", ["", "   "])
+def test_blank_vision_settings_mean_vision_is_off_not_a_startup_error(blank: str) -> None:
+    settings = make(openrouter_api_key=blank, openrouter_model=blank)
+
+    assert settings.openrouter_api_key is None
+    assert settings.openrouter_model is None
+    assert settings.vision_configured is False
+
+
+def test_a_model_without_a_key_does_not_switch_vision_on() -> None:
+    settings = make(openrouter_api_key="", openrouter_model="vendor/model:free")
+
+    assert settings.vision_configured is False

@@ -8,6 +8,10 @@ SKIPPED := $(STATE)/.skipped
 # it is a CI job and a manual target, not part of check.
 GATES := format-check lint typecheck test vuln
 POSTGRES_PORT ?= 5432
+MEMORY_OUT ?= .scratch/NOTASK-17/memory.json
+MEMORY_COMMAND ?= -m evals.memory_bench --out $(MEMORY_OUT)
+SEED_API_URL ?= http://localhost:8080
+SEED_STAFF_USERNAME ?= staff.demo
 DATABASE_URL ?= postgresql+asyncpg://postgres:postgres@localhost:$(POSTGRES_PORT)/docket
 # psql takes the plain URL (no SQLAlchemy driver suffix).
 PSQL_URL = $(subst +asyncpg,,$(DATABASE_URL))
@@ -23,6 +27,8 @@ command -v $(UV) >/dev/null || $(call skip,$(1),uv); $(UV) run --quiet $(2) --ve
 endef
 
 .PHONY: help setup dev seed-accounts check check-file fix test test-integration lint typecheck format format-check migrate migrate-verify migrate-down migrate-new vuln eval-extract eval-record eval-gate eval-report doctor db db-reset clean
+.PHONY: test-memory bench-memory bench-memory-repeat bench-memory-runtime
+.PHONY: test-seed-load seed-load
 
 help: ## List targets
 	@grep -E '^[a-zA-Z_-]+:.*?## ' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*?## "}; {printf "  %-18s %s\n", $$1, $$2}'
@@ -80,6 +86,18 @@ vuln: ## pip-audit over the locked runtime dependencies
 eval-extract: ## Real extraction accuracy on the 30 labelled documents (RapidOCR, local, free)
 	$(UV) run python -m evals.extract_bench rapidocr
 
+test-memory: ## Narrow regression checks for OCR recycling and real engine output
+	$(UV) run pytest --no-cov tests/test_process_engine.py tests/test_config.py tests/integration/test_rapidocr_engine.py
+
+bench-memory: ## Sample API and OCR child RSS over all labelled pages (Linux, no database calls)
+	$(UV) run python $(MEMORY_COMMAND)
+
+bench-memory-repeat: ## Repeat the RSS benchmark in three fresh processes
+	@for run in 1 2 3; do $(MAKE) --no-print-directory bench-memory MEMORY_OUT=.scratch/NOTASK-17/memory-repeat-$$run.json || exit $$?; done
+
+bench-memory-runtime: ## Drive an isolated local container with uploads, real OCR and concurrent logins
+	$(UV) run python -m evals.memory_runtime
+
 eval-record: ## Record RapidOCR words for the 30 documents (live, local, run by a person)
 	$(UV) run python -m evals.recordings rapidocr
 
@@ -124,6 +142,12 @@ migrate: ## alembic upgrade head
 
 seed-accounts: ## Create the two demo accounts and print their one-time passwords once
 	DATABASE_URL=$(DATABASE_URL) $(UV) run python -m app.db.seed_accounts
+
+test-seed-load: ## Verify synthetic API loading and idempotent reload against isolated Postgres
+	DATABASE_URL=$(DATABASE_URL) $(UV) run pytest --no-cov tests/integration/api/test_seed_load.py
+
+seed-load: ## Load 20 synthetic applications and 30 documents into the local API; prompt for staff password
+	$(UV) run python -m seed.load --base-url $(SEED_API_URL) --username $(SEED_STAFF_USERNAME)
 
 migrate-down: ## alembic downgrade one
 	DATABASE_URL=$(DATABASE_URL) $(UV) run alembic downgrade -1

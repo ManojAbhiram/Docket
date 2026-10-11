@@ -40,14 +40,15 @@ class Settings(BaseSettings):
     # under the free tier's 50 requests a day, counted over a rolling 24 hours.
     openrouter_api_key: SecretStr | None = Field(default=None, repr=False)
     openrouter_model: str | None = None
-    openrouter_daily_cap: int = Field(default=40, ge=1)
+    openrouter_daily_cap: int = Field(default=40, ge=1, le=40)
     openrouter_timeout_seconds: float = Field(default=60.0, gt=0)
     # The document worker runs inside the API process (ADR-0011). Off unless asked for.
     worker_enabled: bool = False
     worker_idle_seconds: float = Field(default=2.0, gt=0)
     sweep_interval_seconds: float = Field(default=60.0, gt=0)
     read_timeout_seconds: float = Field(default=120.0, gt=0)
-    engine_recycle_after: int = Field(default=500, ge=1)
+    # Native OCR allocations grow across pages; release them before the next read.
+    engine_recycle_after: int = Field(default=1, ge=1)
     review_confidence_cutoff: float = Field(default=0.9804, ge=0, le=1)
     name_match_threshold: float = Field(default=0.85, ge=0, le=1)
     import_max_bytes: int = Field(default=5_000_000, ge=1_000)
@@ -62,7 +63,7 @@ class Settings(BaseSettings):
     login_source_max_failures: int = Field(default=20, ge=1)
     login_window_minutes: int = Field(default=15, ge=1)
     login_lock_minutes: int = Field(default=15, ge=1)
-    login_hash_concurrency: int = Field(default=2, ge=1)
+    login_hash_concurrency: int = Field(default=1, ge=1)
     register_max_per_source: int = Field(default=10, ge=0)
     register_window_minutes: int = Field(default=60, ge=1)
     argon2_memory_kib: int = Field(default=65536, ge=8)
@@ -97,6 +98,25 @@ class Settings(BaseSettings):
         """The whole stack is async; a sync driver here would block the loop."""
         if value.scheme != "postgresql+asyncpg":
             msg = f"DATABASE_URL must use postgresql+asyncpg://, got {value.scheme}://"
+            raise ValueError(msg)
+        return value
+
+    @field_validator("openrouter_api_key", "openrouter_model", mode="before")
+    @classmethod
+    def _blank_means_unset(cls, value: object) -> object:
+        """An empty value, as `.env.example` and the compose file leave it, keeps Vision off."""
+        if isinstance(value, str) and not value.strip():
+            return None
+        return value
+
+    @field_validator("openrouter_model")
+    @classmethod
+    def _free_vision_model(cls, value: str | None) -> str | None:
+        """Refuse model identifiers outside ADR-0015's opt-in free-model policy."""
+        if value is not None and (
+            not value.endswith(":free") or not value.removesuffix(":free").strip()
+        ):
+            msg = "OPENROUTER_MODEL must name a free model ending in :free"
             raise ValueError(msg)
         return value
 
