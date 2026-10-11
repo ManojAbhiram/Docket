@@ -80,7 +80,7 @@ export function SignUpView({ busy = false, blocked = false, notice, onSubmit }: 
             disabled={busy}
           />
           <p id="password-hint" className="text-sm text-muted-foreground">
-            At least 10 characters
+            At least 8 characters, with one capital letter and one special character
           </p>
         </div>
         <div className="space-y-2">

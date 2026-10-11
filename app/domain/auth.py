@@ -23,7 +23,7 @@ from argon2.exceptions import InvalidHashError, VerificationError
 Role = Literal["staff", "verifier"]
 
 USERNAME_PATTERN = re.compile(r"[a-z0-9._-]{3,64}")
-PASSWORD_MIN = 10
+PASSWORD_MIN = 8
 DISPLAY_NAME_MAX = 120
 
 
@@ -40,6 +40,12 @@ def check_password(password: str, username: str) -> str:
     """The password unchanged, or ValueError. The message never repeats the password."""
     if len(password) < PASSWORD_MIN:
         msg = f"password must be at least {PASSWORD_MIN} characters"
+        raise ValueError(msg)
+    if not any(char.isupper() for char in password):
+        msg = "password must contain a capital letter"
+        raise ValueError(msg)
+    if not any(not char.isalnum() and not char.isspace() for char in password):
+        msg = "password must contain a special character"
         raise ValueError(msg)
     if password.lower() == username.strip().lower():
         msg = "password must not be the same as the username"

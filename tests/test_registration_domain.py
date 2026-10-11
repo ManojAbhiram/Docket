@@ -22,10 +22,22 @@ def test_a_bad_username_is_refused(bad: str) -> None:
         check_username(bad)
 
 
-def test_a_password_needs_ten_characters() -> None:
-    assert check_password("ten-chars!", "asha") == "ten-chars!"
-    with pytest.raises(ValueError, match="at least 10"):
-        check_password("nine-char", "asha")
+def test_a_password_needs_eight_characters() -> None:
+    assert check_password("Eight-ch!", "asha") == "Eight-ch!"
+    assert check_password("Eig8ht!x", "asha") == "Eig8ht!x"
+    with pytest.raises(ValueError, match="at least 8"):
+        check_password("Sev-en!", "asha")
+
+
+def test_a_password_needs_a_capital_letter() -> None:
+    with pytest.raises(ValueError, match="capital letter"):
+        check_password("no-capital-1!", "asha")
+
+
+@pytest.mark.parametrize("bad", ["NoSpecial123", "No Special 123"])
+def test_a_password_needs_a_special_character(bad: str) -> None:
+    with pytest.raises(ValueError, match="special character"):
+        check_password(bad, "asha")
 
 
 def test_a_password_may_not_be_the_username_in_any_case() -> None:

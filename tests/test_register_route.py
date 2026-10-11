@@ -11,7 +11,7 @@ from app.domain.auth import RegistrationLimiter
 GOOD = {
     "username": "asha.k",
     "display_name": "Asha Kumar",
-    "password": "a-long-phrase-1",
+    "password": "A-long-phrase-1",
     "role": "staff",
 }
 
@@ -22,6 +22,9 @@ GOOD = {
         {"username": "ab"},
         {"password": "short"},
         {"password": "ASHA.K"},
+        {"password": "Sh0rt!"},
+        {"password": "no-capital-1!"},
+        {"password": "NoSpecial123"},
         {"display_name": "   "},
         {"role": "admin"},
         {"is_active": True},
