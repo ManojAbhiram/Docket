@@ -17,6 +17,7 @@ from fastapi import FastAPI
 from app import __version__
 from app.api.applications.router import router as applications_router
 from app.api.auth.router import router as auth_router
+from app.api.capabilities.router import router as capabilities_router
 from app.api.decisions.router import router as decisions_router
 from app.api.documents.router import router as documents_router
 from app.api.health.router import router as health_router
@@ -143,6 +144,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     app.include_router(auth_router, prefix="/api")
     app.include_router(imports_router, prefix="/api")
     app.include_router(applications_router, prefix="/api")
+    app.include_router(capabilities_router, prefix="/api")
     app.include_router(documents_router, prefix="/api")
     app.include_router(decisions_router, prefix="/api")
     app.include_router(reports_router, prefix="/api")
