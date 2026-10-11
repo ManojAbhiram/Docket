@@ -22,6 +22,7 @@ from app.gateway.types import CallLedger
 ENGINE_NAME = "openrouter"
 ENDPOINT = "https://openrouter.ai/api/v1/chat/completions"
 MAX_TOKENS = 600
+_TOO_MANY_REQUESTS = 429
 
 _PROMPT = (
     "You read one scanned admissions document. Reply with JSON only, no prose, in this shape: "
@@ -39,8 +40,24 @@ DocumentType = Literal[
 Scalar = str | int | float
 
 
-class VisionTimeoutError(Exception):
-    """The provider did not answer in time. Only the class reaches the worker, never a message."""
+class VisionError(Exception):
+    """Why Vision could not answer. Only the class travels onward, never a provider message."""
+
+
+class VisionTimeoutError(VisionError):
+    """The provider did not answer in time."""
+
+
+class VisionRateLimitedError(VisionError):
+    """The provider said the free tier is busy or used up (HTTP 429, or the same in the body)."""
+
+
+class VisionUpstreamError(VisionError):
+    """The provider failed or could not be reached."""
+
+
+class VisionBadAnswerError(VisionError):
+    """The provider answered, but not with a usable document."""
 
 
 class _Answer(BaseModel):
@@ -84,9 +101,13 @@ class VisionReader:
     def _ask(self, image: bytes) -> ProcessedDocument:
         try:
             response = self._post(image)
+            response.raise_for_status()
         except httpx.TimeoutException as exc:
             raise VisionTimeoutError from exc
-        response.raise_for_status()
+        except httpx.HTTPStatusError as exc:
+            raise _for_status(exc.response.status_code) from exc
+        except httpx.TransportError as exc:
+            raise VisionUpstreamError from exc
         answer = _parse(_content(response))
         return ProcessedDocument(
             doc_type=answer.document_type,
@@ -119,12 +140,25 @@ def _data_url(image: bytes) -> str:
     return f"data:{media};base64,{base64.b64encode(image).decode('ascii')}"
 
 
+def _for_status(status: int) -> VisionError:
+    return VisionRateLimitedError() if status == _TOO_MANY_REQUESTS else VisionUpstreamError()
+
+
 def _content(response: httpx.Response) -> str:
-    body = cast("dict[str, list[dict[str, dict[str, object]]]]", response.json())
-    content = body["choices"][0]["message"]["content"]
+    """The model's text. OpenRouter can answer 200 with an error object instead of choices."""
+    try:
+        body = cast("dict[str, object]", response.json())
+        if "error" in body:
+            error = cast("dict[str, object]", body["error"])
+            raise _for_status(int(cast("int", error.get("code", 0))))
+        choices = cast("list[dict[str, dict[str, object]]]", body["choices"])
+        content = choices[0]["message"]["content"]
+    except VisionError:
+        raise
+    except (ValueError, KeyError, IndexError, TypeError) as exc:
+        raise VisionBadAnswerError from exc
     if not isinstance(content, str):
-        msg = "the model answered with something other than text"
-        raise TypeError(msg)
+        raise VisionBadAnswerError
     return content
 
 
@@ -134,8 +168,7 @@ def _parse(text: str) -> _Answer:
     try:
         return _Answer.model_validate(json.loads(fenced.group(1) if fenced else stripped))
     except (ValueError, ValidationError) as exc:
-        msg = "the model's answer was not the expected JSON"
-        raise ValueError(msg) from exc
+        raise VisionBadAnswerError from exc
 
 
 def _fields(answer: _Answer) -> tuple[ExtractedField, ...]:

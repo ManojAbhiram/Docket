@@ -50,7 +50,11 @@ def run_call[T](
         except Exception as exc:
             ledger.record(
                 CallRecord(
-                    engine=engine_name, outcome="error", duration_ms=_since(started), units=0
+                    engine=engine_name,
+                    outcome="error",
+                    duration_ms=_since(started),
+                    units=0,
+                    error_class=type(exc).__name__,
                 )
             )
             msg = "the engine could not read the image"

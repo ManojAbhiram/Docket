@@ -12,7 +12,12 @@ import pytest
 from app.domain.extract import ExtractedField
 from app.domain.processing import ProcessedDocument
 from app.gateway import CallCapReachedError, EngineError
-from app.gateway.vision import VisionTimeoutError
+from app.gateway.vision import (
+    VisionBadAnswerError,
+    VisionRateLimitedError,
+    VisionTimeoutError,
+    VisionUpstreamError,
+)
 from app.jobs.worker import ClaimedDocument, process_next
 
 CUTOFF = 0.95
@@ -145,3 +150,27 @@ async def test_when_the_fallback_also_fails_the_document_fails_with_the_local_re
 
     assert outcome == "failed"
     assert store.failed == {document_id: "engine_error"}
+
+
+# Regression: ISSUE-001 [NOTASK-16], found by /qa on 2026-10-11. The fallback reason must say why.
+@pytest.mark.parametrize(
+    ("cause", "reason"),
+    [
+        (VisionRateLimitedError(), "vision_rate_limited"),
+        (VisionUpstreamError(), "vision_upstream_error"),
+        (VisionBadAnswerError(), "vision_bad_answer"),
+        (VisionTimeoutError(), "vision_timeout"),
+        (ValueError("anything else"), "vision_error"),
+    ],
+)
+async def test_the_fallback_reason_names_why_vision_could_not_answer(
+    cause: Exception, reason: str
+) -> None:
+    failure = EngineError("engine")
+    failure.__cause__ = cause
+    store, local = Store(), Reader(LOCAL_DOC)
+    document_id = queued(store, "vision")
+
+    await process_next(store, local, confidence_cutoff=CUTOFF, vision_reader=Reader(error=failure))
+
+    assert store.completed[document_id].fallback_reason == reason

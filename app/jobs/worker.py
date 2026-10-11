@@ -19,7 +19,7 @@ from app.core.errors import DomainError
 from app.domain.processing import ProcessedDocument
 from app.gateway import CallCapReachedError, EngineError
 from app.gateway.process import EngineTimeoutError
-from app.gateway.vision import VisionTimeoutError
+from app.gateway.vision import VisionError
 
 log = structlog.get_logger()
 
@@ -118,13 +118,28 @@ async def _read(
         except CallCapReachedError:
             reason = "vision_cap_reached"
         except EngineError as exc:
-            timed_out = isinstance(exc.__cause__, VisionTimeoutError)
-            reason = "vision_timeout" if timed_out else "vision_error"
+            reason = _vision_reason(exc)
         log.warning("document.vision_fallback", document_id=str(document.id), reason_code=reason)
     local = await asyncio.to_thread(
         reader.read, document.image, confidence_cutoff=confidence_cutoff
     )
     return replace(local, fallback_reason=reason)
+
+
+_VISION_REASONS = {
+    "VisionTimeoutError": "vision_timeout",
+    "VisionRateLimitedError": "vision_rate_limited",
+    "VisionUpstreamError": "vision_upstream_error",
+    "VisionBadAnswerError": "vision_bad_answer",
+}
+
+
+def _vision_reason(failure: EngineError) -> str:
+    """The safe reason code for why Vision could not answer; unknown causes are `vision_error`."""
+    cause = failure.__cause__
+    if isinstance(cause, VisionError):
+        return _VISION_REASONS.get(type(cause).__name__, "vision_error")
+    return "vision_error"
 
 
 async def sweep_stale_documents(store: DocumentStore) -> int:

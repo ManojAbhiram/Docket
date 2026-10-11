@@ -656,6 +656,23 @@ describe("choosing how pages are read", () => {
       { requested_mode: "vision", read_engine: "rapidocr", fallback_reason: "vision_timeout" },
       "Vision took too long, so this page was read on this machine.",
     ],
+    // Regression: ISSUE-001 [NOTASK-16], found by /qa on 2026-10-11. Every Vision failure read the same.
+    [
+      { requested_mode: "vision", read_engine: "rapidocr", fallback_reason: "vision_rate_limited" },
+      "Vision is busy right now (free-tier limit), so this page was read on this machine.",
+    ],
+    [
+      {
+        requested_mode: "vision",
+        read_engine: "rapidocr",
+        fallback_reason: "vision_upstream_error",
+      },
+      "Vision's provider had a problem, so this page was read on this machine.",
+    ],
+    [
+      { requested_mode: "vision", read_engine: "rapidocr", fallback_reason: "vision_bad_answer" },
+      "Vision gave an answer that could not be used, so this page was read on this machine.",
+    ],
   ])("shows what read a document: %j", async (how, words) => {
     server.use(
       knownApplication(),
