@@ -12,7 +12,12 @@ from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
 from app.gateway import CallRecord
 
-_COUNT = text("SELECT count(*) FROM gateway_calls WHERE outcome <> 'refused'")
+_COUNT = text(
+    "SELECT count(*) FROM gateway_calls WHERE outcome <> 'refused' "
+    "AND (CAST(:engine AS text) IS NULL OR engine = :engine) "
+    "AND (CAST(:seconds AS double precision) IS NULL "
+    "OR created_at > now() - make_interval(secs => CAST(:seconds AS double precision)))"
+)
 _INSERT = text(
     "INSERT INTO gateway_calls (engine, engine_version, preprocess, duration_ms, outcome, units, "
     "cost) VALUES (:engine, :engine_version, :preprocess, :duration_ms, "
@@ -30,11 +35,16 @@ class SqlCallLedger:
         *,
         engine_version: str,
         preprocess: bool,
+        counts_engine: str | None = None,
+        window_hours: float | None = None,
     ) -> None:
         self._factory = factory
         self._loop = loop
         self._engine_version = engine_version
         self._preprocess = preprocess
+        # The count behind the cap: one engine and a rolling window, or every call ever made.
+        self._counts_engine = counts_engine
+        self._window_seconds = None if window_hours is None else window_hours * 3600
 
     def calls_made(self) -> int:
         """Calls that ran, refused ones excluded."""
@@ -56,7 +66,10 @@ class SqlCallLedger:
 
     async def _count(self) -> int:
         async with self._factory() as session:
-            return int((await session.execute(_COUNT)).scalar_one())
+            counted = await session.execute(
+                _COUNT, {"engine": self._counts_engine, "seconds": self._window_seconds}
+            )
+            return int(counted.scalar_one())
 
     async def _insert(self, record: CallRecord) -> None:
         async with self._factory.begin() as session:

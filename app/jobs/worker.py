@@ -9,7 +9,7 @@ CPU work, so it runs in a thread and the event loop stays free.
 import asyncio
 import contextlib
 from collections.abc import Awaitable, Callable
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from typing import Literal, Protocol
 from uuid import UUID
 
@@ -19,6 +19,7 @@ from app.core.errors import DomainError
 from app.domain.processing import ProcessedDocument
 from app.gateway import CallCapReachedError, EngineError
 from app.gateway.process import EngineTimeoutError
+from app.gateway.vision import VisionTimeoutError
 
 log = structlog.get_logger()
 
@@ -32,6 +33,8 @@ class ClaimedDocument:
 
     id: UUID
     image: bytes
+    # What the uploader asked for: "free" (local OCR) or "vision" (OpenRouter, ADR-0015).
+    mode: str = "free"
 
 
 class ReadTimeoutError(DomainError):
@@ -66,6 +69,7 @@ async def process_next(
     *,
     confidence_cutoff: float,
     settle: Callable[[UUID], Awaitable[None]] | None = None,
+    vision_reader: Reader | None = None,
 ) -> Outcome:
     """Handle the oldest waiting document, if there is one.
 
@@ -77,9 +81,7 @@ async def process_next(
     if document is None:
         return "idle"
     try:
-        result = await asyncio.to_thread(
-            reader.read, document.image, confidence_cutoff=confidence_cutoff
-        )
+        result = await _read(document, reader, vision_reader, confidence_cutoff)
     except CallCapReachedError:
         return await _failed(store, document.id, "cap_reached", settle)
     except ReadTimeoutError:
@@ -93,6 +95,36 @@ async def process_next(
     log.info("document.read", document_id=str(document.id), doc_type=result.doc_type)
     await _settle(settle, document.id)
     return "read"
+
+
+async def _read(
+    document: ClaimedDocument,
+    reader: Reader,
+    vision_reader: Reader | None,
+    confidence_cutoff: float,
+) -> ProcessedDocument:
+    """Read with the engine asked for. Vision is a first try: any failure falls back to the
+    local reader and keeps a safe reason, so an upload is never lost to the provider."""
+    if document.mode != "vision":
+        return await asyncio.to_thread(
+            reader.read, document.image, confidence_cutoff=confidence_cutoff
+        )
+    reason = "vision_unavailable"
+    if vision_reader is not None:
+        try:
+            return await asyncio.to_thread(
+                vision_reader.read, document.image, confidence_cutoff=confidence_cutoff
+            )
+        except CallCapReachedError:
+            reason = "vision_cap_reached"
+        except EngineError as exc:
+            timed_out = isinstance(exc.__cause__, VisionTimeoutError)
+            reason = "vision_timeout" if timed_out else "vision_error"
+        log.warning("document.vision_fallback", document_id=str(document.id), reason_code=reason)
+    local = await asyncio.to_thread(
+        reader.read, document.image, confidence_cutoff=confidence_cutoff
+    )
+    return replace(local, fallback_reason=reason)
 
 
 async def sweep_stale_documents(store: DocumentStore) -> int:

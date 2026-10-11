@@ -20,6 +20,10 @@ class DocumentOut(BaseModel):
     failure_reason: str | None
     is_current: bool
     created_at: datetime
+    # What the uploader asked for, what read it, and why the two differ (a safe reason code).
+    requested_mode: Literal["free", "vision"]
+    read_engine: str | None
+    fallback_reason: str | None
 
 
 class DocumentListOut(BaseModel):

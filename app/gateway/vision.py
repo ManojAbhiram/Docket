@@ -39,6 +39,10 @@ DocumentType = Literal[
 Scalar = str | int | float
 
 
+class VisionTimeoutError(Exception):
+    """The provider did not answer in time. Only the class reaches the worker, never a message."""
+
+
 class _Answer(BaseModel):
     document_type: DocumentType
     fields: dict[str, Scalar | dict[str, Scalar] | None] = {}
@@ -78,7 +82,20 @@ class VisionReader:
         self._client.close()
 
     def _ask(self, image: bytes) -> ProcessedDocument:
-        response = self._client.post(
+        try:
+            response = self._post(image)
+        except httpx.TimeoutException as exc:
+            raise VisionTimeoutError from exc
+        response.raise_for_status()
+        answer = _parse(_content(response))
+        return ProcessedDocument(
+            doc_type=answer.document_type,
+            fields=_fields(answer),
+            engine=ENGINE_NAME,
+        )
+
+    def _post(self, image: bytes) -> httpx.Response:
+        return self._client.post(
             ENDPOINT,
             headers={"Authorization": f"Bearer {self._key}"},
             json={
@@ -94,13 +111,6 @@ class VisionReader:
                     }
                 ],
             },
-        )
-        response.raise_for_status()
-        answer = _parse(_content(response))
-        return ProcessedDocument(
-            doc_type=answer.document_type,
-            fields=_fields(answer),
-            engine=ENGINE_NAME,
         )
 
 

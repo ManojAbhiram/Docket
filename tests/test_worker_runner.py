@@ -121,3 +121,20 @@ async def test_the_settle_hook_given_to_the_worker_reaches_the_loop() -> None:
     await worker.stop()
 
     assert seen == [UUID(int=7)]
+
+
+async def test_stopping_the_worker_also_closes_the_vision_reader() -> None:
+    store, reader, vision = IdleStore(), ClosableReader(), ClosableReader()
+    worker = start_worker(
+        store,
+        reader,
+        confidence_cutoff=0.95,
+        idle_seconds=0.01,
+        sweep_interval_seconds=0.01,
+        vision_reader=vision,
+    )
+    await asyncio.wait_for(store.busy_twice.wait(), timeout=3)
+
+    await asyncio.wait_for(worker.stop(), timeout=3)
+
+    assert (reader.closed, vision.closed) == (True, True)

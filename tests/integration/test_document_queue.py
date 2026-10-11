@@ -4,6 +4,7 @@ Needs `make db` and `make migrate` (migration 0002, the copy of docs/design/sche
 runs in a transaction that is rolled back.
 """
 
+from dataclasses import replace
 from datetime import UTC, datetime
 from uuid import UUID
 
@@ -242,3 +243,53 @@ async def test_a_rejection_without_a_reason_is_refused_by_the_database(
             ),
             {"app": application, "user": user},
         )
+
+
+async def test_a_claim_carries_the_mode_the_uploader_asked_for(
+    connection: AsyncConnection, factory: async_sessionmaker[AsyncSession]
+) -> None:
+    user, application = await seed_user(connection), await seed_application(connection)
+    document = await seed_document(connection, user, application)
+    await connection.execute(
+        text("UPDATE documents SET requested_mode = 'vision' WHERE id = :id"), {"id": document}
+    )
+
+    claimed = await SqlDocumentStore(factory).claim_next()
+
+    assert claimed is not None
+    assert claimed.mode == "vision"
+
+
+async def test_a_completed_read_keeps_the_engine_and_why_the_requested_one_was_not_used(
+    connection: AsyncConnection, factory: async_sessionmaker[AsyncSession]
+) -> None:
+    user, application = await seed_user(connection), await seed_application(connection)
+    document = await seed_document(connection, user, application)
+    store = SqlDocumentStore(factory)
+    await store.claim_next()
+    result = replace(processed(), engine="rapidocr", fallback_reason="vision_cap_reached")
+
+    assert await store.complete(document, result) is True
+
+    row = await connection.execute(
+        text("SELECT read_engine, fallback_reason FROM documents WHERE id = :id"), {"id": document}
+    )
+    assert tuple(row.one()) == ("rapidocr", "vision_cap_reached")
+
+
+async def test_a_field_without_a_confidence_is_stored_as_null(
+    connection: AsyncConnection, factory: async_sessionmaker[AsyncSession]
+) -> None:
+    user, application = await seed_user(connection), await seed_application(connection)
+    document = await seed_document(connection, user, application)
+    store = SqlDocumentStore(factory)
+    await store.claim_next()
+    unscored = ExtractedField("name", None, "Latha Sharma", None, None, True, "low_confidence")
+
+    await store.complete(document, ProcessedDocument("id_proof", (unscored,), engine="openrouter"))
+
+    row = await connection.execute(
+        text("SELECT confidence, needs_review FROM extracted_fields WHERE document_id = :id"),
+        {"id": document},
+    )
+    assert tuple(row.one()) == (None, True)

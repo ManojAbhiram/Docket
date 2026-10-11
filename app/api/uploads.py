@@ -18,6 +18,20 @@ from app.domain.uploads import read_capped
 _OVERHEAD = 8_192
 
 
+class InvalidModeError(DomainError):
+    """The `mode` part was neither `free` nor `vision`."""
+
+    status_code = 422
+    code = "validation_error"
+
+
+class VisionUnavailableError(DomainError):
+    """Vision was asked for but no key and model are configured on this server."""
+
+    status_code = 409
+    code = "vision_unavailable"
+
+
 class MissingFileError(DomainError):
     """The request had no part named `file`."""
 
@@ -30,10 +44,15 @@ class UploadedFile:
     name: str
     content_type: str
     data: bytes
+    # The other text parts, such as `mode`. A route must check them: they are untrusted input.
+    fields: dict[str, str]
 
 
-async def read_one_file(request: Request, *, cap: int) -> UploadedFile:
-    """The part named `file`, at most `cap` bytes. Over the cap raises `UploadTooLargeError`."""
+async def read_one_file(request: Request, *, cap: int, max_fields: int = 1) -> UploadedFile:
+    """The part named `file`, at most `cap` bytes, plus up to `max_fields` text parts.
+
+    Over the cap raises `UploadTooLargeError`. An import sends the file alone (`max_fields=1`).
+    """
     body = await read_capped(request.stream(), cap=cap + _OVERHEAD)
     sent = False
 
@@ -44,14 +63,17 @@ async def read_one_file(request: Request, *, cap: int) -> UploadedFile:
         sent = True
         return {"type": "http.request", "body": body, "more_body": False}
 
-    form = await Request(request.scope, replay).form(max_files=1, max_fields=1)
+    form = await Request(request.scope, replay).form(max_files=1, max_fields=max_fields)
     try:
         part = form.get("file")
         if not isinstance(part, UploadFile):
             msg = "send the file as a multipart part named file"
             raise MissingFileError(msg)
         return UploadedFile(
-            name=part.filename or "", content_type=part.content_type or "", data=await part.read()
+            name=part.filename or "",
+            content_type=part.content_type or "",
+            data=await part.read(),
+            fields={key: value for key, value in form.items() if isinstance(value, str)},
         )
     finally:
         await form.close()

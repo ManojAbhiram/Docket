@@ -21,7 +21,7 @@ _CLAIM = text(
         SELECT id FROM documents WHERE status = 'uploaded'
         ORDER BY created_at FOR UPDATE SKIP LOCKED LIMIT 1
     )
-    RETURNING id
+    RETURNING id, requested_mode
     """
 )
 _IMAGE = text("SELECT content FROM document_blobs WHERE document_id = :id")
@@ -40,7 +40,8 @@ _DEMOTE_OLDER = text(
 )
 _MARK_READ = text(
     "UPDATE documents SET status = 'read', detected_type = CAST(:doc_type AS document_type), "
-    "is_current = :current, updated_at = now() WHERE id = :id"
+    "is_current = :current, read_engine = :engine, fallback_reason = :fallback, "
+    "updated_at = now() WHERE id = :id"
 )
 _INSERT_FIELD = text(
     "INSERT INTO extracted_fields (document_id, field_name, subject, value, confidence, box, "
@@ -66,11 +67,12 @@ class SqlDocumentStore:
 
     async def claim_next(self) -> ClaimedDocument | None:
         async with self._factory.begin() as session:
-            claimed = (await session.execute(_CLAIM)).scalar_one_or_none()
+            claimed = (await session.execute(_CLAIM)).first()
             if claimed is None:
                 return None
-            image = (await session.execute(_IMAGE, {"id": claimed})).scalar_one()
-            return ClaimedDocument(id=claimed, image=bytes(image))
+            document_id, mode = claimed
+            image = (await session.execute(_IMAGE, {"id": document_id})).scalar_one()
+            return ClaimedDocument(id=document_id, image=bytes(image), mode=mode)
 
     async def complete(self, document_id: UUID, result: ProcessedDocument) -> bool:
         async with self._factory.begin() as session:
@@ -90,7 +92,14 @@ class SqlDocumentStore:
                 current = (await session.execute(_NEWER_CURRENT, keys)).first() is None
                 await session.execute(_DEMOTE_OLDER, keys)
             await session.execute(
-                _MARK_READ, {"id": document_id, "doc_type": result.doc_type, "current": current}
+                _MARK_READ,
+                {
+                    "id": document_id,
+                    "doc_type": result.doc_type,
+                    "current": current,
+                    "engine": result.engine,
+                    "fallback": result.fallback_reason,
+                },
             )
             for field in result.fields:
                 await session.execute(

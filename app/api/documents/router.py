@@ -19,7 +19,7 @@ from app.api.applications.schemas import PageOut
 from app.api.auth.deps import current_user, get_settings_from_app, require_role, verify_csrf
 from app.api.documents.deps import get_rasteriser, get_upload_store
 from app.api.documents.schemas import DocumentListOut, DocumentOut
-from app.api.uploads import read_one_file
+from app.api.uploads import InvalidModeError, VisionUnavailableError, read_one_file
 from app.core.config import Settings
 from app.core.errors import ErrorEnvelope, NotFoundError
 from app.db.repositories.application_detail import SqlReviewStore
@@ -42,7 +42,7 @@ router = APIRouter(tags=["documents"])
     "/applications/{application_id}/documents",
     status_code=202,
     response_model=DocumentOut,
-    responses={code: {"model": ErrorEnvelope} for code in (401, 403, 404, 413, 415, 422)},
+    responses={code: {"model": ErrorEnvelope} for code in (401, 403, 404, 409, 413, 415, 422)},
 )
 async def upload_document(
     application_id: UUID,
@@ -57,7 +57,14 @@ async def upload_document(
     """Store one page image against the application, or return the one already stored."""
     if not await store.application_exists(application_id):
         raise NotFoundError("no such application")
-    upload = await read_one_file(request, cap=settings.upload_max_bytes)
+    upload = await read_one_file(request, cap=settings.upload_max_bytes, max_fields=2)
+    mode = upload.fields.get("mode", "free")
+    if mode not in {"free", "vision"}:
+        msg = "mode must be free or vision"
+        raise InvalidModeError(msg)
+    if mode == "vision" and not settings.vision_configured:
+        msg = "Vision is not set up on this server"
+        raise VisionUnavailableError(msg)
     declared = check_declared_type(upload.content_type.split(";")[0].strip().lower(), upload.data)
     stored = await asyncio.to_thread(_page_image, upload.data, declared, rasteriser)
     record, created = await store.add_document(
@@ -67,12 +74,14 @@ async def upload_document(
         sha256=sha256_hex(upload.data),
         size_bytes=len(upload.data),
         stored=stored,
+        mode=mode,
     )
     log.info(
         "document.uploaded",
         document_id=str(record.id),
         application_id=str(application_id),
         content_type=declared,
+        mode=mode,
         created=created,
     )
     if created:
