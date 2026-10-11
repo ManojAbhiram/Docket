@@ -60,12 +60,21 @@ function asBox(box: number[] | null): Box | null {
   return [x, y, width, height];
 }
 
+const ISO_DATE = /^(\d{4})-(\d{2})-(\d{2})$/;
+
+/** The application stores a date as 2006-12-10, the marksheets print it day first: 10/12/2006. */
+function applicationText(field: ReviewField): string {
+  const value = field.application_value ?? "none";
+  const parts = field.field_name === "dob" ? ISO_DATE.exec(value) : null;
+  return parts ? `${parts[3] ?? ""}/${parts[2] ?? ""}/${parts[1] ?? ""}` : value;
+}
+
 /** A field in the shape the comparison views take. */
 export function toComparison(field: ReviewField): FieldComparison {
   return {
     id: field.id,
     label: fieldLabel(field),
-    applicationValue: field.application_value ?? "none",
+    applicationValue: applicationText(field),
     documentValue: field.value,
     confidence: field.confidence,
     kind: fieldKind(field),
@@ -88,4 +97,26 @@ const FAILURES: Record<string, string> = {
 /** A failure reason code in plain words. The code itself never reaches the screen. */
 export function failureSentence(reason: string | null): string {
   return (reason === null ? undefined : FAILURES[reason]) ?? "Reading failed.";
+}
+
+const FALLBACKS: Record<string, string> = {
+  vision_cap_reached: "Vision's daily limit was reached, so this page was read on this machine.",
+  vision_timeout: "Vision took too long, so this page was read on this machine.",
+  vision_error: "Vision could not read the page, so it was read on this machine.",
+  vision_unavailable: "Vision is not set up, so this page was read on this machine.",
+};
+
+/** What read a document and, if Vision was asked for and not used, why. Empty until it is read. */
+export function provenanceWords(
+  doc: Pick<ReviewDocument, "status" | "read_engine" | "fallback_reason">,
+): string[] {
+  if (doc.status !== "read" || doc.read_engine === null) {
+    return [];
+  }
+  const by =
+    doc.read_engine === "openrouter"
+      ? "Read by OpenRouter Vision. A person must check every field."
+      : "Read on this machine.";
+  const why = doc.fallback_reason === null ? undefined : FALLBACKS[doc.fallback_reason];
+  return why === undefined ? [by] : [by, why];
 }

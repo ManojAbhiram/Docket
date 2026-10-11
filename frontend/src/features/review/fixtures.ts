@@ -51,6 +51,9 @@ export function detail(overrides: Partial<ApplicationDetail> = {}): ApplicationD
         failure_reason: null,
         is_current: true,
         created_at: "2026-10-05T09:05:00Z",
+        requested_mode: "free",
+        read_engine: "rapidocr",
+        fallback_reason: null,
         fields: [
           field({
             id: 11,

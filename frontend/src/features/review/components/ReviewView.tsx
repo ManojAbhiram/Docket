@@ -15,6 +15,7 @@ import {
   documentTitle,
   failedFirst,
   failureSentence,
+  provenanceWords,
   toComparison,
 } from "@/features/review/mapping";
 import type { ApplicationDetail, ReviewDocument } from "@/features/review/schemas";
@@ -156,6 +157,11 @@ function DocumentSection({ doc, selectedId, onSelect }: DocumentSectionProps) {
       <h2 id={`doc-${doc.id}`} className="text-lg font-semibold">
         {title}
       </h2>
+      {provenanceWords(doc).map((line) => (
+        <p key={line} className="text-sm text-muted-foreground">
+          {line}
+        </p>
+      ))}
       {doc.status === "failed" ? (
         <div className="space-y-1">
           <p>This document could not be read.</p>

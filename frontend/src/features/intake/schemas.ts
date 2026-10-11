@@ -59,6 +59,12 @@ export const documentTypeSchema = z.enum([
   "unknown",
 ]);
 
+export const readModeSchema = z.enum(["free", "vision"]);
+export type ReadMode = z.infer<typeof readModeSchema>;
+
+/** What this server can do. Vision is true only when a key and a model are set (ADR-0015). */
+export const capabilitiesSchema = z.object({ vision: z.boolean() });
+
 export const documentSchema = z.object({
   id: z.string(),
   application_id: z.string(),
@@ -67,6 +73,9 @@ export const documentSchema = z.object({
   failure_reason: z.string().nullable(),
   is_current: z.boolean(),
   created_at: z.string(),
+  requested_mode: readModeSchema,
+  read_engine: z.string().nullable(),
+  fallback_reason: z.string().nullable(),
 });
 export type DocumentBody = z.infer<typeof documentSchema>;
 

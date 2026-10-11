@@ -17,7 +17,8 @@ export function AuthShell({ title, description, children }: AuthShellProps) {
       <div className="bg-tile-deep px-6 py-6 text-tile-foreground md:flex md:flex-col md:justify-between md:py-10">
         <p className="font-display text-[25px] font-semibold">Docket</p>
         <p className="mt-2 max-w-xs text-sm text-tile-foreground/90 md:mt-0">
-          Admissions documents read on this machine, checked field by field against the application.
+          Admissions documents read on this machine by default, checked field by field against the
+          application.
         </p>
       </div>
       <div className="enter space-y-5 p-6 md:p-10">
