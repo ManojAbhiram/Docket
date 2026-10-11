@@ -55,6 +55,16 @@ make seed-accounts POSTGRES_PORT=55432
 
 Sign in as **staff.demo** first.
 
+To load all 20 applications and 30 documents through the local API, run `make seed-load` in a
+separate terminal and enter the existing staff password when prompted. It requests free mode;
+the worker reads the queued documents when enabled. Running it again reuses the applications
+and documents. A repeated CSV import records duplicate row errors, which the loader accepts;
+other import failures stop the load. Existing seed applications must still match the generated
+CSV values. To use another local API or staff account, set `SEED_API_URL` and
+`SEED_STAFF_USERNAME`, for example `make seed-load SEED_API_URL=http://localhost:8080
+SEED_STAFF_USERNAME=staff.demo`. The loader accepts only localhost or 127.0.0.1 and prompts for
+the password without placing it in shell arguments.
+
 1. **Import**: open Import and choose `data/seed/applications.csv`. It creates 20 applications.
 2. **Upload**: open Applications, choose Add documents on an application, and pick files from
    `data/seed/png/` named for it (for example `SYN-APP-001_10th_marksheet.png`). Reading takes a few

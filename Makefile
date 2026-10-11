@@ -10,6 +10,8 @@ GATES := format-check lint typecheck test vuln
 POSTGRES_PORT ?= 5432
 MEMORY_OUT ?= .scratch/NOTASK-17/memory.json
 MEMORY_COMMAND ?= -m evals.memory_bench --out $(MEMORY_OUT)
+SEED_API_URL ?= http://localhost:8080
+SEED_STAFF_USERNAME ?= staff.demo
 DATABASE_URL ?= postgresql+asyncpg://postgres:postgres@localhost:$(POSTGRES_PORT)/docket
 # psql takes the plain URL (no SQLAlchemy driver suffix).
 PSQL_URL = $(subst +asyncpg,,$(DATABASE_URL))
@@ -26,6 +28,7 @@ endef
 
 .PHONY: help setup dev seed-accounts check check-file fix test test-integration lint typecheck format format-check migrate migrate-verify migrate-down migrate-new vuln eval-extract eval-record eval-gate eval-report doctor db db-reset clean
 .PHONY: test-memory bench-memory bench-memory-repeat bench-memory-runtime
+.PHONY: test-seed-load seed-load
 
 help: ## List targets
 	@grep -E '^[a-zA-Z_-]+:.*?## ' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*?## "}; {printf "  %-18s %s\n", $$1, $$2}'
@@ -139,6 +142,12 @@ migrate: ## alembic upgrade head
 
 seed-accounts: ## Create the two demo accounts and print their one-time passwords once
 	DATABASE_URL=$(DATABASE_URL) $(UV) run python -m app.db.seed_accounts
+
+test-seed-load: ## Verify synthetic API loading and idempotent reload against isolated Postgres
+	DATABASE_URL=$(DATABASE_URL) $(UV) run pytest --no-cov tests/integration/api/test_seed_load.py
+
+seed-load: ## Load 20 synthetic applications and 30 documents into the local API; prompt for staff password
+	$(UV) run python -m seed.load --base-url $(SEED_API_URL) --username $(SEED_STAFF_USERNAME)
 
 migrate-down: ## alembic downgrade one
 	DATABASE_URL=$(DATABASE_URL) $(UV) run alembic downgrade -1
