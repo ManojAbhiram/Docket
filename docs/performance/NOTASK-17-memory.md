@@ -150,3 +150,8 @@ Vision responses. The runtime does not meet ADR-0004's approximate 400 MB hostin
 3. Run `make bench-memory-repeat`; inspect the three JSON files under `.scratch/NOTASK-17`.
 4. Start the isolated one worker image with the limits above, run `make bench-memory-runtime`,
    and record the final cgroup counters. Use a fresh container to reset the peak counter.
+
+
+## Measurement hardware
+
+Recorded 2026-10-11 for AC-US-02-002-4. The memory runs used one laptop: Intel Core i7-14700HX (20 cores, 28 threads), 15 GB RAM, Linux 7.0.0-38-generic, Docker 29.8.2. The container runs were limited to `--cpus=1` and a 512,000,000-byte cgroup. Speed figures from the unconstrained laptop do not predict a one-core host; the memory figure under the cgroup does. The hardware of the original 2026-10-05 benchmark was not recorded and cannot be recovered.

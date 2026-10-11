@@ -140,3 +140,23 @@ Reasoning: the landscape narrows the field to two engines that could fit the bud
 ## Throwaway
 
 No spike code was written and no `.scratch` directory was created.
+
+
+## Eligibility before any run (added 2026-10-11 for AC-US-02-002-1)
+
+Each candidate in the table above, marked eligible or disqualified for free, end-to-end use on the 512 MB budget, with the reason taken from the table. Eligible means it was allowed to run; the results are in `docs/testing/extraction-accuracy.md`.
+
+| Candidate | Verdict | Reason |
+| --- | --- | --- |
+| RapidOCR | Eligible | Apache-2.0, 27 MB wheel, ONNX Runtime only; ran and was chosen (ADR-0001) |
+| Tesseract 5.x `tessdata_fast` | Eligible | Apache-2.0, native code, Devanagari model; ran as the second opinion |
+| PaddleOCR 3.7.0 | Disqualified for hosting | published CPU peak 2,220 MB against a 512 MB budget; useful only as an accuracy baseline on a larger machine |
+| docTR 1.1.0 | Disqualified for v1 | PyTorch dependency, Devanagari not documented; to be measured only if RapidOCR and Tesseract both failed on Hindi |
+| EasyOCR 1.7.2 | Disqualified | no release since 2024-09, PyTorch, lowest Hindi score in the one study read |
+| Surya 0.22.1 | Disqualified | weights licence is restricted and the model is 650M parameters |
+| Granite-Docling 258M | Disqualified | no Hindi |
+| PaddleOCR-VL-1.6 | Disqualified | 1.0B parameters and Devanagari not listed |
+| MinerU 4.0 | Disqualified | 2 GB minimum RAM |
+| GOT-OCR-2.0-hf | Disqualified | about 1.2 GB of weights |
+| olmOCR 0.4.0 | Disqualified | needs at least 12 GB of GPU memory |
+| Florence-2, dots.ocr, DeepSeek-OCR, LightOnOCR, Nanonets-OCR2, Qwen3-VL-2B, MiniCPM-V, Docling | Disqualified | size, missing CPU support or Hindi not confirmed, as listed above |

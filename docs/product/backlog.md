@@ -191,17 +191,17 @@ Covers: REQ-007, REQ-008, REQ-009, REQ-010, REQ-011, REQ-044   Judgement: merged
 
 **Acceptance criteria.**
 
-- AC-US-00-003-1. Given an uploaded document, when it is processed, then exactly one gateway call is made for it.
+- AC-US-00-003-1. Given an uploaded document, when it is processed in the default Free mode, then exactly one gateway call is made for it. In opt-in Vision mode one Vision call is made first and, if it fails, the page is then read locally, so that document has two logged calls (ADR-0015, updated 2026-10-11).
   Covers: REQ-008
-- AC-US-00-003-2. Given the call result, when it is stored, then the document type is a 10th marksheet, a 12th marksheet, an ID proof or unknown, and an unknown type sends the application to Needs review.
+- AC-US-00-003-2. Given the call result, when it is stored, then the document type is a 10th marksheet, a 12th marksheet, an ID proof, a transfer certificate or unknown, and an unknown type sends the application to Needs review (transfer certificate added by the implemented story, updated 2026-10-11).
   Covers: REQ-009
-- AC-US-00-003-3. Given the call result, when it is stored, then the fields are held as JSON and each field has a confidence.
+- AC-US-00-003-3. Given the call result, when it is stored, then the fields are stored one row per field and returned by the API as JSON, and each local field has a confidence. A Vision field has no confidence (null) and always goes to Needs review (ADR-0015, updated 2026-10-11).
   Covers: REQ-010
 - AC-US-00-003-4. Given a field below the configured confidence threshold, when it is stored, then it is marked for Needs review.
   Covers: REQ-011
 - AC-US-00-003-5. Given a synthetic phone photo with blur, skew and shadow, when it is processed, then processing completes and every field is either extracted or sent to Needs review, none silently dropped.
   Covers: REQ-007
-- AC-US-00-003-6. Given a processed document, when the network is blocked in a test, then processing still completes, so no document left this machine.
+- AC-US-00-003-6. Given a processed document, when the network is blocked in a test, then processing in the default Free mode still completes, so no document left this machine. Opt-in Vision mode sends the page image to OpenRouter by design, with synthetic data only (ADR-0015, updated 2026-10-11).
   Covers: REQ-044
 
 **Not in this story.**
@@ -292,7 +292,7 @@ Covers: REQ-017, REQ-018, REQ-019, REQ-020   Judgement: merged from REQ-017, REQ
   Covers: REQ-017, REQ-018
 - AC-US-00-005-2. Given a mismatch or a low-confidence field, when the comparison finishes, then the status is Needs review and the application is flagged.
   Covers: REQ-020
-- AC-US-00-005-3. Given a required document type missing, when the status is set, then it is Missing documents.
+- AC-US-00-005-3. Given a required document type missing and no document flagged, when the status is set, then it is Missing documents. If any document is flagged or mismatched the status is Needs review, which takes precedence over Missing documents (ADR-0016, updated 2026-10-11).
   Covers: REQ-017
 - AC-US-00-005-4. Given a mismatch and no verifier decision, when any caller, including a direct API call, asks for Verified, then the service refuses it.
   Covers: REQ-019
@@ -573,13 +573,13 @@ Covers: REQ-040, REQ-041, REQ-042, REQ-043   Judgement: merged from REQ-040, REQ
 
 **Acceptance criteria.**
 
-- AC-US-02-003-1. Given an empty database, when the seed runs, then 20 applications and 30 documents exist.
+- AC-US-02-003-1. Given an empty database and a running local API with a staff account, when `make seed-load` runs, then 20 applications and 30 documents exist, and running it again adds none (updated 2026-10-11).
   Covers: REQ-040
 - AC-US-02-003-2. Given a seeded document, when it is opened, then it is a PNG rendered from HTML with blur, skew and shadow applied.
   Covers: REQ-041
 - AC-US-02-003-3. Given the seed, when its ground-truth file is read, then some documents are marked as mismatching their application and the field that differs is named.
   Covers: REQ-042
-- AC-US-02-003-4. Given every seeded name, date, roll number and mark, when checked, then each was generated and none appears in a list of real data.
+- AC-US-02-003-4. Given every seeded name, date, roll number and mark, when checked, then each was generated from the fixed synthetic pools, every identifier carries a synthetic prefix and every page says it is synthetic. Absence from real data is shown by provenance (the generator reads no outside data), because no list of real data may be held to compare against (updated 2026-10-11).
   Covers: REQ-043
 - AC-US-02-003-5. Given each seeded document, when its label file is read, then every field value is recorded.
   Covers: REQ-040
