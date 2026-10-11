@@ -185,3 +185,180 @@ doctor: ## Environment diagnostics
 clean: ## Remove caches and build output
 	rm -rf .venv .ruff_cache .mypy_cache .pytest_cache .coverage htmlcov dist build $(STATE)/.check-passed $(SKIPPED)
 	find . -name __pycache__ -type d -prune -exec rm -rf {} +
+
+# Deployment to one Linux VM over SSH (docs/runbooks/deploy.md). Every deploy-* target runs from
+# your laptop. Your settings live in deploy/deploy.local.mk (ignored by git), or pass them as
+# `make deploy DEPLOY_HOST=ubuntu@1.2.3.4 ...`. The images are built here and sent to the server,
+# so a small server never has to compile anything. No target removes the database volume.
+-include deploy/deploy.local.mk
+DEPLOY_HOST ?=
+DEPLOY_KEY ?=
+DEPLOY_DOMAIN ?=
+DEPLOY_DIR ?= Docket
+DEPLOY_PLATFORM ?= linux/amd64
+DEPLOY_REPO ?= $(shell git remote get-url origin 2>/dev/null)
+DOCKET_VERSION ?= $(shell git rev-parse --short HEAD 2>/dev/null)
+PUBLIC_ORIGIN ?= https://$(DEPLOY_DOMAIN)
+WEB_PORT ?= 8081
+BACKUP_DIR ?= .scratch/backups
+SERVICE ?= api
+LINES ?= 100
+SSH_OPTS = -i $(DEPLOY_KEY) -o StrictHostKeyChecking=accept-new -o ServerAliveInterval=30
+SSH = ssh $(SSH_OPTS) $(DEPLOY_HOST)
+SSH_TTY = ssh -t $(SSH_OPTS) $(DEPLOY_HOST)
+# Run on the server: CD enters the checkout, DC is Compose with the production settings.
+CD = cd $(DEPLOY_DIR) &&
+DC = docker compose --env-file deploy/production.env -f docker-compose.prod.yml
+
+.PHONY: deploy deploy-first deploy-bootstrap deploy-clone deploy-caddy deploy-build deploy-push deploy-release
+.PHONY: deploy-verify deploy-apply deploy-env deploy-status deploy-logs deploy-ssh deploy-seed-accounts
+.PHONY: deploy-backup deploy-restore deploy-rollback deploy-prune
+
+# $(call need_deploy,target): a host and a key file are set.
+define need_deploy
+@[ -n "$(DEPLOY_HOST)" ] || { echo "$(1): set DEPLOY_HOST (for example ubuntu@1.2.3.4) in deploy/deploy.local.mk" >&2; exit 1; }; \
+[ -f "$(DEPLOY_KEY)" ] || { echo "$(1): DEPLOY_KEY must be the path of your SSH private key file" >&2; exit 1; }
+endef
+# $(call need_domain,target): the public domain is set.
+define need_domain
+@[ -n "$(DEPLOY_DOMAIN)" ] || { echo "$(1): set DEPLOY_DOMAIN (for example docket-demo.duckdns.org)" >&2; exit 1; }
+endef
+
+# One-time server preparation. Safe to run again: it moves the 80 and 443 rules above the
+# REJECT rule that Oracle images ship with, adds swap and Docker only when they are missing.
+define DEPLOY_BOOTSTRAP_SCRIPT
+set -euo pipefail
+export DEBIAN_FRONTEND=noninteractive
+for port in 80 443; do
+  while sudo iptables -D INPUT -p tcp --dport $$port -j ACCEPT 2>/dev/null; do :; done
+  pos=$$(sudo iptables -L INPUT -n --line-numbers | awk '/REJECT/ {print $$1; exit}')
+  sudo iptables -I INPUT $${pos:-1} -p tcp --dport $$port -j ACCEPT
+done
+sudo apt-get update -qq
+sudo apt-get install -y -qq iptables-persistent ca-certificates curl git caddy
+sudo netfilter-persistent save
+if ! swapon --show | grep -q /swapfile; then
+  [ -f /swapfile ] || { sudo fallocate -l 2G /swapfile; sudo chmod 600 /swapfile; sudo mkswap /swapfile >/dev/null; }
+  sudo swapon /swapfile
+  grep -q '^/swapfile' /etc/fstab || echo '/swapfile none swap sw 0 0' | sudo tee -a /etc/fstab >/dev/null
+fi
+command -v docker >/dev/null || curl -fsSL https://get.docker.com | sudo sh
+sudo usermod -aG docker "$$USER"
+echo "bootstrap: done"
+endef
+export DEPLOY_BOOTSTRAP_SCRIPT
+
+# Clone the repository on the server and write deploy/production.env once, with a random
+# database password that is never printed. Running it again keeps the password.
+define DEPLOY_CLONE_SCRIPT
+set -euo pipefail
+[ -d $(DEPLOY_DIR)/.git ] || git clone -q $(DEPLOY_REPO) $(DEPLOY_DIR)
+cd $(DEPLOY_DIR)
+git checkout -q main
+if [ ! -f deploy/production.env ]; then
+  cp deploy/production.env.example deploy/production.env
+  chmod 600 deploy/production.env
+  sed -i "s|^POSTGRES_PASSWORD=.*|POSTGRES_PASSWORD=$$(openssl rand -hex 24)|" deploy/production.env
+  echo "clone: wrote deploy/production.env with a new random database password"
+else
+  echo "clone: deploy/production.env already exists, password kept"
+fi
+sed -i "s|^PUBLIC_ORIGIN=.*|PUBLIC_ORIGIN=$(PUBLIC_ORIGIN)|" deploy/production.env
+sed -i "s|^DOCKET_VERSION=.*|DOCKET_VERSION=$(DOCKET_VERSION)|" deploy/production.env
+echo "clone: PUBLIC_ORIGIN and DOCKET_VERSION set"
+endef
+export DEPLOY_CLONE_SCRIPT
+
+deploy: ## Ship main: build here, send, start on the server, verify (the everyday command)
+	$(call need_deploy,deploy)
+	$(call need_domain,deploy)
+	@[ "$$(git rev-parse --abbrev-ref HEAD)" = main ] || { echo "deploy: check out main first" >&2; exit 1; }
+	@git diff --quiet && git diff --cached --quiet || { echo "deploy: commit or stash your changes first" >&2; exit 1; }
+	@git fetch -q origin main && [ "$$(git rev-parse HEAD)" = "$$(git rev-parse origin/main)" ] || { echo "deploy: main differs from origin/main, push or pull first" >&2; exit 1; }
+	@$(MAKE) deploy-build deploy-push deploy-release deploy-verify
+
+deploy-first: ## First time only: prepare the server, clone, ship, start, set up HTTPS
+	$(call need_deploy,deploy-first)
+	$(call need_domain,deploy-first)
+	@$(MAKE) deploy-bootstrap deploy-clone deploy-build deploy-push deploy-release deploy-caddy deploy-verify
+	@echo "deploy-first: now run make deploy-seed-accounts and copy the two passwords it prints once"
+
+deploy-bootstrap: ## Prepare the server: firewall order, swap, Docker, Caddy (safe to repeat)
+	$(call need_deploy,deploy-bootstrap)
+	@printf '%s\n' "$$DEPLOY_BOOTSTRAP_SCRIPT" | $(SSH) bash -s
+
+deploy-clone: ## Clone the repo on the server and write deploy/production.env (keeps an existing password)
+	$(call need_deploy,deploy-clone)
+	$(call need_domain,deploy-clone)
+	@printf '%s\n' "$$DEPLOY_CLONE_SCRIPT" | $(SSH) bash -s
+
+deploy-caddy: ## Point Caddy at the web container for DEPLOY_DOMAIN (HTTPS certificate is automatic)
+	$(call need_deploy,deploy-caddy)
+	$(call need_domain,deploy-caddy)
+	@printf '%s {\n  reverse_proxy 127.0.0.1:$(WEB_PORT)\n}\n' "$(DEPLOY_DOMAIN)" | $(SSH) 'sudo tee /etc/caddy/Caddyfile >/dev/null && sudo systemctl reload caddy && echo "caddy: reloaded for $(DEPLOY_DOMAIN)"'
+
+deploy-build: ## Build the API and web images here for the server's CPU, tagged with the commit
+	docker build --platform $(DEPLOY_PLATFORM) -t docket-api:$(DOCKET_VERSION) .
+	docker build --platform $(DEPLOY_PLATFORM) -t docket-web:$(DOCKET_VERSION) ./frontend
+
+deploy-push: ## Send the built images to the server
+	$(call need_deploy,deploy-push)
+	@set -o pipefail; docker save docket-api:$(DOCKET_VERSION) docket-web:$(DOCKET_VERSION) | gzip | $(SSH) 'gunzip | docker load'
+
+deploy-release: ## On the server: pull main, set the version, start the new containers (migrations run)
+	$(call need_deploy,deploy-release)
+	@$(SSH) 'cd $(DEPLOY_DIR) && git fetch -q origin main && git checkout -q main && git merge -q --ff-only origin/main && sed -i "s|^DOCKET_VERSION=.*|DOCKET_VERSION=$(DOCKET_VERSION)|" deploy/production.env && $(DC) up -d && $(DC) ps'
+
+deploy-verify: ## Check the containers and the public /healthz (retries while the API starts)
+	$(call need_deploy,deploy-verify)
+	$(call need_domain,deploy-verify)
+	@$(SSH) '$(CD) $(DC) ps'
+	@curl -fsS --retry 12 --retry-delay 5 --retry-connrefused --max-time 10 $(PUBLIC_ORIGIN)/healthz && echo " <- $(PUBLIC_ORIGIN)/healthz"
+
+deploy-apply: ## Apply a changed deploy/production.env or compose file without rebuilding
+	$(call need_deploy,deploy-apply)
+	@$(SSH) '$(CD) $(DC) up -d && $(DC) ps'
+
+deploy-env: ## Edit deploy/production.env on the server (then make deploy-apply)
+	$(call need_deploy,deploy-env)
+	@$(SSH_TTY) 'cd $(DEPLOY_DIR) && nano deploy/production.env'
+
+deploy-status: ## Containers, memory, disk and the image versions on the server
+	$(call need_deploy,deploy-status)
+	@$(SSH) '$(CD) $(DC) ps; echo; docker stats --no-stream; echo; free -h; df -h / | tail -1; echo; docker images --format "{{.Repository}}:{{.Tag}} {{.CreatedSince}}" | grep ^docket'
+
+deploy-logs: ## Server logs: make deploy-logs SERVICE=api LINES=200 (api, web, postgres, migrate)
+	$(call need_deploy,deploy-logs)
+	@$(SSH) '$(CD) $(DC) logs --tail $(LINES) $(SERVICE)'
+
+deploy-ssh: ## Open a shell on the server
+	$(call need_deploy,deploy-ssh)
+	@$(SSH_TTY)
+
+deploy-seed-accounts: ## Create the two demo accounts; the passwords print once
+	$(call need_deploy,deploy-seed-accounts)
+	@$(SSH) '$(CD) $(DC) run --rm api python -m app.db.seed_accounts'
+
+deploy-backup: ## Download a compressed database dump into .scratch/backups
+	$(call need_deploy,deploy-backup)
+	@mkdir -p $(BACKUP_DIR)
+	@set -o pipefail; f="$(BACKUP_DIR)/docket-$$(date +%F-%H%M).sql.gz"; $(SSH) '$(CD) $(DC) exec -T postgres pg_dump -U docket docket | gzip' > "$$f" && [ -s "$$f" ] && echo "backup: $$f ($$(du -h "$$f" | cut -f1))" || { rm -f "$$f"; echo "backup: failed" >&2; exit 1; }
+
+deploy-restore: ## Replace the database from a dump: make deploy-restore FILE=x.sql.gz CONFIRM=yes
+	$(call need_deploy,deploy-restore)
+	@[ -f "$(FILE)" ] || { echo "deploy-restore: FILE=path/to/dump.sql.gz is required" >&2; exit 1; }
+	@[ "$(CONFIRM)" = yes ] || { echo "deploy-restore: this replaces every table on the server; add CONFIRM=yes" >&2; exit 1; }
+	@$(MAKE) deploy-backup
+	@$(SSH) '$(CD) $(DC) stop api'
+	@$(SSH) '$(CD) $(DC) exec -T postgres psql -U docket docket -v ON_ERROR_STOP=1 -c "drop schema public cascade; create schema public;"'
+	@gunzip -c "$(FILE)" | $(SSH) '$(CD) $(DC) exec -T postgres psql -U docket docket -v ON_ERROR_STOP=1'
+	@$(SSH) '$(CD) $(DC) up -d'
+
+deploy-rollback: ## Go back to an earlier image: make deploy-rollback VERSION=<short commit>
+	$(call need_deploy,deploy-rollback)
+	@[ -n "$(VERSION)" ] || { echo "deploy-rollback: VERSION=<short commit> is required (make deploy-status lists them)" >&2; exit 1; }
+	@$(SSH) 'docker image inspect docket-api:$(VERSION) docket-web:$(VERSION) >/dev/null && cd $(DEPLOY_DIR) && sed -i "s|^DOCKET_VERSION=.*|DOCKET_VERSION=$(VERSION)|" deploy/production.env && $(DC) up -d && $(DC) ps'
+
+deploy-prune: ## Remove unused dangling images on the server (tagged versions stay for rollback)
+	$(call need_deploy,deploy-prune)
+	@$(SSH) 'docker image prune -f && df -h / | tail -1'

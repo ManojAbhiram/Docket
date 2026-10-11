@@ -37,3 +37,6 @@ data/seed/
 
 # Filled-in production settings hold secrets.
 deploy/production.env
+
+# Per-machine deployment settings (host, key path, domain).
+deploy/deploy.local.mk
