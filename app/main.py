@@ -17,6 +17,7 @@ from fastapi import FastAPI
 from app import __version__
 from app.api.applications.router import router as applications_router
 from app.api.auth.router import router as auth_router
+from app.api.capabilities.router import router as capabilities_router
 from app.api.decisions.router import router as decisions_router
 from app.api.documents.router import router as documents_router
 from app.api.health.router import router as health_router
@@ -32,7 +33,8 @@ from app.db.repositories.gateway_calls import SqlCallLedger
 from app.db.session import make_engine, make_session_factory
 from app.domain.auth import LoginLimiter, Passwords, RegistrationLimiter
 from app.domain.pdf import PopplerRasteriser
-from app.gateway.reader import build_reader, engine_version
+from app.gateway.reader import build_reader, build_vision_reader, engine_version
+from app.gateway.vision import ENGINE_NAME
 from app.jobs.runner import RunningWorker, start_worker
 from app.jobs.settle import make_settle
 
@@ -75,9 +77,18 @@ def _start_document_worker(app: FastAPI, settings: Settings) -> RunningWorker | 
         engine_version=engine_version(settings),
         preprocess=True,
     )
+    vision_ledger = SqlCallLedger(
+        factory,
+        asyncio.get_running_loop(),
+        engine_version=(settings.openrouter_model or "unset")[:40],
+        preprocess=False,
+        counts_engine=ENGINE_NAME,
+        window_hours=24,
+    )
     return start_worker(
         SqlDocumentStore(factory),
         build_reader(settings, ledger),
+        vision_reader=build_vision_reader(settings, vision_ledger),
         confidence_cutoff=settings.review_confidence_cutoff,
         idle_seconds=settings.worker_idle_seconds,
         sweep_interval_seconds=settings.sweep_interval_seconds,
@@ -133,6 +144,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     app.include_router(auth_router, prefix="/api")
     app.include_router(imports_router, prefix="/api")
     app.include_router(applications_router, prefix="/api")
+    app.include_router(capabilities_router, prefix="/api")
     app.include_router(documents_router, prefix="/api")
     app.include_router(decisions_router, prefix="/api")
     app.include_router(reports_router, prefix="/api")

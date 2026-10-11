@@ -11,6 +11,8 @@ from uuid import UUID
 from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
+from app.domain.extract import ExtractedField
+from app.domain.match import fields_for
 from app.domain.processing import ProcessedDocument
 from app.jobs.worker import ClaimedDocument
 
@@ -21,7 +23,7 @@ _CLAIM = text(
         SELECT id FROM documents WHERE status = 'uploaded'
         ORDER BY created_at FOR UPDATE SKIP LOCKED LIMIT 1
     )
-    RETURNING id
+    RETURNING id, requested_mode
     """
 )
 _IMAGE = text("SELECT content FROM document_blobs WHERE document_id = :id")
@@ -29,7 +31,7 @@ _LOCK_DOCUMENT = text(
     "SELECT application_id, created_at FROM documents "
     "WHERE id = :id AND status = 'processing' FOR UPDATE"
 )
-_LOCK_APPLICATION = text("SELECT id FROM applications WHERE id = :id FOR UPDATE")
+_LOCK_APPLICATION = text("SELECT marks FROM applications WHERE id = :id FOR UPDATE")
 _NEWER_CURRENT = text(
     "SELECT 1 FROM documents WHERE application_id = :app AND detected_type = "
     "CAST(:doc_type AS document_type) AND is_current AND created_at > :created AND id <> :id"
@@ -40,7 +42,8 @@ _DEMOTE_OLDER = text(
 )
 _MARK_READ = text(
     "UPDATE documents SET status = 'read', detected_type = CAST(:doc_type AS document_type), "
-    "is_current = :current, updated_at = now() WHERE id = :id"
+    "is_current = :current, read_engine = :engine, fallback_reason = :fallback, "
+    "updated_at = now() WHERE id = :id"
 )
 _INSERT_FIELD = text(
     "INSERT INTO extracted_fields (document_id, field_name, subject, value, confidence, box, "
@@ -66,11 +69,12 @@ class SqlDocumentStore:
 
     async def claim_next(self) -> ClaimedDocument | None:
         async with self._factory.begin() as session:
-            claimed = (await session.execute(_CLAIM)).scalar_one_or_none()
+            claimed = (await session.execute(_CLAIM)).first()
             if claimed is None:
                 return None
-            image = (await session.execute(_IMAGE, {"id": claimed})).scalar_one()
-            return ClaimedDocument(id=claimed, image=bytes(image))
+            document_id, mode = claimed
+            image = (await session.execute(_IMAGE, {"id": document_id})).scalar_one()
+            return ClaimedDocument(id=document_id, image=bytes(image), mode=mode)
 
     async def complete(self, document_id: UUID, result: ProcessedDocument) -> bool:
         async with self._factory.begin() as session:
@@ -78,7 +82,9 @@ class SqlDocumentStore:
             if row is None:
                 return False
             application_id, created_at = row
-            await session.execute(_LOCK_APPLICATION, {"id": application_id})
+            expected_marks = (
+                await session.execute(_LOCK_APPLICATION, {"id": application_id})
+            ).scalar_one()
             current = True
             if result.doc_type != "unknown":
                 keys = {
@@ -90,9 +96,16 @@ class SqlDocumentStore:
                 current = (await session.execute(_NEWER_CURRENT, keys)).first() is None
                 await session.execute(_DEMOTE_OLDER, keys)
             await session.execute(
-                _MARK_READ, {"id": document_id, "doc_type": result.doc_type, "current": current}
+                _MARK_READ,
+                {
+                    "id": document_id,
+                    "doc_type": result.doc_type,
+                    "current": current,
+                    "engine": result.engine,
+                    "fallback": result.fallback_reason,
+                },
             )
-            for field in result.fields:
+            for field in _fields_for_storage(result, expected_marks):
                 await session.execute(
                     _INSERT_FIELD,
                     {
@@ -117,3 +130,32 @@ class SqlDocumentStore:
         async with self._factory.begin() as session:
             result = await session.execute(_SWEEP, {"seconds": older_than_seconds})
             return len(result.all())
+
+
+def _fields_for_storage(
+    result: ProcessedDocument, expected_marks: object
+) -> tuple[ExtractedField, ...]:
+    """Keep missing expected subjects as review evidence under the existing application lock."""
+    if "marks" not in fields_for(result.doc_type):
+        return result.fields
+    marks: object = (
+        json.loads(expected_marks) if isinstance(expected_marks, str) else expected_marks
+    )
+    if not isinstance(marks, dict):
+        raise TypeError("the application marks are not an object")
+    if not marks:
+        return result.fields
+    fields = tuple(
+        field for field in result.fields if field.field_name != "marks" or field.subject is not None
+    )
+    found = {
+        field.subject.strip().casefold()
+        for field in fields
+        if field.field_name == "marks" and field.subject is not None
+    }
+    missing = tuple(
+        ExtractedField("marks", str(subject), "", 0.0, None, True, "not_extracted")
+        for subject in marks
+        if str(subject).casefold() not in found
+    )
+    return fields + missing

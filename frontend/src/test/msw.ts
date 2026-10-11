@@ -11,6 +11,8 @@ import { setupServer } from "msw/node";
  * request URLs match these patterns.
  */
 export const handlers = [
+  // Vision is off unless a test turns it on, so the upload screen offers no choice by default.
+  http.get("*/api/capabilities", () => HttpResponse.json({ vision: false })),
   http.get("*/healthz", () => HttpResponse.json({ status: "ok", version: "msw" })),
   // The counts are unavailable unless a test provides them, so no screen may depend on them.
   http.get("*/api/dashboard", () =>

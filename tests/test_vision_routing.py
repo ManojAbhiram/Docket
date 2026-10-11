@@ -1,0 +1,147 @@
+"""The worker reads a document with the engine its uploader asked for (ADR-0015).
+
+Vision is opt-in and only ever a first try: when it cannot answer, the document is read by the
+local OCR and the safe reason is kept, so an upload is never lost to the provider.
+"""
+
+from dataclasses import dataclass, field
+from uuid import UUID, uuid4
+
+import pytest
+
+from app.domain.extract import ExtractedField
+from app.domain.processing import ProcessedDocument
+from app.gateway import CallCapReachedError, EngineError
+from app.gateway.vision import VisionTimeoutError
+from app.jobs.worker import ClaimedDocument, process_next
+
+CUTOFF = 0.95
+VISION_DOC = ProcessedDocument(
+    doc_type="id_proof",
+    fields=(ExtractedField("name", None, "Latha Sharma", None, None, True, "low_confidence"),),
+    engine="openrouter",
+)
+LOCAL_DOC = ProcessedDocument(
+    doc_type="id_proof",
+    fields=(ExtractedField("name", None, "Latha Sharma", 0.99, (1, 2, 3, 4), False, None),),
+    engine="rapidocr",
+)
+
+
+@dataclass
+class Store:
+    queue: list[ClaimedDocument] = field(default_factory=list)
+    completed: dict[UUID, ProcessedDocument] = field(default_factory=dict)
+    failed: dict[UUID, str] = field(default_factory=dict)
+
+    async def claim_next(self) -> ClaimedDocument | None:
+        return self.queue.pop(0) if self.queue else None
+
+    async def complete(self, document_id: UUID, result: ProcessedDocument) -> bool:
+        self.completed[document_id] = result
+        return True
+
+    async def fail(self, document_id: UUID, reason: str) -> bool:
+        self.failed[document_id] = reason
+        return True
+
+    async def sweep_stale(self, older_than_seconds: int) -> int:
+        return 0
+
+
+class Reader:
+    def __init__(self, result: ProcessedDocument | None = None, error: Exception | None = None):
+        self.result = result
+        self.error = error
+        self.reads = 0
+
+    def read(self, image: bytes, *, confidence_cutoff: float) -> ProcessedDocument:
+        self.reads += 1
+        if self.error is not None:
+            raise self.error
+        assert self.result is not None
+        return self.result
+
+
+def queued(store: Store, mode: str) -> UUID:
+    document_id = uuid4()
+    store.queue.append(ClaimedDocument(id=document_id, image=b"page", mode=mode))
+    return document_id
+
+
+async def test_a_free_document_never_reaches_vision() -> None:
+    store, local, vision = Store(), Reader(LOCAL_DOC), Reader(VISION_DOC)
+    document_id = queued(store, "free")
+
+    await process_next(store, local, confidence_cutoff=CUTOFF, vision_reader=vision)
+
+    assert store.completed[document_id] == LOCAL_DOC
+    assert (local.reads, vision.reads) == (1, 0)
+
+
+async def test_a_vision_document_is_read_by_vision_alone() -> None:
+    store, local, vision = Store(), Reader(LOCAL_DOC), Reader(VISION_DOC)
+    document_id = queued(store, "vision")
+
+    outcome = await process_next(store, local, confidence_cutoff=CUTOFF, vision_reader=vision)
+
+    assert outcome == "read"
+    assert store.completed[document_id] == VISION_DOC
+    assert (local.reads, vision.reads) == (0, 1)
+
+
+@pytest.mark.parametrize(
+    ("error", "reason"),
+    [
+        (CallCapReachedError("cap"), "vision_cap_reached"),
+        (EngineError("engine"), "vision_error"),
+    ],
+)
+async def test_a_vision_failure_falls_back_to_the_local_reader_and_says_why(
+    error: Exception, reason: str
+) -> None:
+    store, local, vision = Store(), Reader(LOCAL_DOC), Reader(error=error)
+    document_id = queued(store, "vision")
+
+    outcome = await process_next(store, local, confidence_cutoff=CUTOFF, vision_reader=vision)
+
+    assert outcome == "read"
+    assert store.completed[document_id].engine == "rapidocr"
+    assert store.completed[document_id].fallback_reason == reason
+    assert store.failed == {}
+
+
+async def test_a_vision_timeout_is_named_as_such() -> None:
+    timeout = EngineError("engine")
+    timeout.__cause__ = VisionTimeoutError()
+    store, local = Store(), Reader(LOCAL_DOC)
+    document_id = queued(store, "vision")
+
+    await process_next(store, local, confidence_cutoff=CUTOFF, vision_reader=Reader(error=timeout))
+
+    assert store.completed[document_id].fallback_reason == "vision_timeout"
+
+
+async def test_a_vision_document_with_vision_switched_off_is_read_locally() -> None:
+    store, local = Store(), Reader(LOCAL_DOC)
+    document_id = queued(store, "vision")
+
+    await process_next(store, local, confidence_cutoff=CUTOFF, vision_reader=None)
+
+    assert store.completed[document_id].fallback_reason == "vision_unavailable"
+    assert local.reads == 1
+
+
+async def test_when_the_fallback_also_fails_the_document_fails_with_the_local_reason() -> None:
+    store = Store()
+    document_id = queued(store, "vision")
+
+    outcome = await process_next(
+        store,
+        Reader(error=EngineError("local")),
+        confidence_cutoff=CUTOFF,
+        vision_reader=Reader(error=EngineError("vision")),
+    )
+
+    assert outcome == "failed"
+    assert store.failed == {document_id: "engine_error"}

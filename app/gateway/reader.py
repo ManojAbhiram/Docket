@@ -14,6 +14,7 @@ from app.gateway.engines import build_engine
 from app.gateway.process import ProcessEngine
 from app.gateway.rapidocr_engine import ENGINE_NAME, make_engine, release
 from app.gateway.types import CallLedger, Engine
+from app.gateway.vision import VisionReader
 
 _RECORDED_VERSION = "recorded-1"
 
@@ -31,7 +32,7 @@ class GatewayReader:
         result = read_document(image, engine=self.engine, ledger=self._ledger, cap=self._cap)
         doc_type = classify(result.words)
         fields = extract_fields(result.words, doc_type, confidence_cutoff=confidence_cutoff)
-        return ProcessedDocument(doc_type=doc_type, fields=fields)
+        return ProcessedDocument(doc_type=doc_type, fields=fields, engine=self.engine.name)
 
     def close(self) -> None:
         if isinstance(self.engine, ProcessEngine):
@@ -62,3 +63,16 @@ def build_reader(settings: Settings, ledger: CallLedger) -> GatewayReader:
         msg = f"unknown engine {settings.gateway_engine}"
         raise ValueError(msg)
     return GatewayReader(engine, ledger, settings.gateway_call_cap)
+
+
+def build_vision_reader(settings: Settings, ledger: CallLedger) -> VisionReader | None:
+    """The opt-in Vision reader, or None when no key or model is set, so Vision is unavailable."""
+    if settings.openrouter_api_key is None or settings.openrouter_model is None:
+        return None
+    return VisionReader(
+        api_key=settings.openrouter_api_key.get_secret_value(),
+        model=settings.openrouter_model,
+        ledger=ledger,
+        cap=settings.openrouter_daily_cap,
+        timeout_seconds=settings.openrouter_timeout_seconds,
+    )

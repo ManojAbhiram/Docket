@@ -45,4 +45,8 @@ export interface UploadedDocument {
   detectedType?: string;
   /** Set when the file is refused or the read failed, in the flows' copy. */
   problem?: string;
+  /** What read it, in words, once it is read. */
+  readBy?: string;
+  /** Why the requested engine was not used, in words. Never provider text. */
+  readNote?: string;
 }

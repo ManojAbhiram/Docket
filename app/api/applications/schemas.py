@@ -64,6 +64,9 @@ class DocumentDetailOut(BaseModel):
     failure_reason: str | None
     is_current: bool
     created_at: datetime
+    requested_mode: Literal["free", "vision"]
+    read_engine: str | None
+    fallback_reason: str | None
     fields: list[ExtractedFieldOut]
 
 

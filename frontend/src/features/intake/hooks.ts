@@ -13,12 +13,14 @@ import { ApiError } from "@/lib/api";
 
 import {
   fetchApplicationRef,
+  fetchCapabilities,
   importApplications,
   listApplications,
   listDocuments,
   uploadDocument,
   type ApplicationFilter,
 } from "./api";
+import type { ReadMode } from "./schemas";
 
 export const intakeKeys = {
   all: ["intake"] as const,
@@ -26,6 +28,7 @@ export const intakeKeys = {
   documents: (applicationId: string) => [...intakeKeys.all, "documents", applicationId] as const,
   application: (applicationId: string) =>
     [...intakeKeys.all, "application", applicationId] as const,
+  capabilities: ["intake", "capabilities"] as const,
 };
 
 export function applicationsQueryOptions(filter: ApplicationFilter) {
@@ -68,6 +71,17 @@ export function useApplicationRef(applicationId: string) {
   );
 }
 
+/** Whether Vision can be chosen. If the answer cannot be had, it is not offered. */
+export function useCapabilities() {
+  return useQuery(
+    queryOptions({
+      queryKey: intakeKeys.capabilities,
+      queryFn: ({ signal }) => fetchCapabilities({ signal }),
+      staleTime: 5 * 60 * 1000,
+    }),
+  );
+}
+
 export function useImport() {
   return useMutation({ mutationFn: importApplications });
 }
@@ -86,6 +100,9 @@ export function refusalFor(name: string, error: unknown): string {
     }
     if (error.status === 403) {
       return "Only staff can upload documents.";
+    }
+    if (error.status === 409 && error.serverCode === "vision_unavailable") {
+      return `Vision is not set up on this server. Choose Read on this machine and upload ${name} again.`;
     }
     if (error.status === 404) {
       return "That application does not exist.";
@@ -113,7 +130,7 @@ export function useBatchUpload(applicationId: string) {
   }, []);
 
   const start = useCallback(
-    async (files: File[], known: ReadonlySet<string>) => {
+    async (files: File[], known: ReadonlySet<string>, mode: ReadMode) => {
       if (running.current || files.length === 0) {
         return;
       }
@@ -141,7 +158,7 @@ export function useBatchUpload(applicationId: string) {
           }
           mark(index, { state: "uploading" });
           try {
-            const document = await uploadDocument(applicationId, file);
+            const document = await uploadDocument(applicationId, file, mode);
             mark(index, { state: seen.has(document.id) ? "already" : "stored" });
             seen.add(document.id);
           } catch (error) {

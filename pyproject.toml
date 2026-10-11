@@ -29,6 +29,8 @@ dependencies = [
   "python-multipart>=0.0.32",
   "rapidocr>=3.9.2",
   "onnxruntime>=1.30.0",
+  # The opt-in OpenRouter Vision reader (ADR-0015) calls the provider over HTTPS with a timeout.
+  "httpx>=0.28,<1",
 ]
 
 [dependency-groups]
@@ -38,7 +40,6 @@ dev = [
   "pytest>=9.1,<10",
   "pytest-asyncio>=1.4,<2",
   "pytest-cov>=7.1,<8",
-  "httpx>=0.28,<1",
   "asgi-lifespan>=2.1,<3",
   "pre-commit>=4.3,<5",
   # The seed noise (seed/render.py) and the OCR preprocessing (app/gateway/preprocess.py) use OpenCV and

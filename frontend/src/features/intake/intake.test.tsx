@@ -318,7 +318,17 @@ describe("applications", () => {
   });
 });
 
-function doc(id: string, status: string, type: string | null = null, reason: string | null = null) {
+function doc(
+  id: string,
+  status: string,
+  type: string | null = null,
+  reason: string | null = null,
+  how: {
+    requested_mode?: string;
+    read_engine?: string | null;
+    fallback_reason?: string | null;
+  } = {},
+) {
   return {
     id,
     application_id: APP_ID,
@@ -327,6 +337,9 @@ function doc(id: string, status: string, type: string | null = null, reason: str
     failure_reason: reason,
     is_current: true,
     created_at: "2026-10-05T04:12:41Z",
+    requested_mode: how.requested_mode ?? "free",
+    read_engine: how.read_engine ?? null,
+    fallback_reason: how.fallback_reason ?? null,
   };
 }
 
@@ -528,5 +541,133 @@ describe("upload", () => {
 
     expect(await screen.findByText("The documents did not load.")).toBeInTheDocument();
     await userEvent.setup().click(screen.getByRole("button", { name: "Reload" }));
+  });
+});
+
+describe("choosing how pages are read", () => {
+  function withCapabilities(vision: boolean) {
+    return http.get("*/api/capabilities", () => HttpResponse.json({ vision }));
+  }
+
+  it("offers no choice while the server has no Vision set up", async () => {
+    server.use(
+      knownApplication(),
+      withCapabilities(false),
+      http.get(`*/api/applications/${APP_ID}/documents`, () => documentList()),
+    );
+    renderAt(`/applications/${APP_ID}/upload`);
+
+    await screen.findByLabelText("Choose files");
+
+    expect(screen.queryByRole("radio")).not.toBeInTheDocument();
+    expect(screen.getByText("Read on this machine. Nothing is sent anywhere.")).toBeInTheDocument();
+  });
+
+  it("offers the choice, with this machine as the default, once Vision is set up", async () => {
+    server.use(
+      knownApplication(),
+      withCapabilities(true),
+      http.get(`*/api/applications/${APP_ID}/documents`, () => documentList()),
+    );
+    renderAt(`/applications/${APP_ID}/upload`);
+
+    const here = await screen.findByRole("radio", { name: /Read on this machine/ });
+    const vision = screen.getByRole("radio", { name: /Read with OpenRouter Vision/ });
+
+    expect(here).toBeChecked();
+    expect(vision).not.toBeChecked();
+  });
+
+  it("says the page image leaves the machine as soon as Vision is chosen", async () => {
+    server.use(
+      knownApplication(),
+      withCapabilities(true),
+      http.get(`*/api/applications/${APP_ID}/documents`, () => documentList()),
+    );
+    renderAt(`/applications/${APP_ID}/upload`);
+
+    await userEvent
+      .setup()
+      .click(await screen.findByRole("radio", { name: /Read with OpenRouter Vision/ }));
+
+    expect(screen.getByRole("status", { name: "Where the page goes" })).toHaveTextContent(
+      "sent to OpenRouter",
+    );
+    expect(screen.queryByText("Read on this machine. Nothing is sent anywhere.")).toBeNull();
+  });
+
+  it.each([
+    ["free", false],
+    ["vision", true],
+  ])("sends mode %s with the file", async (expected, chooseVision) => {
+    let sent: FormDataEntryValue | null = null;
+    server.use(
+      knownApplication(),
+      withCapabilities(true),
+      http.get(`*/api/applications/${APP_ID}/documents`, () => documentList()),
+      http.post(`*/api/applications/${APP_ID}/documents`, async ({ request }) => {
+        sent = (await request.formData()).get("mode");
+        return HttpResponse.json(doc("n1", "uploaded", null, null, { requested_mode: expected }), {
+          status: 202,
+        });
+      }),
+    );
+    renderAt(`/applications/${APP_ID}/upload`);
+    const user = userEvent.setup();
+    if (chooseVision) {
+      await user.click(await screen.findByRole("radio", { name: /Read with OpenRouter Vision/ }));
+    }
+
+    await user.upload(await screen.findByLabelText("Choose files"), png("a.png"));
+
+    await waitFor(() => {
+      expect(sent).toBe(expected);
+    });
+  });
+
+  it("explains a refusal because Vision is not set up", async () => {
+    server.use(
+      knownApplication(),
+      withCapabilities(true),
+      http.get(`*/api/applications/${APP_ID}/documents`, () => documentList()),
+      http.post(`*/api/applications/${APP_ID}/documents`, () => failure(409, "vision_unavailable")),
+    );
+    renderAt(`/applications/${APP_ID}/upload`);
+    const user = userEvent.setup();
+    await user.click(await screen.findByRole("radio", { name: /Read with OpenRouter Vision/ }));
+
+    await user.upload(await screen.findByLabelText("Choose files"), png("a.png"));
+
+    expect(
+      await screen.findByText(
+        "Vision is not set up on this server. Choose Read on this machine and upload a.png again.",
+      ),
+    ).toBeInTheDocument();
+  });
+
+  it.each([
+    [{ read_engine: "openrouter" }, "Read by OpenRouter Vision"],
+    [{ read_engine: "rapidocr" }, "Read on this machine"],
+    [
+      { requested_mode: "vision", read_engine: "rapidocr", fallback_reason: "vision_cap_reached" },
+      "Vision's daily limit was reached, so this page was read on this machine.",
+    ],
+    [
+      { requested_mode: "vision", read_engine: "rapidocr", fallback_reason: "vision_timeout" },
+      "Vision took too long, so this page was read on this machine.",
+    ],
+  ])("shows what read a document: %j", async (how, words) => {
+    server.use(
+      knownApplication(),
+      withCapabilities(true),
+      http.get(`*/api/applications/${APP_ID}/documents`, () =>
+        documentList(doc("d1", "read", "id_proof", null, how)),
+      ),
+    );
+    renderAt(`/applications/${APP_ID}/upload`);
+
+    const documents = await screen.findByRole("region", { name: "Documents" });
+
+    expect(within(documents).getByText(words)).toBeInTheDocument();
   });
 });

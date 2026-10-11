@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 
 import { field } from "./fixtures";
-import { documentTitle, fieldKind, fieldLabel, toComparison } from "./mapping";
+import { documentTitle, fieldKind, fieldLabel, provenanceWords, toComparison } from "./mapping";
 
 describe("fieldKind", () => {
   it("is a mismatch whenever the comparison said so", () => {
@@ -80,5 +80,59 @@ describe("toComparison", () => {
 
   it("drops a box that is not four numbers", () => {
     expect(toComparison(field({ box: [1, 2] })).box).toBeNull();
+  });
+});
+
+describe("the date of birth", () => {
+  it("is shown the way the document prints it, day first, on both sides", () => {
+    const dob = field({ field_name: "dob", value: "10/12/2006", application_value: "2006-12-10" });
+
+    expect(toComparison(dob).applicationValue).toBe("10/12/2006");
+    expect(toComparison(dob).documentValue).toBe("10/12/2006");
+  });
+
+  it("is left as it is when the application value is not a plain date", () => {
+    const odd = field({ field_name: "dob", application_value: "unknown" });
+
+    expect(toComparison(odd).applicationValue).toBe("unknown");
+  });
+
+  it("does not touch another field that happens to look like a date", () => {
+    const roll = field({ field_name: "roll_number", application_value: "2006-12-10" });
+
+    expect(toComparison(roll).applicationValue).toBe("2006-12-10");
+  });
+});
+
+describe("provenanceWords", () => {
+  const read = { status: "read" as const, fallback_reason: null };
+
+  it("says a Vision reading needs a person on every field", () => {
+    expect(provenanceWords({ ...read, read_engine: "openrouter" })).toEqual([
+      "Read by OpenRouter Vision. A person must check every field.",
+    ]);
+  });
+
+  it("says a local reading was local", () => {
+    expect(provenanceWords({ ...read, read_engine: "rapidocr" })).toEqual([
+      "Read on this machine.",
+    ]);
+  });
+
+  it("explains why Vision was asked for and not used", () => {
+    expect(
+      provenanceWords({
+        ...read,
+        read_engine: "rapidocr",
+        fallback_reason: "vision_error",
+      }),
+    ).toEqual([
+      "Read on this machine.",
+      "Vision could not read the page, so it was read on this machine.",
+    ]);
+  });
+
+  it("says nothing before a document is read", () => {
+    expect(provenanceWords({ ...read, status: "uploaded", read_engine: null })).toEqual([]);
   });
 });

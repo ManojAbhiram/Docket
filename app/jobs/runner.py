@@ -30,6 +30,7 @@ class RunningWorker:
 
     reader: ClosableReader
     stop_signal: asyncio.Event
+    vision_reader: ClosableReader | None = None
     tasks: list[asyncio.Task[None]] = field(default_factory=list)
     finished: bool = False
 
@@ -37,6 +38,8 @@ class RunningWorker:
         self.stop_signal.set()
         _, pending = await asyncio.wait(self.tasks, timeout=_GRACE_SECONDS)
         self.reader.close()
+        if self.vision_reader is not None:
+            self.vision_reader.close()
         if pending:
             await asyncio.wait(pending, timeout=_GRACE_SECONDS)
         self.finished = all(task.done() for task in self.tasks)
@@ -50,11 +53,19 @@ def start_worker(
     idle_seconds: float,
     sweep_interval_seconds: float,
     settle: Callable[[UUID], Awaitable[None]] | None = None,
+    vision_reader: ClosableReader | None = None,
 ) -> RunningWorker:
     """Create both tasks on the running loop."""
     stop = asyncio.Event()
-    step = partial(process_next, store, reader, confidence_cutoff=confidence_cutoff, settle=settle)
-    worker = RunningWorker(reader=reader, stop_signal=stop)
+    step = partial(
+        process_next,
+        store,
+        reader,
+        confidence_cutoff=confidence_cutoff,
+        settle=settle,
+        vision_reader=vision_reader,
+    )
+    worker = RunningWorker(reader=reader, stop_signal=stop, vision_reader=vision_reader)
     worker.tasks = [
         asyncio.create_task(run_loop(step, idle_seconds=idle_seconds, stop=stop)),
         asyncio.create_task(sweep_loop(store, interval_seconds=sweep_interval_seconds, stop=stop)),

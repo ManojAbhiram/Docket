@@ -104,3 +104,42 @@ async def test_calling_the_ledger_from_the_event_loop_thread_is_refused_not_dead
 
     with pytest.raises(RuntimeError, match="worker thread"):
         ledger.calls_made()
+
+
+async def insert_call(connection: AsyncConnection, engine: str, age_hours: float) -> None:
+    await connection.execute(
+        text(
+            "INSERT INTO gateway_calls (engine, engine_version, preprocess, duration_ms, outcome, "
+            "units, created_at) VALUES (:engine, 'v', false, 1, 'ok', 1, "
+            "now() - make_interval(secs => :seconds))"
+        ),
+        {"engine": engine, "seconds": age_hours * 3600},
+    )
+
+
+async def test_a_ledger_scoped_to_one_engine_counts_only_its_own_recent_calls(
+    factory: async_sessionmaker[AsyncSession], connection: AsyncConnection
+) -> None:
+    await insert_call(connection, "openrouter", age_hours=1)
+    await insert_call(connection, "openrouter", age_hours=23)
+    await insert_call(connection, "openrouter", age_hours=25)
+    await insert_call(connection, "rapidocr", age_hours=1)
+    vision = SqlCallLedger(
+        factory,
+        asyncio.get_running_loop(),
+        engine_version="vendor/model:free",
+        preprocess=False,
+        counts_engine="openrouter",
+        window_hours=24,
+    )
+
+    assert await asyncio.to_thread(vision.calls_made) == 2
+
+
+async def test_an_unscoped_ledger_still_counts_every_call_ever_made(
+    factory: async_sessionmaker[AsyncSession], connection: AsyncConnection
+) -> None:
+    await insert_call(connection, "openrouter", age_hours=100)
+    await insert_call(connection, "rapidocr", age_hours=1)
+
+    assert await asyncio.to_thread(ledger_for(factory).calls_made) == 2

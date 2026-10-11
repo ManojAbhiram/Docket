@@ -21,13 +21,15 @@ _APPLICATION_EXISTS = text("SELECT 1 FROM applications WHERE id = :id AND erased
 _LOCK = text("SELECT pg_advisory_xact_lock(hashtextextended(CAST(:id AS text), 0))")
 _BY_HASH = text(
     "SELECT id, application_id, detected_type::text, status::text, failure_reason, is_current, "
-    "created_at FROM documents WHERE application_id = :application_id AND sha256 = :sha256"
+    "created_at, requested_mode, read_engine, fallback_reason FROM documents "
+    "WHERE application_id = :application_id AND sha256 = :sha256"
 )
 _INSERT_DOCUMENT = text(
-    "INSERT INTO documents (application_id, uploaded_by, source_content_type, sha256, size_bytes) "
-    "VALUES (:application_id, :uploaded_by, :source_content_type, :sha256, :size_bytes) "
+    "INSERT INTO documents (application_id, uploaded_by, source_content_type, sha256, size_bytes, "
+    "requested_mode) VALUES (:application_id, :uploaded_by, :source_content_type, :sha256, "
+    ":size_bytes, :mode) "
     "RETURNING id, application_id, detected_type::text, status::text, failure_reason, is_current, "
-    "created_at"
+    "created_at, requested_mode, read_engine, fallback_reason"
 )
 _INSERT_BLOB = text(
     "INSERT INTO document_blobs (document_id, content_type, content) "
@@ -35,7 +37,8 @@ _INSERT_BLOB = text(
 )
 _LIST = text(
     "SELECT id, application_id, detected_type::text, status::text, failure_reason, is_current, "
-    "created_at FROM documents WHERE application_id = :application_id "
+    "created_at, requested_mode, read_engine, fallback_reason FROM documents "
+    "WHERE application_id = :application_id "
     "AND (CAST(:cursor_at AS timestamptz) IS NULL "
     "OR (created_at, id) < (CAST(:cursor_at AS timestamptz), CAST(:cursor_id AS uuid))) "
     "ORDER BY created_at DESC, id DESC LIMIT :fetch"
@@ -51,6 +54,9 @@ class DocumentRecord:
     failure_reason: str | None
     is_current: bool
     created_at: datetime
+    requested_mode: str
+    read_engine: str | None
+    fallback_reason: str | None
 
 
 @dataclass(frozen=True)
@@ -68,6 +74,9 @@ def _record(row: Row[Any]) -> DocumentRecord:
         failure_reason=row[4],
         is_current=row[5],
         created_at=row[6],
+        requested_mode=row[7],
+        read_engine=row[8],
+        fallback_reason=row[9],
     )
 
 
@@ -91,6 +100,7 @@ class SqlUploadStore:
         sha256: str,
         size_bytes: int,
         stored: StoredImage,
+        mode: str = "free",
     ) -> tuple[DocumentRecord, bool]:
         """Store the page image, or return the document that already holds these exact bytes."""
         async with self._factory.begin() as session:
@@ -111,6 +121,7 @@ class SqlUploadStore:
                         "source_content_type": source_content_type,
                         "sha256": sha256,
                         "size_bytes": size_bytes,
+                        "mode": mode,
                     },
                 )
             ).one()

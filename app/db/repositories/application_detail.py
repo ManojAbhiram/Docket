@@ -22,7 +22,8 @@ _APPLICATION = text(
 )
 _DOCUMENTS = text(
     "SELECT id, application_id, detected_type::text, status::text, failure_reason, is_current, "
-    "created_at FROM documents WHERE application_id = :id "
+    "created_at, requested_mode, read_engine, fallback_reason FROM documents "
+    "WHERE application_id = :id "
     "ORDER BY is_current DESC, created_at DESC, id DESC"
 )
 _FIELDS = text(
@@ -60,6 +61,9 @@ class DocumentDetail:
     failure_reason: str | None
     is_current: bool
     created_at: datetime
+    requested_mode: str
+    read_engine: str | None
+    fallback_reason: str | None
     fields: tuple[FieldRecord, ...]
 
 
@@ -134,6 +138,9 @@ class SqlReviewStore:
                     failure_reason=d[4],
                     is_current=d[5],
                     created_at=d[6],
+                    requested_mode=d[7],
+                    read_engine=d[8],
+                    fallback_reason=d[9],
                     fields=tuple(by_document.get(d[0], ())),
                 )
                 for d in documents

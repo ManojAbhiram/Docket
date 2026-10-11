@@ -4,8 +4,13 @@ import { useState } from "react";
 import type { NoticeSpec } from "@/components/Notice";
 import type { UploadedDocument } from "@/features/applications/types";
 import { UploadView } from "@/features/intake/components/UploadView";
-import { useApplicationRef, useBatchUpload, useDocuments } from "@/features/intake/hooks";
-import type { DocumentBody } from "@/features/intake/schemas";
+import {
+  useApplicationRef,
+  useBatchUpload,
+  useCapabilities,
+  useDocuments,
+} from "@/features/intake/hooks";
+import type { DocumentBody, ReadMode } from "@/features/intake/schemas";
 import { ApiError } from "@/lib/api";
 
 const MAX_BATCH = 100;
@@ -24,6 +29,18 @@ const FAILURE_WORDS: Record<string, string> = {
   engine_error: "The engine could not read the page.",
 };
 
+const ENGINE_WORDS: Record<string, string> = {
+  rapidocr: "Read on this machine",
+  openrouter: "Read by OpenRouter Vision",
+};
+
+const FALLBACK_WORDS: Record<string, string> = {
+  vision_cap_reached: "Vision's daily limit was reached, so this page was read on this machine.",
+  vision_timeout: "Vision took too long, so this page was read on this machine.",
+  vision_error: "Vision could not read the page, so it was read on this machine.",
+  vision_unavailable: "Vision is not set up, so this page was read on this machine.",
+};
+
 function shown(document: DocumentBody, position: number): UploadedDocument {
   const detected = document.detected_type ? TYPE_WORDS[document.detected_type] : undefined;
   const reason = document.failure_reason;
@@ -32,6 +49,14 @@ function shown(document: DocumentBody, position: number): UploadedDocument {
     fileName: `Document ${String(position + 1)}`,
     status: document.status,
     ...(detected && { detectedType: detected }),
+    ...(document.read_engine &&
+      ENGINE_WORDS[document.read_engine] && {
+        readBy: ENGINE_WORDS[document.read_engine],
+      }),
+    ...(document.fallback_reason &&
+      FALLBACK_WORDS[document.fallback_reason] && {
+        readNote: FALLBACK_WORDS[document.fallback_reason],
+      }),
     ...(document.status === "failed" && {
       problem: `${(reason && FAILURE_WORDS[reason]) ?? "Reading failed."} Upload the file again.`,
     }),
@@ -50,7 +75,9 @@ export function UploadPage() {
   const application = useApplicationRef(applicationId);
   const documents = useDocuments(applicationId);
   const upload = useBatchUpload(applicationId);
+  const capabilities = useCapabilities();
   const [tooMany, setTooMany] = useState(false);
+  const [mode, setMode] = useState<ReadMode>("free");
 
   const missing = isNotFound(application.error) || isNotFound(documents.error);
   let notice: NoticeSpec | undefined;
@@ -82,11 +109,14 @@ export function UploadPage() {
       loading={documents.isPending && !missing}
       readOnly={missing}
       batch={upload.items}
+      visionAvailable={capabilities.data?.vision === true}
+      mode={mode}
+      onModeChange={setMode}
       {...(notice && { notice })}
       onFiles={(files) => {
         setTooMany(files.length > MAX_BATCH);
         if (files.length <= MAX_BATCH) {
-          void upload.start(files, known);
+          void upload.start(files, known, mode);
         }
       }}
       onNoticeAction={() => {

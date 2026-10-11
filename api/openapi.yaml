@@ -275,6 +275,32 @@ paths:
         '404': { $ref: '#/components/responses/NotFound' }
         '500': { $ref: '#/components/responses/InternalError' }
 
+  /capabilities:
+    get:
+      operationId: getCapabilities
+      summary: What this server can do for the signed-in person
+      description: >-
+        Today only whether the opt-in OpenRouter Vision reader can be chosen on upload (ADR-0015). It is true
+        when a key and a model are configured. Neither is ever returned.
+      tags: [capabilities]
+      parameters:
+        - $ref: '#/components/parameters/ApiVersion'
+      responses:
+        '200':
+          description: The capabilities
+          headers:
+            X-Request-Id: { $ref: '#/components/headers/XRequestId' }
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [vision]
+                properties:
+                  vision: { type: boolean }
+              example: { vision: false }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '500': { $ref: '#/components/responses/InternalError' }
+
   /applications/{id}/documents:
     parameters:
       - name: id
@@ -342,6 +368,14 @@ paths:
                   type: string
                   format: binary
                   description: The scan or photo.
+                mode:
+                  type: string
+                  enum: [free, vision]
+                  default: free
+                  description: >-
+                    How to read it. free reads on this server. vision sends the page image to OpenRouter and is
+                    refused with 409 vision_unavailable unless the server has a key and a free model set. Vision is
+                    a request: if it cannot answer, the page is read locally and fallback_reason says why.
             encoding:
               file: { contentType: "image/jpeg, image/png, application/pdf" }
       responses:
@@ -811,7 +845,7 @@ components:
         review_reason: null
     Document:
       type: object
-      required: [id, application_id, status, is_current, created_at]
+      required: [id, application_id, status, is_current, created_at, requested_mode]
       properties:
         id: { type: string, format: uuid }
         application_id: { type: string, format: uuid }
@@ -820,6 +854,9 @@ components:
         failure_reason: { type: [string, 'null'], description: "A short reason code, never document content." }
         is_current: { type: boolean }
         created_at: { type: string, format: date-time }
+        requested_mode: { type: string, enum: [free, vision], description: "What the uploader asked for." }
+        read_engine: { type: [string, 'null'], description: "The engine that read it, for example rapidocr or openrouter. Null until read." }
+        fallback_reason: { type: [string, 'null'], description: "Why the requested engine was not used, a short code such as vision_cap_reached. Never provider text." }
         fields:
           type: array
           description: Present on the application detail, empty until the document is read.
@@ -832,6 +869,9 @@ components:
         failure_reason: null
         is_current: true
         created_at: 2026-10-05T09:05:00Z
+        requested_mode: free
+        read_engine: rapidocr
+        fallback_reason: null
     ApplicationDetail:
       allOf:
         - $ref: '#/components/schemas/Application'

@@ -144,6 +144,45 @@ async def test_three_required_documents_that_all_match_make_the_application_veri
     assert results == ["match", "skipped"]
 
 
+# Regression: ISSUE-002 [NOTASK-14], found by /qa on 2026-10-10.
+# Report: .scratch/qa-NOTASK-14/qa-report-docket-2026-10-10.md
+@pytest.mark.parametrize("end", [-2, 11], ids=["missing-subject", "missing-table"])
+async def test_missing_expected_marks_are_saved_for_review_instead_of_verifying(
+    api: AsyncClient,
+    connection: AsyncConnection,
+    factory: async_sessionmaker[AsyncSession],
+    api_settings: Settings,
+    tmp_path: Path,
+    end: int,
+) -> None:
+    await staff(api, connection)
+    application_id = await application(connection)
+
+    await read_all(
+        api,
+        connection,
+        factory,
+        api_settings,
+        tmp_path,
+        [marksheet(TENTH)[:end], marksheet(TWELFTH), id_card()],
+        application_id,
+    )
+
+    assert await status_of(connection, application_id) == "needs_review"
+    missing = (
+        await connection.execute(
+            text(
+                "SELECT f.value, f.confidence, f.needs_review, f.review_reason "
+                "FROM extracted_fields f JOIN documents d ON d.id = f.document_id "
+                "WHERE d.application_id = :id AND d.detected_type = '10th_marksheet' "
+                "AND d.status = 'read' AND f.field_name = 'marks' AND f.subject = 'Mathematics'"
+            ),
+            {"id": application_id},
+        )
+    ).one()
+    assert tuple(missing) == ("", 0.0, True, "not_extracted")
+
+
 async def test_a_name_that_differs_on_one_document_sends_the_application_to_review(
     api: AsyncClient,
     connection: AsyncConnection,

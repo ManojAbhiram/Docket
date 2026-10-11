@@ -184,6 +184,20 @@ describe("the application review screen", () => {
     });
   });
 
+  it("says what read each document and that Vision needs a person on every field", async () => {
+    const base = detail();
+    serve({
+      ...base,
+      documents: [{ ...base.documents[0]!, requested_mode: "vision", read_engine: "openrouter" }],
+    });
+
+    renderCompare();
+
+    expect(
+      await screen.findByText("Read by OpenRouter Vision. A person must check every field."),
+    ).toBeInTheDocument();
+  });
+
   it("keeps an older upload folded away", async () => {
     const base = detail();
     const older = {

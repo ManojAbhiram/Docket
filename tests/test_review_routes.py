@@ -54,6 +54,9 @@ class FakeStore:
             failure_reason=None,
             is_current=True,
             created_at=STAMP,
+            requested_mode="free",
+            read_engine="rapidocr",
+            fallback_reason=None,
             fields=(field,),
         )
         return ApplicationDetail(

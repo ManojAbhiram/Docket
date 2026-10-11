@@ -55,6 +55,9 @@ const reviewDocumentSchema = z.object({
   failure_reason: z.string().nullable(),
   is_current: z.boolean(),
   created_at: z.string(),
+  requested_mode: z.enum(["free", "vision"]),
+  read_engine: z.string().nullable(),
+  fallback_reason: z.string().nullable(),
   fields: z.array(reviewFieldSchema),
 });
 export type ReviewDocument = z.infer<typeof reviewDocumentSchema>;

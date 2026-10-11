@@ -25,7 +25,7 @@ _LABELS = {
     "id number": "document_number",
     "tc number": "document_number",
 }
-_ORDER = ("name", "father_name", "dob", "board", "roll_number", "document_number", "marks")
+FIELD_ORDER = ("name", "father_name", "dob", "board", "roll_number", "document_number", "marks")
 _CODE = re.compile(r"^[A-Za-z0-9-]{4,30}$")
 _MARK = re.compile(r"^\d{1,3}$")
 _MAX_MARK = 100
@@ -35,12 +35,15 @@ _CURLY_APOSTROPHE = chr(0x2019)
 
 @dataclass(frozen=True)
 class ExtractedField:
-    """One field read from a document. A field nobody found has an empty value and confidence 0."""
+    """One field read from a document. A field nobody found has an empty value and confidence 0.
+
+    A model reader gives no score, so its fields carry `None`: a number would be made up.
+    """
 
     field_name: str
     subject: str | None
     value: str
-    confidence: float
+    confidence: float | None
     box: Box | None
     needs_review: bool
     review_reason: ReviewReason | None
@@ -52,7 +55,7 @@ def extract_fields(
     """Every field `document_type` carries, each marked for review when it cannot be trusted."""
     wanted = fields_for(document_type)
     fields: list[ExtractedField] = []
-    for name in _ORDER:
+    for name in FIELD_ORDER:
         if name not in wanted:
             continue
         if name == "marks":
@@ -87,7 +90,7 @@ def _marks(words: Sequence[OcrWord], cutoff: float) -> list[ExtractedField]:
 def _judge(name: str, subject: str | None, value: OcrWord, cutoff: float) -> ExtractedField:
     text = value.text.strip()
     reason: ReviewReason | None = None
-    if not _valid(name, text):
+    if not is_valid_value(name, text):
         reason = "format_invalid"
     elif value.confidence < cutoff:
         reason = "low_confidence"
@@ -102,7 +105,7 @@ def _judge(name: str, subject: str | None, value: OcrWord, cutoff: float) -> Ext
     )
 
 
-def _valid(name: str, text: str) -> bool:
+def is_valid_value(name: str, text: str) -> bool:
     if name == "dob":
         return parse_printed_date(text) is not None
     if name in {"roll_number", "document_number"}:

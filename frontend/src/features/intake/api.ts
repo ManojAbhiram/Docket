@@ -4,10 +4,12 @@ import { apiFetch } from "@/lib/api";
 
 import {
   applicationListSchema,
+  capabilitiesSchema,
   documentListSchema,
   documentSchema,
   importResultSchema,
   type DocumentBody,
+  type ReadMode,
   type Status,
 } from "./schemas";
 
@@ -39,10 +41,15 @@ export function listApplications(
   return apiFetch(`/api/applications?${query.toString()}`, applicationListSchema, init);
 }
 
-/** uploadDocument stores one scan against an application. */
-export function uploadDocument(applicationId: string, file: File): Promise<DocumentBody> {
+/** uploadDocument stores one scan against an application, to be read the way `mode` says. */
+export function uploadDocument(
+  applicationId: string,
+  file: File,
+  mode: ReadMode,
+): Promise<DocumentBody> {
   const body = new FormData();
   body.append("file", file);
+  body.append("mode", mode);
   return apiFetch(`/api/applications/${applicationId}/documents`, documentSchema, {
     method: "POST",
     body,
@@ -62,4 +69,9 @@ export function listDocuments(applicationId: string, init: Pick<RequestInit, "si
     documentListSchema,
     init,
   );
+}
+
+/** What this server can do for the signed-in person, such as reading with Vision. */
+export function fetchCapabilities(init: Pick<RequestInit, "signal"> = {}) {
+  return apiFetch("/api/capabilities", capabilitiesSchema, init);
 }
