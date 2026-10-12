@@ -163,14 +163,20 @@ function DocumentSection({ doc, selectedId, onSelect }: DocumentSectionProps) {
         </p>
       ))}
       {doc.status === "failed" ? (
-        <div className="space-y-1">
-          <p>This document could not be read.</p>
-          <p className="text-muted-foreground">{failureSentence(doc.failure_reason)}</p>
+        <div className="space-y-3">
+          <div className="space-y-1">
+            <p>This document could not be read.</p>
+            <p className="text-muted-foreground">{failureSentence(doc.failure_reason)}</p>
+          </div>
+          <StoredPage documentId={doc.id} />
         </div>
       ) : doc.status === "uploaded" || doc.status === "processing" ? (
         <p className="text-muted-foreground">This document is still being read.</p>
       ) : doc.detected_type === "unknown" ? (
-        <p>This document was not recognised as a marksheet or an ID proof.</p>
+        <div className="space-y-3">
+          <p>This document was not recognised as a marksheet or an ID proof.</p>
+          <StoredPage documentId={doc.id} />
+        </div>
       ) : (
         <ReadDocument
           documentId={doc.id}
@@ -181,6 +187,24 @@ function DocumentSection({ doc, selectedId, onSelect }: DocumentSectionProps) {
         />
       )}
     </section>
+  );
+}
+
+/** The page as uploaded, for a document with no fields to point at, so a person can judge it. */
+function StoredPage({ documentId }: { documentId: string }) {
+  const [broken, setBroken] = useState(false);
+  if (broken) {
+    return <p role="alert">The document image did not load.</p>;
+  }
+  return (
+    <img
+      src={documentImageUrl(documentId)}
+      alt="Uploaded page of this document"
+      className="max-h-[32rem] w-full rounded-md border border-border bg-card object-contain"
+      onError={() => {
+        setBroken(true);
+      }}
+    />
   );
 }
 

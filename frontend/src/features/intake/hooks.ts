@@ -1,4 +1,5 @@
 import {
+  type QueryClient,
   infiniteQueryOptions,
   queryOptions,
   useInfiniteQuery,
@@ -9,6 +10,8 @@ import {
 import { useCallback, useEffect, useRef, useState } from "react";
 
 import type { BatchItem } from "@/features/intake/components/UploadView";
+import { reportKeys } from "@/features/reports/hooks";
+import { reviewKeys } from "@/features/review/hooks";
 import { ApiError } from "@/lib/api";
 
 import {
@@ -37,7 +40,18 @@ export function applicationsQueryOptions(filter: ApplicationFilter) {
     queryFn: ({ pageParam, signal }) => listApplications(filter, pageParam, { signal }),
     initialPageParam: undefined as string | undefined,
     getNextPageParam: (last) => last.page.next_cursor ?? undefined,
+    // A status moves while documents are read, so opening the list always asks again.
+    staleTime: 0,
   });
+}
+
+/** Every screen that shows an application's status, marked out of date so it asks again. */
+function refreshStatuses(client: QueryClient): Promise<unknown> {
+  return Promise.all([
+    client.invalidateQueries({ queryKey: [...intakeKeys.all, "applications"] }),
+    client.invalidateQueries({ queryKey: reviewKeys.all }),
+    client.invalidateQueries({ queryKey: reportKeys.dashboard() }),
+  ]);
 }
 
 export function useApplications(filter: ApplicationFilter) {
@@ -48,18 +62,32 @@ export const POLL_MS = 3000;
 
 /** The documents of one application. While one is waiting or being read, it asks again every 3 s. */
 export function useDocuments(applicationId: string) {
-  return useQuery(
+  const client = useQueryClient();
+  const query = useQuery(
     queryOptions({
       queryKey: intakeKeys.documents(applicationId),
       queryFn: ({ signal }) => listDocuments(applicationId, { signal }),
-      refetchInterval: (query) => {
-        const pending = query.state.data?.data.some(
-          (d) => d.status === "uploaded" || d.status === "processing",
-        );
-        return pending ? POLL_MS : false;
-      },
+      refetchInterval: (current) => (isWaiting(current.state.data) ? POLL_MS : false),
     }),
   );
+  // The server settles the status when a document is read, so once none is waiting any more the
+  // screens that show the status are out of date.
+  const waiting = query.data === undefined ? undefined : isWaiting(query.data);
+  const wasWaiting = useRef(false);
+  useEffect(() => {
+    if (waiting === undefined) {
+      return;
+    }
+    if (wasWaiting.current && !waiting) {
+      void refreshStatuses(client);
+    }
+    wasWaiting.current = waiting;
+  }, [waiting, client]);
+  return query;
+}
+
+function isWaiting(list: { data: { status: string }[] } | undefined): boolean {
+  return list?.data.some((d) => d.status === "uploaded" || d.status === "processing") === true;
 }
 
 export function useApplicationRef(applicationId: string) {
@@ -165,6 +193,7 @@ export function useBatchUpload(applicationId: string) {
             mark(index, { state: "refused", problem: refusalFor(file.name, error) });
           }
           await client.invalidateQueries({ queryKey: intakeKeys.documents(applicationId) });
+          await refreshStatuses(client);
         }
       } finally {
         running.current = false;
