@@ -44,6 +44,7 @@ describe("status after a document is read", () => {
       intakeKeys.applications({}),
       reviewKeys.queue(),
       reviewKeys.application(APP_ID),
+      intakeKeys.application(APP_ID),
       reportKeys.dashboard(),
     ];
     for (const key of keys) {
@@ -62,12 +63,9 @@ describe("status after a document is read", () => {
     await waitFor(() => {
       expect(result.current.data?.data[0]?.status).toBe("processing");
     });
-    expect(keys.map((key) => client.getQueryState(key)?.isInvalidated)).toEqual([
-      false,
-      false,
-      false,
-      false,
-    ]);
+    expect(keys.map((key) => client.getQueryState(key)?.isInvalidated)).toEqual(
+      keys.map(() => false),
+    );
 
     await client.invalidateQueries({ queryKey: intakeKeys.documents(APP_ID) });
 
@@ -75,12 +73,9 @@ describe("status after a document is read", () => {
       expect(result.current.data?.data[0]?.status).toBe("read");
     });
     await waitFor(() => {
-      expect(keys.map((key) => client.getQueryState(key)?.isInvalidated)).toEqual([
-        true,
-        true,
-        true,
-        true,
-      ]);
+      expect(keys.map((key) => client.getQueryState(key)?.isInvalidated)).toEqual(
+        keys.map(() => true),
+      );
     });
   });
 });

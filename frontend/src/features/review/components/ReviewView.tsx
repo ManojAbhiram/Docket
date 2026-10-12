@@ -7,6 +7,7 @@ import type { NoticeSpec } from "@/components/Notice";
 import { PageHeader } from "@/components/PageHeader";
 import { ShortcutsDialog, type Shortcut } from "@/components/ShortcutsDialog";
 import { StatusBadge } from "@/components/StatusBadge";
+import { StillNeeded } from "@/components/StillNeeded";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { documentImageUrl } from "@/features/review/api";
@@ -100,6 +101,7 @@ export function ReviewView({
           )
         }
       />
+      {application && <StillNeeded types={application.missing_document_types} />}
       {notice && <ActionNotice spec={notice} onAction={onNoticeAction} />}
       {loading && (
         <div className="grid gap-6 lg:grid-cols-2" aria-busy="true">

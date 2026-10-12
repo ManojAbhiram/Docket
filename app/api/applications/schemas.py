@@ -8,6 +8,8 @@ from pydantic import BaseModel, Field
 
 from app.api.types import DocumentType
 
+RequiredDocumentType = Literal["10th_marksheet", "12th_marksheet", "id_proof"]
+
 
 class ApplicationOut(BaseModel):
     id: UUID
@@ -73,4 +75,7 @@ class DocumentDetailOut(BaseModel):
 class ApplicationDetailOut(ApplicationOut):
     """The application with its documents, current ones first."""
 
+    missing_document_types: list[RequiredDocumentType] = Field(
+        description="Required types that no current, read document gives. Empty once all are read.",
+    )
     documents: list[DocumentDetailOut]

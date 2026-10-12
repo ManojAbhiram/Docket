@@ -49,6 +49,7 @@ export function applicationsQueryOptions(filter: ApplicationFilter) {
 function refreshStatuses(client: QueryClient): Promise<unknown> {
   return Promise.all([
     client.invalidateQueries({ queryKey: [...intakeKeys.all, "applications"] }),
+    client.invalidateQueries({ queryKey: [...intakeKeys.all, "application"] }),
     client.invalidateQueries({ queryKey: reviewKeys.all }),
     client.invalidateQueries({ queryKey: reportKeys.dashboard() }),
   ]);

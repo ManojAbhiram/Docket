@@ -438,3 +438,30 @@ async def test_each_document_says_what_was_asked_for_and_what_actually_read_it(
         "rapidocr",
         "vision_cap_reached",
     )
+
+
+async def test_the_detail_names_the_required_documents_that_are_not_read_yet(
+    api: AsyncClient, connection: AsyncConnection
+) -> None:
+    await as_verifier(api, connection)
+    application_id = await flagged_application(connection)
+    await make_document(
+        connection, application_id, doc_type="12th_marksheet", is_current=False, sha="b"
+    )
+
+    body = (await api.get(f"/api/applications/{application_id}")).json()
+
+    assert body["missing_document_types"] == ["12th_marksheet", "id_proof"]
+
+
+async def test_the_detail_names_nothing_once_all_three_are_read(
+    api: AsyncClient, connection: AsyncConnection
+) -> None:
+    await as_verifier(api, connection)
+    application_id = await flagged_application(connection)
+    await make_document(connection, application_id, doc_type="12th_marksheet", sha="c")
+    await make_document(connection, application_id, doc_type="id_proof", sha="d")
+
+    body = (await api.get(f"/api/applications/{application_id}")).json()
+
+    assert body["missing_document_types"] == []

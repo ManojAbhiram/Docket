@@ -4,6 +4,7 @@ import { ListRow } from "@/components/ListRow";
 import type { NoticeSpec } from "@/components/Notice";
 import { PageHeader } from "@/components/PageHeader";
 import { ReadProgress, type ReadState } from "@/components/ReadProgress";
+import { StillNeeded } from "@/components/StillNeeded";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -40,6 +41,8 @@ const BATCH_WORDS: Record<BatchState, string> = {
 
 interface UploadViewProps {
   reference: string;
+  /** Required types no read document gives yet. */
+  missingTypes?: readonly string[];
   documents: UploadedDocument[];
   loading?: boolean;
   /** Staff upload; a verifier sees the list only. */
@@ -155,6 +158,7 @@ function ModeChoice({
 /** S-05: add scans to one application and see what the machine read from each. */
 export function UploadView({
   reference,
+  missingTypes = [],
   documents,
   loading = false,
   readOnly = false,
@@ -179,6 +183,7 @@ export function UploadView({
             : "Read on this machine. Nothing is sent anywhere."
         }
       />
+      {!readOnly && <StillNeeded types={missingTypes} />}
       {!readOnly && visionAvailable && <ModeChoice mode={mode} onChange={onModeChange} />}
       {!readOnly && sendsOut && (
         <p

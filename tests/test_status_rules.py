@@ -12,6 +12,7 @@ from app.domain.status import (
     VerificationNotAllowedError,
     assert_can_verify,
     compute_status,
+    missing_types,
 )
 
 MATCH = FieldFacts(match=True)
@@ -148,3 +149,34 @@ def test_a_field_not_yet_compared_is_not_a_match() -> None:
 )
 def test_the_status_is_always_one_of_the_three(documents: list[DocumentFacts]) -> None:
     assert compute_status(documents) in {"verified", "needs_review", "missing_documents"}
+
+
+def test_with_nothing_uploaded_all_three_required_types_are_missing_in_a_fixed_order() -> None:
+    assert missing_types([]) == ("10th_marksheet", "12th_marksheet", "id_proof")
+
+
+def test_a_complete_set_misses_nothing() -> None:
+    assert missing_types(complete_and_matching()) == ()
+
+
+def test_only_the_types_that_are_not_read_are_named() -> None:
+    assert missing_types([read("10th_marksheet", MATCH)]) == ("12th_marksheet", "id_proof")
+
+
+def test_a_document_that_is_waiting_failed_or_unrecognised_does_not_count_as_present() -> None:
+    documents = [
+        DocumentFacts(doc_type="10th_marksheet", state="processing"),
+        DocumentFacts(doc_type="12th_marksheet", state="failed"),
+        DocumentFacts(doc_type="unknown", state="read"),
+        DocumentFacts(doc_type=None, state="uploaded"),
+    ]
+
+    assert missing_types(documents) == ("10th_marksheet", "12th_marksheet", "id_proof")
+
+
+def test_a_transfer_certificate_is_neither_required_nor_counted() -> None:
+    assert missing_types([read("transfer_certificate", MATCH)]) == (
+        "10th_marksheet",
+        "12th_marksheet",
+        "id_proof",
+    )

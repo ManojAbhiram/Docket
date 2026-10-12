@@ -56,7 +56,11 @@ export function uploadDocument(
   });
 }
 
-const applicationRefSchema = z.object({ id: z.string(), application_ref: z.string() });
+const applicationRefSchema = z.object({
+  id: z.string(),
+  application_ref: z.string(),
+  missing_document_types: z.array(z.string()).default([]),
+});
 
 /** The application's reference, to name the page. The rest of the detail is the review screen's. */
 export function fetchApplicationRef(applicationId: string, init: Pick<RequestInit, "signal"> = {}) {
