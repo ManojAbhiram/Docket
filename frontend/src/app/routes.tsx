@@ -16,6 +16,7 @@ import { parseGallerySearch } from "@/design/registry";
 import { AuthGate, RequireRole } from "@/features/auth/components/AuthGate";
 import { SignInPage } from "@/features/auth/components/SignInPage";
 import { SignUpPage } from "@/features/auth/components/SignUpPage";
+import { HelpPage } from "@/features/help/HelpPage";
 import { ApplicationsPage } from "@/features/intake/pages/ApplicationsPage";
 import { ImportPage } from "@/features/intake/pages/ImportPage";
 import { UploadPage } from "@/features/intake/pages/UploadPage";
@@ -126,6 +127,12 @@ const dashboardRoute = createRoute({
   component: DashboardPage,
 });
 
+const helpRoute = createRoute({
+  getParentRoute: () => appRoute,
+  path: "/help",
+  component: HelpPage,
+});
+
 const exportRoute = createRoute({
   getParentRoute: () => appRoute,
   path: "/export",
@@ -170,6 +177,7 @@ const appRoutes = appRoute.addChildren([
   queueRoute,
   dashboardRoute,
   exportRoute,
+  helpRoute,
 ]);
 
 export const routeTree = rootRoute.addChildren([

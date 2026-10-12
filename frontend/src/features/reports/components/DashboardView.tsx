@@ -127,7 +127,7 @@ export function DashboardView({
   return (
     <div className="space-y-6">
       <PageHeader
-        title="Dashboard"
+        title="Overview"
         description={counts && total > 0 ? `${number.format(total)} applications` : undefined}
         actions={
           <>

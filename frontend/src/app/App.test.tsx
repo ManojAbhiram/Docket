@@ -47,9 +47,31 @@ describe("App", () => {
       "aria-current",
       "page",
     );
-    expect(within(nav).getByRole("link", { name: "Dashboard" })).not.toHaveAttribute(
-      "aria-current",
-    );
+    expect(within(nav).getByRole("link", { name: "Overview" })).not.toHaveAttribute("aria-current");
+  });
+
+  it("offers the Help Center to every role, in the sidebar", async () => {
+    for (const role of ["staff", "verifier"] as const) {
+      fakeSession({ startAs: role });
+      const { unmount } = renderAt("/applications");
+
+      const nav = await screen.findByRole("navigation", { name: "Main" });
+      expect(await within(nav).findByRole("link", { name: "Help Center" })).toHaveAttribute(
+        "href",
+        "/help",
+      );
+      unmount();
+    }
+  });
+
+  it("names the product in the sidebar with its logo", async () => {
+    fakeSession({ startAs: "staff" });
+
+    renderAt("/applications");
+
+    const home = await screen.findByRole("link", { name: "Docket" });
+    expect(home).toHaveAttribute("href", "/");
+    expect(within(home).getByRole("img", { name: "Docket logo" })).toBeInTheDocument();
   });
 
   it("says on every screen that the data is synthetic", async () => {

@@ -285,10 +285,9 @@ describe("applications", () => {
     renderAt("/applications", "staff");
 
     expect(await screen.findByText("No applications yet.")).toBeInTheDocument();
-    expect(screen.getByRole("link", { name: "Import applications" })).toHaveAttribute(
-      "href",
-      "/import",
-    );
+    expect(
+      within(screen.getByRole("main")).getByRole("link", { name: "Import applications" }),
+    ).toHaveAttribute("href", "/import");
   });
 
   it("says what failed and reloads on request", async () => {
