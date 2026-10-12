@@ -450,6 +450,22 @@ describe("upload", () => {
     expect(await screen.findByText("Already stored")).toBeInTheDocument();
   });
 
+  it("names the documents still needed for this application", async () => {
+    server.use(
+      http.get(`*/api/applications/${APP_ID}`, () =>
+        HttpResponse.json({
+          id: APP_ID,
+          application_ref: "SYN-APP-007",
+          missing_document_types: ["10th_marksheet", "id_proof"],
+        }),
+      ),
+      http.get(`*/api/applications/${APP_ID}/documents`, () => documentList()),
+    );
+    renderAt(`/applications/${APP_ID}/upload`);
+
+    expect(await screen.findByText("Still needed: 10th marksheet, id proof")).toBeInTheDocument();
+  });
+
   it("asks again every three seconds while a document is being read and stops when it is read", async () => {
     let lists = 0;
     server.use(

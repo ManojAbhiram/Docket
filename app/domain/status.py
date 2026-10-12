@@ -12,7 +12,8 @@ from app.core.errors import ConflictError
 Status = Literal["verified", "needs_review", "missing_documents"]
 DocumentState = Literal["uploaded", "processing", "read", "failed"]
 
-REQUIRED_TYPES = frozenset({"10th_marksheet", "12th_marksheet", "id_proof"})
+REQUIRED_ORDER = ("10th_marksheet", "12th_marksheet", "id_proof")
+REQUIRED_TYPES = frozenset(REQUIRED_ORDER)
 
 
 @dataclass(frozen=True)
@@ -44,14 +45,20 @@ class VerificationNotAllowedError(StatusNotAllowedError):
     code = "verification_not_allowed"
 
 
+def missing_types(documents: list[DocumentFacts]) -> tuple[str, ...]:
+    """The required types that no read document gives, in a fixed order.
+
+    A document that is waiting, failed or not recognised does not count as present.
+    """
+    present = {d.doc_type for d in documents if d.state == "read"}
+    return tuple(t for t in REQUIRED_ORDER if t not in present)
+
+
 def compute_status(documents: list[DocumentFacts], *, approved: bool = False) -> Status:
     """One of the three statuses. `approved` is a verifier approval newer than the evidence."""
-    present = {
-        d.doc_type for d in documents if d.state == "read" and d.doc_type not in (None, "unknown")
-    }
     waiting = any(d.state in ("uploaded", "processing") for d in documents)
     # An upload nobody has read yet is evidence still to come, so it holds back Verified.
-    missing = waiting or not present >= REQUIRED_TYPES
+    missing = waiting or bool(missing_types(documents))
     if approved:
         return "missing_documents" if missing else "verified"
     if any(_needs_a_person(d) for d in documents):

@@ -42,6 +42,7 @@ export function detail(overrides: Partial<ApplicationDetail> = {}): ApplicationD
     marks: { English: 59 },
     category: "General",
     created_at: "2026-10-05T09:00:00Z",
+    missing_document_types: [],
     documents: [
       {
         id: DOCUMENT_ID,

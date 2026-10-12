@@ -879,8 +879,12 @@ components:
       allOf:
         - $ref: '#/components/schemas/Application'
         - type: object
-          required: [documents]
+          required: [documents, missing_document_types]
           properties:
+            missing_document_types:
+              type: array
+              description: Required types that no current, read document gives. Empty once all three are read.
+              items: { type: string, enum: [10th_marksheet, 12th_marksheet, id_proof] }
             documents:
               type: array
               items: { $ref: '#/components/schemas/Document' }
@@ -898,6 +902,7 @@ components:
         rejected: false
         created_at: 2026-10-05T09:00:00Z
         updated_at: 2026-10-05T09:12:41Z
+        missing_document_types: [12th_marksheet, id_proof]
         documents:
           - id: 0192b1c3-1a2b-7c4e-9a1b-2c3d4e5f6a7c
             application_id: 0192b1c2-7f3a-7c4e-9a1b-2c3d4e5f6a7b

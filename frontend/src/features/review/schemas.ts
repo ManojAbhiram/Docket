@@ -71,6 +71,7 @@ export const applicationDetailSchema = queueItemSchema.extend({
   marks: z.record(z.string(), z.number()),
   category: z.string(),
   created_at: z.string(),
+  missing_document_types: z.array(z.enum(["10th_marksheet", "12th_marksheet", "id_proof"])),
   documents: z.array(reviewDocumentSchema),
 });
 export type ApplicationDetail = z.infer<typeof applicationDetailSchema>;

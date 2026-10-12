@@ -293,6 +293,28 @@ describe("the application review screen", () => {
     expect(page).toHaveAttribute("src", `http://api.test/api/documents/${DOCUMENT_ID}/image`);
   });
 
+  it("names the documents still needed", async () => {
+    serve(
+      detail({
+        status: "missing_documents",
+        missing_document_types: ["12th_marksheet", "id_proof"],
+      }),
+    );
+
+    renderCompare();
+
+    expect(await screen.findByText("Still needed: 12th marksheet, id proof")).toBeInTheDocument();
+  });
+
+  it("says nothing about missing documents once all three are read", async () => {
+    serve(detail({ missing_document_types: [] }));
+
+    renderCompare();
+
+    await screen.findByRole("heading", { name: "SYN-APP-004" });
+    expect(screen.queryByText(/Still needed/)).not.toBeInTheDocument();
+  });
+
   it("says a document is still being read", async () => {
     const base = detail();
     serve({

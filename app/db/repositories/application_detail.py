@@ -14,6 +14,7 @@ from sqlalchemy import Row, text
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
 from app.domain.review import ApplicationValues, application_value
+from app.domain.status import DocumentFacts, missing_types
 
 _APPLICATION = text(
     "SELECT id, application_ref, full_name, father_name, date_of_birth, board, roll_number, marks, "
@@ -82,6 +83,7 @@ class ApplicationDetail:
     rejected: bool
     created_at: datetime
     updated_at: datetime
+    missing_document_types: tuple[str, ...]
     documents: tuple[DocumentDetail, ...]
 
 
@@ -129,6 +131,9 @@ class SqlReviewStore:
             rejected=row[10],
             created_at=row[11],
             updated_at=row[12].astimezone(UTC),
+            missing_document_types=missing_types(
+                [DocumentFacts(doc_type=d[2], state=d[3]) for d in documents if d[5]]
+            ),
             documents=tuple(
                 DocumentDetail(
                     id=d[0],

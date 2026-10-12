@@ -73,6 +73,7 @@ class FakeStore:
             rejected=False,
             created_at=STAMP,
             updated_at=STAMP,
+            missing_document_types=("12th_marksheet", "id_proof"),
             documents=(document,),
         )
 
@@ -108,6 +109,16 @@ async def test_the_detail_carries_the_etag_and_the_value_beside_the_value(
         "Latha Sharma",
         "mismatch",
     )
+
+
+async def test_the_detail_names_the_documents_still_needed(
+    signed_in: FastAPI, client: AsyncClient
+) -> None:
+    serve(signed_in, FakeStore())
+
+    response = await client.get(f"/api/applications/{APPLICATION_ID}")
+
+    assert response.json()["missing_document_types"] == ["12th_marksheet", "id_proof"]
 
 
 async def test_an_application_the_store_does_not_have_is_404(

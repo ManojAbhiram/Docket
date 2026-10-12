@@ -99,6 +99,7 @@ export function UploadPage() {
   return (
     <UploadView
       reference={application.data?.application_ref ?? "this application"}
+      missingTypes={application.data?.missing_document_types ?? []}
       documents={documents.data?.data.map(shown) ?? []}
       loading={documents.isPending && !missing}
       readOnly={missing}
