@@ -370,3 +370,16 @@
     transform: none;
   }
 }
+
+/* The sidebar sits on the same deep teal as the sign in panel and the old app bar. Scoped to the
+   sidebar element and its wrapper (the drawer on a phone renders outside the layout, so a variable set on
+   the layout would not reach it). Alias only: the palette stays in docs/design/tokens.json. */
+[data-slot="sidebar"],
+[data-sidebar="sidebar"] {
+  --sidebar: var(--header);
+  --sidebar-foreground: var(--header-foreground);
+  --sidebar-accent: color-mix(in oklab, var(--header-foreground) 18%, var(--header));
+  --sidebar-accent-foreground: var(--header-foreground);
+  --sidebar-border: color-mix(in oklab, var(--header-foreground) 22%, var(--header));
+  --sidebar-ring: var(--header-foreground);
+}

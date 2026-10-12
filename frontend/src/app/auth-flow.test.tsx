@@ -1,5 +1,5 @@
 import { createMemoryHistory } from "@tanstack/react-router";
-import { act, render, screen, waitFor } from "@testing-library/react";
+import { act, render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { http, HttpResponse } from "msw";
 import { describe, expect, it } from "vitest";
@@ -133,8 +133,10 @@ describe("the signed-in shell", () => {
     renderAt("/applications");
 
     const nav = await screen.findByRole("navigation", { name: "Main" });
-    expect(await screen.findByRole("link", { name: "Import" })).toBeInTheDocument();
-    expect(screen.getByRole("link", { name: "Export" })).toBeInTheDocument();
+    expect(
+      await within(nav).findByRole("link", { name: "Import applications" }),
+    ).toBeInTheDocument();
+    expect(within(nav).getByRole("link", { name: "Export verified list" })).toBeInTheDocument();
     expect(nav).not.toHaveTextContent("Review queue");
     expect(screen.getByText("Demo Staff")).toBeInTheDocument();
   });
@@ -145,8 +147,13 @@ describe("the signed-in shell", () => {
     renderAt("/applications");
 
     expect(await screen.findByRole("link", { name: "Review queue" })).toBeInTheDocument();
-    expect(screen.queryByRole("link", { name: "Import" })).not.toBeInTheDocument();
-    expect(screen.queryByRole("link", { name: "Export" })).not.toBeInTheDocument();
+    const nav = screen.getByRole("navigation", { name: "Main" });
+    expect(
+      within(nav).queryByRole("link", { name: "Import applications" }),
+    ).not.toBeInTheDocument();
+    expect(
+      within(nav).queryByRole("link", { name: "Export verified list" }),
+    ).not.toBeInTheDocument();
   });
 
   it("sends each role to its own start from the index", async () => {

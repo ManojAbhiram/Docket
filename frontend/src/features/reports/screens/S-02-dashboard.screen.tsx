@@ -4,7 +4,7 @@ import { DashboardView } from "@/features/reports/components/DashboardView";
 
 export const screen: ScreenModule["screen"] = {
   id: "S-02",
-  name: "Dashboard",
+  name: "Overview",
   feature: "reports",
   job: "Shows how many applications are Verified, Needs review and Missing documents, and leads to the next job.",
   states: {

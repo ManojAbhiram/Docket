@@ -67,17 +67,27 @@ describe("the dashboard", () => {
     );
   });
 
+  it("is called Overview, the name the sidebar uses", async () => {
+    fakeSession({ startAs: "staff" });
+    dashboardAnswers(json(counts()));
+
+    renderAt("/dashboard");
+
+    expect(await screen.findByRole("heading", { level: 1, name: "Overview" })).toBeInTheDocument();
+  });
+
   it("sends staff to import, export and the applications", async () => {
     fakeSession({ startAs: "staff" });
     dashboardAnswers(json(counts()));
 
     renderAt("/dashboard");
 
-    expect(await screen.findByRole("link", { name: "Import applications" })).toHaveAttribute(
+    const main = within(await screen.findByRole("main"));
+    expect(await main.findByRole("link", { name: "Import applications" })).toHaveAttribute(
       "href",
       "/import",
     );
-    expect(screen.getByRole("link", { name: "Export verified list" })).toHaveAttribute(
+    expect(main.getByRole("link", { name: "Export verified list" })).toHaveAttribute(
       "href",
       "/export",
     );
@@ -109,7 +119,8 @@ describe("the dashboard", () => {
     dashboardAnswers(json(counts()));
     renderAt("/dashboard");
 
-    await userEvent.click(await screen.findByRole("link", { name: "Import applications" }));
+    const main = within(await screen.findByRole("main"));
+    await userEvent.click(await main.findByRole("link", { name: "Import applications" }));
 
     expect(await screen.findByRole("heading", { name: "Import applications" })).toBeInTheDocument();
   });
