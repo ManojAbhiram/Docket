@@ -265,6 +265,34 @@ describe("the application review screen", () => {
     ).toBeInTheDocument();
   });
 
+  it("shows the uploaded page of a document that was not recognised", async () => {
+    const base = detail();
+    serve({
+      ...base,
+      documents: [{ ...base.documents[0]!, detected_type: "unknown", fields: [] }],
+    });
+
+    renderCompare();
+
+    const page = await screen.findByRole("img", { name: /uploaded page/i });
+    expect(page).toHaveAttribute("src", `http://api.test/api/documents/${DOCUMENT_ID}/image`);
+  });
+
+  it("shows the uploaded page of a document that could not be read", async () => {
+    const base = detail();
+    serve({
+      ...base,
+      documents: [
+        { ...base.documents[0]!, status: "failed", failure_reason: "cap_reached", fields: [] },
+      ],
+    });
+
+    renderCompare();
+
+    const page = await screen.findByRole("img", { name: /uploaded page/i });
+    expect(page).toHaveAttribute("src", `http://api.test/api/documents/${DOCUMENT_ID}/image`);
+  });
+
   it("says a document is still being read", async () => {
     const base = detail();
     serve({
