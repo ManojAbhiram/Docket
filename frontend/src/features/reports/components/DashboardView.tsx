@@ -214,8 +214,8 @@ export function DashboardView({
           <Tile label="Verified" value={counts.verified} status="verified" index={0} />
           <Tile
             label="Needs review"
-            value={counts.needsReview}
-            detail={`of which ${number.format(counts.rejected)} rejected`}
+            value={Math.max(counts.needsReview - counts.rejected, 0)}
+            detail={`${number.format(counts.rejected)} rejected`}
             status="needs_review"
             index={1}
             link={

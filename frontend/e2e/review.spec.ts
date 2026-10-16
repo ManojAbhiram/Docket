@@ -41,7 +41,7 @@ test.describe("review and decide", () => {
 
     await page.getByRole("link", { name: "Overview" }).click();
 
-    await expect(page.getByText("of which 1 rejected")).toBeVisible();
+    await expect(page.getByText("1 rejected")).toBeVisible();
   });
 
   test("an approval of a stale page tells the verifier the application changed", async ({
