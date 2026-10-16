@@ -3,6 +3,8 @@
 Regime: both (GDPR terms with the DPDP equivalents in brackets: data principal, data fiduciary). Controller (data fiduciary): unconfirmed, the organisation that runs Docket. Privacy contact: unconfirmed.
 Source: `docs/design/data-model.md` (95 columns, 14 personal-data columns), `docs/design/schema.sql`, `app/` as of 2026-10-05. Last reviewed: 2026-10-05, Proposed, no reviewer named.
 
+> Update 2026-10-16 (NOTASK-29): the "95 columns" above is wrong. `data-model.md` was right on 2026-10-05 with 106, counted from `alembic/versions/0002_core_schema.sql`, and the schema now has 109 columns after migration 0003 (`docs/design/data-dictionary.csv` has 109 rows, 14 marked personal). 95 is only the number of columns marked not personal today (109 minus 14). The 14 personal-data columns are correct. Nothing else in this map was re-checked in this pass.
+
 Status of everything below: **Proposed.** No privacy notice, retention schedule, processor contract or accepted privacy ADR exists, so no promise could be tested against the system. The application does not store anything yet: the tables are designed, not migrated.
 
 Identifiers this map looks for: email, phone, name, address, date of birth, ip address, device id, national id, tax id, pan, aadhaar, passport, payment card, location, photo, biometric, health, employment, financial.
