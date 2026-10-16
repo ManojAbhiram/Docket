@@ -26,6 +26,7 @@ Statuses were checked against the ADR files on 2026-10-16. The "Conflicts that w
 | ADR-0016 | Needs review takes precedence over Missing documents | review routing | Accepted | cheap: one rule in `app/domain/status.py` |
 | ADR-0017 | Narrow the engine comparison and accept the calibration limit | vision approach | Accepted | cheap: reopen when real labelled sets exist |
 | ADR-0018 | Host on at least 1 GB of RAM on Oracle Cloud Always Free, with the no-card rule waived | compute | Accepted | cheap: no hosted state exists yet |
+| ADR-0019 | Deploy main automatically when CI is green | deployment | Accepted | cheap: delete the job or unset DEPLOY_ENABLED |
 
 ## Conflicts that were settled
 
