@@ -22,6 +22,7 @@
 - Progress files for US-00-009, US-00-010, US-02-002, US-02-003, US-02-004
 
 ## Blockers
+- Correction: the NOTASK-17 progress file lists the provider response ceiling and the multipart file cap as unfixed. Both are fixed on main (`app/gateway/vision.py` 64 KiB cap, `app/api/uploads.py` cap + 1 read) with tests (`tests/test_vision_reader.py`, `tests/test_upload_reader.py`).
 - ADR-0008, 0009 and 0010 are still Proposed (engineer decides)
 - CONSTRAINTS.md still says no card; it is not edited, ADR-0018 records the exception
 
