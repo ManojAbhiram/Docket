@@ -145,6 +145,53 @@ jobs:
       - run: make migrate-verify
       - run: make test-integration
 
+  # The live end-to-end suite (NOTASK-31): real API, real Postgres and real RapidOCR behind the built
+  # UI, Chromium only. NOT a required check and not in `make check`: add it to the branch-protection
+  # list only after it has been green for a week. The Postgres service replaces the compose project
+  # that `make test-e2e-live` starts locally; E2E_LIVE_DATABASE_URL tells the target to use it.
+  e2e-live:
+    needs: integration
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    services:
+      postgres:
+        image: postgres:16
+        env: { POSTGRES_DB: docket, POSTGRES_USER: postgres, POSTGRES_PASSWORD: postgres }
+        ports: ["55432:5432"]
+        options: --health-cmd "pg_isready -U postgres" --health-interval 5s --health-retries 10
+    env:
+      E2E_LIVE_DATABASE_URL: postgresql+asyncpg://postgres:postgres@localhost:55432/docket
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v6
+        with:
+          version: ${{ env.UV_VERSION }}
+          python-version: ${{ env.PYTHON_VERSION }}
+          enable-cache: true
+          cache-dependency-glob: uv.lock
+      - run: uv sync --locked --all-groups
+      - uses: pnpm/action-setup@v4
+        with:
+          package_json_file: frontend/package.json
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: pnpm
+          cache-dependency-path: frontend/pnpm-lock.yaml
+      - run: pnpm install --frozen-lockfile
+        working-directory: frontend
+      - run: pnpm exec playwright install --with-deps chromium
+        working-directory: frontend
+      - run: make test-e2e-live
+      - uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: e2e-live-report
+          path: |
+            frontend/playwright-report/live
+            frontend/test-results/live
+          if-no-files-found: ignore
+
   dependency-scan:
     needs: validate
     runs-on: ubuntu-latest
