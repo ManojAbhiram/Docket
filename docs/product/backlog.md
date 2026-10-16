@@ -4,6 +4,8 @@ PRD: docs/product/PRD.md   Questions: docs/product/questions.md   Built: 2026-10
 
 Code check: the repository holds only the scaffold (health endpoints, config, error handling, an empty `app/domain` and `app/db`). No domain rule from the PRD exists in code yet, so every rule below is new work and no statement contradicts code.
 
+> Update 2026-10-16 (NOTASK-23): The scaffold statement is out of date: all 15 stories are implemented, and 59 of 60 criteria pass in the audit. The text below is kept as written on its date. Current state of the code and its evidence: `docs/testing/NOTASK-17-acceptance-audit.md`.
+
 ## Story index
 
 | Story | Epic | Title | Persona | Priority | Points | Covers | Depends on |

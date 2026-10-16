@@ -6,6 +6,8 @@ Date: 2026-10-05   Author: draft, unreviewed
 
 Existing screens: none. `frontend/` is a scaffold with no routes or pages, so every screen is `new`. The README-level design system does not exist yet either, so no component name is reused.
 
+> Update 2026-10-16 (NOTASK-23): The frontend is built and `api/openapi.yaml` has handlers. The text below is kept as written on its date. Current state of the code and its evidence: `docs/testing/NOTASK-17-acceptance-audit.md`.
+
 ## 0. Spec against code
 
 From the contract, no code yet: only `GET /healthz` and `GET /readyz` exist (`app/api/health/router.py:34`, `:40`). Each operation's responses in `api/openapi.yaml` are read as its rejections, and the limits come from the data model and the HLD. A conflict is between the stories and the contract.

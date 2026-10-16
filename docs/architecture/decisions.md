@@ -2,7 +2,7 @@
 
 One row per decision, and every contradiction settled once so it is not settled again, differently, in each file that runs into it.
 
-Titles, status and reversibility of ADR-0001 to ADR-0005 come from `docs/decisions.md` and the benchmark records, not from re-reading each ADR file in this run; check them against the files.
+Statuses were checked against the ADR files on 2026-10-16. The "Conflicts that were settled" section below is dated 2026-10-05 and has not been refreshed: ADR-0011 is Accepted now, and the 512 MB figures in it are superseded for hosting by ADR-0018.
 
 ## Decisions
 
@@ -18,7 +18,14 @@ Titles, status and reversibility of ADR-0001 to ADR-0005 come from `docs/decisio
 | ADR-0008 | Receive uploads through the API with streaming size caps and a fixed set of types | object storage | Proposed | cheap: one route and one limit |
 | ADR-0009 | No malware scan in v1, mitigate with limits and fixed serving headers | object storage | Proposed | cheap: a scan step is added later |
 | ADR-0010 | Re-encode uploaded images to strip metadata and cap size | object storage | Proposed | irreversible for stored documents: originals are not kept |
-| ADR-0011 | Run document processing inside one API process | compute | Proposed | cheap: the loop moves to its own container |
+| ADR-0011 | Run document processing inside one API process | compute | Accepted | cheap: the loop moves to its own container |
+| ADR-0012 | Hash passwords with argon2id and guard state changes with a session-bound CSRF token | auth | Accepted | awkward: every state-changing route lists the CSRF check |
+| ADR-0013 | Open sign up with a self-chosen role | auth | Accepted | cheap: add an access code or invite step; revisit before real data |
+| ADR-0014 | Normalize extracted documents at the gateway boundary | vision approach | Accepted | cheap: one result shape behind the gateway |
+| ADR-0015 | Opt-in OpenRouter Vision on a free model | llm provider and models | Accepted | cheap: switch off by leaving the key unset |
+| ADR-0016 | Needs review takes precedence over Missing documents | review routing | Accepted | cheap: one rule in `app/domain/status.py` |
+| ADR-0017 | Narrow the engine comparison and accept the calibration limit | vision approach | Accepted | cheap: reopen when real labelled sets exist |
+| ADR-0018 | Host on at least 1 GB of RAM on Oracle Cloud Always Free, with the no-card rule waived | compute | Accepted | cheap: no hosted state exists yet |
 
 ## Conflicts that were settled
 

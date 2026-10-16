@@ -17,3 +17,4 @@ table is the index. `tech-decision` maintains it.
 | 2026-10-05 | object storage (malware scan) | None in v1, limits and fixed serving headers instead | No scan in v1 | scanner does not fit 512 MB; data is synthetic; accepted risk | ADR-0009 | Proposed |
 | 2026-10-05 | object storage (image handling) | Re-encode on upload, drop metadata, cap 2,000 px | Re-encode on upload | removes GPS and device data from minors' photos | ADR-0010 | Proposed |
 | 2026-10-05 | compute (process model) | One gunicorn worker with the processing loop inside it | One worker, loop in process | two workers would load the engine twice (about 1,018 MB from 2 x 509) | ADR-0011 | Proposed |
+| 2026-10-16 | compute (hosting) | At least 1 GB RAM on Oracle Cloud Always Free; no-card rule waived by the owner for that account | Cloudflare Pages + Render free + Neon | owner has a 1 GB host; measured peak 449 MB fits; replaces the 400 MB bar in ADR-0004 | ADR-0018 | Accepted |

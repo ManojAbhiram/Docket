@@ -1,5 +1,7 @@
 # Free hosting for Docket: static frontend, Python OCR API, Postgres
 
+> Update 2026-10-16 (NOTASK-23): the owner chose a 1 GB Oracle Cloud Always Free host and waived the no-card rule for it (ADR-0018). The Render free (512 MB) conclusions below stay as research and no longer decide hosting.
+
 Date: 2026-10-05   Timebox: 1 h (start time not recorded, see "Not run")   Stopped because: answered, with gaps listed below
 Location: no throwaway code was written
 Prior work: `docs/research/ocr-landscape.md` (engine shortlist and the 512 MB budget). Held: it is two days old and nothing in the code changed it.
