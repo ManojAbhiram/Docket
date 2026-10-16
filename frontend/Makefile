@@ -40,7 +40,7 @@ define in_pw_image
     bash -c "corepack enable && pnpm install --frozen-lockfile --silent && $(2); s=\$$?; chown -R $$(id -u):$$(id -g) e2e test-results playwright-report dist .next 2>/dev/null; exit \$$s"; }
 endef
 
-.PHONY: help setup dev build check check-file fix test test-e2e test-e2e-matrix test-visual test-visual-update setup-browsers bundle-budget lighthouse lint typecheck format format-check vuln doctor clean
+.PHONY: help setup dev build check check-file fix test test-e2e test-e2e-matrix test-visual test-visual-update test-e2e-live setup-browsers bundle-budget lighthouse lint typecheck format format-check vuln doctor clean
 
 help: ## List targets
 	@grep -E '^[a-zA-Z_-]+:.*?## ' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*?## "}; {printf "  %-14s %s\n", $$1, $$2}'
@@ -99,6 +99,9 @@ test-e2e-matrix: ## The same specs on chromium, firefox, webkit and two phones (
 	[ "$$n" -gt 0 ] || { echo "test-e2e-matrix: 0 spec files, nothing checked" >&2; exit 1; }; \
 	[ -x $(BIN)/playwright ] || $(call skip,test-e2e-matrix,playwright); \
 	$(PNPM) exec playwright test $(MATRIX) && echo "test-e2e-matrix: $$n spec files checked on $(words $(MATRIX)) projects"
+
+test-e2e-live: ## The live suite: real API, Postgres and RapidOCR (runs the root target; needs Docker and uv)
+	@$(MAKE) --no-print-directory -C .. test-e2e-live
 
 setup-browsers: ## Install every Playwright browser the matrix needs (setup installs chromium only)
 	$(PNPM) exec playwright install firefox webkit
