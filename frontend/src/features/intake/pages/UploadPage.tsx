@@ -10,6 +10,7 @@ import {
   useBatchUpload,
   useCapabilities,
   useDocuments,
+  useReprocess,
 } from "@/features/intake/hooks";
 import type { DocumentBody, ReadMode } from "@/features/intake/schemas";
 import { ApiError } from "@/lib/api";
@@ -52,7 +53,7 @@ function shown(document: DocumentBody, position: number): UploadedDocument {
         readNote: FALLBACK_WORDS[document.fallback_reason],
       }),
     ...(document.status === "failed" && {
-      problem: `${(reason && FAILURE_WORDS[reason]) ?? "Reading failed."} Upload the file again.`,
+      problem: `${(reason && FAILURE_WORDS[reason]) ?? "Reading failed."} Reprocess it to try again.`,
     }),
   };
 }
@@ -70,6 +71,7 @@ export function UploadPage() {
   const documents = useDocuments(applicationId);
   const upload = useBatchUpload(applicationId);
   const capabilities = useCapabilities();
+  const reprocess = useReprocess(applicationId);
   const [tooMany, setTooMany] = useState(false);
   const [mode, setMode] = useState<ReadMode>("free");
 
@@ -87,6 +89,15 @@ export function UploadPage() {
       title: `Choose up to ${String(MAX_BATCH)} files at a time.`,
       body: "Upload the rest in another batch.",
     };
+  } else if (reprocess.isError) {
+    notice =
+      reprocess.error instanceof ApiError && reprocess.error.status === 409
+        ? {
+            tone: "info",
+            title: "That document is no longer failed.",
+            body: "Its current state is shown below.",
+          }
+        : { title: "Reprocessing did not start.", body: "Check your connection and try again." };
   } else if (application.isError || documents.isError) {
     notice = {
       title: "The documents did not load.",
@@ -107,6 +118,10 @@ export function UploadPage() {
       visionAvailable={capabilities.data?.vision === true}
       mode={mode}
       onModeChange={setMode}
+      onReprocess={(documentId) => {
+        reprocess.mutate(documentId);
+      }}
+      reprocessingId={reprocess.isPending ? reprocess.variables : undefined}
       {...(notice && { notice })}
       onFiles={(files) => {
         setTooMany(files.length > MAX_BATCH);

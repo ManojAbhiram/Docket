@@ -56,6 +56,11 @@ export function uploadDocument(
   });
 }
 
+/** reprocessDocument queues a failed document to be read again. The API answers 409 if it is not failed. */
+export function reprocessDocument(documentId: string): Promise<DocumentBody> {
+  return apiFetch(`/api/documents/${documentId}/reprocess`, documentSchema, { method: "POST" });
+}
+
 const applicationRefSchema = z.object({
   id: z.string(),
   application_ref: z.string(),
