@@ -43,10 +43,10 @@ Rows exist for every `e2e` and `manual` case. Unit and integration cases (includ
 | TC-0237.2 | TC-0237 | Read the crop beside the name | The name printed on the scan is legible in the crop |
 | TC-0237.3 | TC-0237 | Select a field that has no position on the page | The full page shows and no crop is drawn for that field |
 | TC-0245.1 | TC-0245 | Sign in as staff on the mock and open /dashboard | The heading Overview shows |
-| TC-0245.2 | TC-0245 | Read the counts | The text `3 applications` and the text `of which 0 rejected` show |
+| TC-0245.2 | TC-0245 | Read the counts | The text `3 applications` and the text `0 rejected` show |
 | TC-0247.1 | TC-0247 | Sign in as a verifier on the mock, open /queue and press Review newest | The heading SYN-APP-004 shows |
 | TC-0247.2 | TC-0247 | Press Decide, choose Reject, type `Not legible` into Reason and press Save decision | The text `Nothing needs review.` shows |
-| TC-0247.3 | TC-0247 | Press the Overview link | The text `of which 1 rejected` shows |
+| TC-0247.3 | TC-0247 | Press the Overview link | The text `1 rejected` shows |
 | TC-0248.1 | TC-0248 | Run make seed-load against a local API and sign in as staff, open /dashboard and note the Verified and Needs review counts | The Verified count and the Needs review count are written down |
 | TC-0248.2 | TC-0248 | Sign in as the seeded verifier, open /queue, press Review newest, press Decide, choose Approve and press Save decision | The text `Decision saved` shows |
 | TC-0248.3 | TC-0248 | Sign in as staff again and open /dashboard | Verified is one higher and Needs review one lower than the noted counts |
