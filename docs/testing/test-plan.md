@@ -8,7 +8,7 @@ Version: v2   Author: unattributed
 Scenarios: 85
 
 test-cases: 60 ACs, 60 with cases, 359 live cases, 359 with oracles, 90 risks (high 25, medium 44, low 21), 31 threats traced from 1 threat models, 0 problems
-test-types: unit 170, integration 164, e2e 15, manual 10; by machine 349 (automated 310, planned 39), by hand 10
+test-types: unit 170, integration 164, e2e 15, manual 10; by machine 349 (automated 311, planned 38), by hand 10
 
 ## 2. Risk summary
 
@@ -96,7 +96,7 @@ Medium: 44 (R-002, R-003, R-004, R-006, R-007, R-008, R-009, R-010, R-011, R-012
 | TS-US-00-006-2 | US-00-006 | Queue paging and rejected list | the queue stays short and complete | TC-0175, TC-0180, TC-0193 | machine |
 | TS-US-00-006-3 | US-00-006 | Nothing or nobody to show | a missing record is explained, never a blank or a crash | TC-0178, TC-0179, TC-0186, TC-0187 | machine |
 | TS-US-00-006-4 | US-00-006 | Real device | a mismatch is not signalled by colour alone | TC-0194 | hand |
-| TS-US-00-006-5 | US-00-006 | Who may see the queue and the images | only signed-in people with the right role see a child's records | TC-0181, TC-0182, TC-0188, TC-0189, TC-0190 | machine |
+| TS-US-00-006-5 | US-00-006 | Who may see the queue and the images | only signed-in people with the right role see a child's records | TC-0360, TC-0182, TC-0188, TC-0189, TC-0190 | machine |
 | TS-US-00-006-6 | US-00-006 | Staff reading an image | images are served to signed-in roles only | TC-0336 | machine |
 | TS-US-00-007-1 | US-00-007 | Approve and correct | a decision is applied once and logged with who, when and why | TC-0195, TC-0206, TC-0209, TC-0213, TC-0222 | machine |
 | TS-US-00-007-2 | US-00-007 | Reject with a reason | a rejected application is out of the queue and still unverified | TC-0219, TC-0221, TC-0223 | machine |
@@ -139,7 +139,7 @@ Medium: 44 (R-002, R-003, R-004, R-006, R-007, R-008, R-009, R-010, R-011, R-012
 - Poppler and the RapidOCR models are installed for the PDF and real-engine cases, for example TC-0068, TC-0069 and TC-0119 (the engineer who runs them confirms).
 - `make seed-accounts` has printed the two demo passwords, and `make seed-load` has loaded the 20 applications and 30 documents, before TC-0173 and TC-0248 (the tester confirms).
 - Q-003 (name threshold), Q-011 (date formats) and Q-017 (field map) are answered, or the assumed readings in `docs/product/questions.md` are accepted (the product owner confirms).
-- The product owner has decided the two contradictions in section 7 (TC-0181 queue visibility for staff and TC-0265 the empty export file) before those cases are used as a gate.
+- The two contradictions in section 7 were settled on 2026-10-16: the engineer kept both as built (TC-0181 is retired and replaced by TC-0360; TC-0265 stands). Product still confirms the wording of the backlog notes.
 
 ## 5. Exit criteria
 
@@ -170,8 +170,8 @@ Medium: 44 (R-002, R-003, R-004, R-006, R-007, R-008, R-009, R-010, R-011, R-012
 - [risk] TC-0023 asserts the logs hold none of three values. A log line built from a whole object (for example a dict of the application) would leak them; the case catches only the three values it names.
 - [risk] No test was run by this task. `automated: path:test_name` means the test exists in that file, checked by search. The acceptance audit (`docs/testing/NOTASK-17-acceptance-audit.md`) says its test names are assertions in the repository, not a claim that each was run alone. The exit criteria ask for one run on the release commit.
 - [risk] All 15 browser cases run on a mocked API (`frontend/e2e/support/mockApi.ts`). The audit found no unmocked journey from sign-in to export; TC-0173 and TC-0248 are planned for the real stack.
-- [contradiction] AC-US-00-006-1 and Q-013 say only verifiers see the queue, but `GET /api/applications` lets either signed-in role list (TC-0182 asserts the as-built reading). TC-0181 asserts the backlog reading, is `planned` and fails today.
-- [contradiction] AC-US-00-009-2 says an export with no Verified application holds the header row only. The API does (TC-0262); the export page declines to save a file and says nothing is Verified yet (TC-0265). The product owner decides which is intended.
+- [contradiction] AC-US-00-006-1 and Q-013 say only verifiers see the queue, but `GET /api/applications` lets either signed-in role list (TC-0182 asserts the as-built reading). Resolved 2026-10-16: the engineer kept the as-built reading, TC-0181 is retired and TC-0360 asserts that either role may list.
+- [contradiction] AC-US-00-009-2 says an export with no Verified application holds the header row only. The API does (TC-0262); the export page declines to save a file and says nothing is Verified yet (TC-0265). Resolved 2026-10-16: the engineer kept this as built; TC-0265 stands and Product confirms the backlog note.
 - [undefined] AC-US-00-008-1 names staff, but the dashboard also answers a verifier (TC-0241). Nothing says whether that is wanted.
 - [assumption] AC-US-00-001-1 does not say which date formats a CSV may carry. The importer reads ISO dates only, accepts 1950-01-01 to 2020-12-31 and a name of up to 120 characters (`app/domain/importing.py`); TC-0039, TC-0041 and TC-0043 take their limits from the code, not from the backlog.
 - [assumption] Limits quoted in cases come from `app/core/config.py`: import_max_bytes 5,000,000, import_max_rows 20,000, upload_max_bytes 8 MiB, gateway_call_cap 1000, review_confidence_cutoff 0.9804 and a Vision daily cap of 40. A test may override them.
@@ -199,7 +199,7 @@ python3 "/home/manoj-abhiram-k/bearing/plugins/bearing/skills/test-cases/scripts
 The case table, the step table and this plan passed the gate with 0 problems on 2026-10-16:
 
 ```
-test-types: unit 170, integration 164, e2e 15, manual 10; by machine 349 (automated 310, planned 39), by hand 10
+test-types: unit 170, integration 164, e2e 15, manual 10; by machine 349 (automated 311, planned 38), by hand 10
 test-steps: 25 manual or e2e cases, 25 with steps, 61 steps
 test-plan: 85 scenarios over 15 stories, 359 of 359 live cases placed, 29 concerns raised, 0 problems
 ```

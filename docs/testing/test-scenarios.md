@@ -138,7 +138,7 @@ Acceptance criteria: AC-US-00-006-1, AC-US-00-006-2, AC-US-00-006-3
 | TS-US-00-006-2 | Alternate | Rejected applications move to their own list, the queue pages without repeats and failed fields come first | the queue stays short and complete | AC-US-00-006-1, AC-US-00-006-3 | TC-0175, TC-0180, TC-0193 |
 | TS-US-00-006-3 | Error | An empty queue, an application with no documents, an unknown id and a not-flagged row | a missing record is explained, never a blank or a crash | AC-US-00-006-1, AC-US-00-006-2 | TC-0178, TC-0179, TC-0186, TC-0187 |
 | TS-US-00-006-4 | Edge | A flagged field read without colour on a phone | a mismatch is not signalled by colour alone | AC-US-00-006-3 | TC-0194 |
-| TS-US-00-006-5 | Security | An anonymous caller, a staff account on the queue, the image headers and an erased application | only signed-in people with the right role see a child's records | AC-US-00-006-1, AC-US-00-006-2 | TC-0181, TC-0182, TC-0188, TC-0189, TC-0190 |
+| TS-US-00-006-5 | Security | An anonymous caller, a staff account on the queue, the image headers and an erased application | only signed-in people with the right role see a child's records | AC-US-00-006-1, AC-US-00-006-2 | TC-0360, TC-0182, TC-0188, TC-0189, TC-0190 |
 | TS-US-00-006-6 | Security | Staff read a stored image and an unknown id is 404 | images are served to signed-in roles only | AC-US-00-006-2 | TC-0336 |
 
 Not applicable: Performance: no criterion names a list speed, paging is tested in rv7

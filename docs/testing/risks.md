@@ -76,7 +76,7 @@ Other stories (2026-10-16, NOTASK-28): the code exists, so likelihood comes from
 | R-043 | US-00-006 | A flagged application is missing from the queue, or a settled one is listed | AC-US-00-006-1, Q-006 changed what leaves the queue | M | M | Medium | TC-0174, TC-0175 |
 | R-044 | US-00-006 | The verifier sees a document value beside the wrong application value, or only one side | AC-US-00-006-2 | L | H | Medium | TC-0183, TC-0184 |
 | R-045 | US-00-006 | A failed field is not marked, so the verifier misses the mismatch | AC-US-00-006-3 | L | H | Medium | TC-0191, TC-0192 |
-| R-046 | US-00-006 | A role that should not see the queue can list it, a drift found by the audit | AC-US-00-006-1, Q-013 (only verifiers see the queue), audit NOTASK-17 | M | M | Medium | TC-0181, TC-0182 |
+| R-046 | US-00-006 | A role that should not see the queue can list it, a drift found by the audit | AC-US-00-006-1, Q-013 (only verifiers see the queue), audit NOTASK-17 | M | M | Medium | TC-0360, TC-0182 |
 | R-047 | US-00-006 | A child's document image is served to an unauthenticated caller, kept after erasure or sent with unsafe headers | AC-US-00-006-2, T-09, ADR-0009 | M | H | High | TC-0188, TC-0189, TC-0190, TC-0336 |
 | R-048 | US-00-007 | A decision is applied to a stale view of the application, so a wrong approval is saved | AC-US-00-007-1, REQ-023, If-Match rule | M | H | High | TC-0196, TC-0198, TC-0199, TC-0207 |
 | R-049 | US-00-007 | A correction changes another application's value or leaves the comparison stale | AC-US-00-007-2, fix 0fc0394 (correction picker) | L | H | Medium | TC-0209, TC-0211 |

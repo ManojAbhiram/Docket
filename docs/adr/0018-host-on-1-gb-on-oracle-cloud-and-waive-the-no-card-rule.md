@@ -64,3 +64,4 @@ Consequences for this ADR:
 - Memory still has to be measured with Postgres, nginx and the API on the same 1 GB machine (449 MB API peak alone).
 - A demo that sits idle risks reclamation.
 - The no-card waiver stands as decided.
+- Follow-up 2026-10-16 (NOTASK-34): the full research behind these facts, including the Arm A1 shape (aarch64 wheels exist for every binary dependency in `uv.lock`) and the measurement to run on the host, is in `docs/research/oracle-hosting-fit.md`. The engineer kept the 1 GB shape as the target.
