@@ -2,6 +2,8 @@
 
 **Store:** PostgreSQL · **Tables:** 12 · **Columns:** 106 · **Indexes:** 20 · **Personal-data columns:** 14
 
+> Update 2026-10-16 (NOTASK-29), counted from the files, not from this document. `alembic/versions/0002_core_schema.sql` creates 12 tables, 106 columns and 20 `CREATE INDEX` statements (6 unique, 14 plain), plus 12 primary-key indexes. That matches the headline above, which is therefore right for migration 0002 and for 2026-10-05. Migration 0003 (`alembic/versions/0003_document_read_mode.py`, `document read mode`, not the roles migration planned in section 9) adds 3 columns to `documents` (`requested_mode`, `read_engine`, `fallback_reason`) and one index (`idx_gateway_calls_engine_created_at`), so the schema now has **12 tables, 109 columns, 21 secondary indexes (12 primary-key indexes besides) and 14 personal-data columns**. `docs/design/schema.sql` and `docs/design/data-dictionary.csv` (109 rows) already show the 109. The sentence under section 1 that says "17 named secondary indexes" and "ten primary-key indexes" is wrong: it is 20 and 12 for 0002, 21 and 12 now. `docs/privacy/DATA_MAP.md` says 95 columns, which is wrong and was never the total: 95 is the number of columns marked `No` for personal data in the dictionary today (109 minus 14; it would have been 92 on 2026-10-05). The 14 personal-data columns agree in both documents and in the dictionary.
+
 The database holds the staff and verifier accounts, the applications imported from a CSV, the uploaded documents with their image bytes, what the OCR engine read from each, how each field compared with the application, the status of each application, and an append-only log of verifier decisions and engine calls. The API reads and writes it; the OCR gateway writes `gateway_calls` and `extracted_fields`; the dashboard and export only read. One PostgreSQL 16 database is enough for every acceptance criterion (all of them are relational and consistency-critical), and it is already in `docker-compose.yml` and `app/db/session.py`.
 
 - Task: US-02-002
@@ -179,6 +181,8 @@ Personal-data columns (14): `users.username`, `users.display_name`, `application
 
 The repository uses Alembic with sequential four-digit revisions; `0001_init` creates `schema_probe`.
 
+> Update 2026-10-16 (NOTASK-29): the migrations that exist are `0001_init`, `0002_core_schema` and `0003_document_read_mode`. The row below named `0003 roles_and_erase_function` was not built under that number: `git grep` finds no `erase_application`, no `SECURITY DEFINER` and no `GRANT` in `app/` or `alembic/`, and `MIGRATION_DATABASE_URL` appears nowhere (`alembic/env.py:22-24` reads `DATABASE_URL`). The roles migration is still to do, under a later number.
+
 | # | db-migration name | Phase (expand, migrate or contract) | Hot table | Lock risk and batch note |
 | --- | --- | --- | --- | --- |
 | 0002 | core_schema (from schema.sql, also drops `schema_probe`) | expand | no | empty database apart from the probe, no lock risk. `schema.sql` is pasted as one `op.execute` per statement without `BEGIN` and `COMMIT`, with a Down that drops everything in reverse, run by `make migrate-verify`. Dropping `schema_probe` is the contract step for the probe. |
@@ -201,6 +205,19 @@ Rules checked: 24 against `database/references/postgres.md`. Deviations: 7.
 ## 11. What the review found
 
 Reviewed by: critic, 2026-10-05. Findings: BLOCKER 0, MAJOR 5, MINOR 4, NIT 1 (open 1, a build item).
+
+> Update 2026-10-16 (NOTASK-29): each "Status: fixed in this version" below was checked against the code. The statuses were written about the design, and a design fix is not the same as a built one. The findings in the order they appear:
+>
+> - MAJOR 1 (document type unknown at upload, newest current document): built. The application row is locked before a status is computed (`app/db/repositories/statuses.py:35`, `SELECT ... FOR UPDATE`), uploads take an advisory lock per application (`app/db/repositories/uploads.py:21`), and Needs review beats Missing documents (ADR-0016, `tests/test_status_rules.py` `test_needs_review_beats_missing_documents`). Tests: `tests/integration/test_application_status.py` `test_a_recompute_waits_for_the_application_row_and_then_sees_what_was_committed`, `tests/integration/api/test_decisions.py` `test_two_decisions_on_one_application_cannot_both_win`.
+> - MAJOR 2 (call log guarding the call): the schema is as designed (`call_outcome` has `pending`, `alembic/versions/0002_core_schema.sql:22`) but the code does not use it. `SqlCallLedger` inserts one row after the call with the final outcome (`app/db/repositories/gateway_calls.py:21-25`, `:68-85`), there is no `pending` row and no advisory lock on the cap (the cap is held by a process-local lock and an in-flight counter, `app/gateway/core.py:75-86`), and the insert does not set `document_id`, so `uq_gateway_calls_document_ok` constrains nothing. A crash between a call and its row still leaves the call unlogged. Status: built differently, the finding's failure case is still open.
+> - MAJOR 3 (append-only as a mechanism): half built. The row trigger and the `TRUNCATE` trigger exist (`alembic/versions/0002_core_schema.sql:397-425`, `tests/integration/test_schema.py` `test_the_decision_log_guard_triggers_exist`, `tests/integration/api/test_decisions.py` `test_the_database_refuses_to_change_or_delete_a_logged_decision`). The separate owner and API roles, the `SECURITY DEFINER` erase function and `MIGRATION_DATABASE_URL` are not built. Status: open, as the paragraph already says.
+> - MAJOR 4 (erased applications in lists): the filter is built in every read: `erased_at IS NULL` in `app/db/repositories/applications.py:44`, `reports.py:23` and `:33`, `application_detail.py:22` and `:38`, `uploads.py:20`, `decisions.py:35` and `:38`, `statuses.py:35`. Test: `tests/integration/api/test_import.py` `test_the_list_filters_by_status_and_hides_erased_applications`, `tests/integration/api/test_application_detail.py` `test_the_image_of_an_erased_application_is_gone`. Nothing sets `erased_at` yet, because the erase function does not exist (see section 12).
+> - MAJOR 5 (a correction names its document): built. `decisions.extracted_field_id` is written by `app/db/repositories/decisions.py:52`. Test: `tests/integration/api/test_decisions.py` `test_correcting_a_value_reruns_the_comparison_and_logs_the_old_and_new_value`.
+> - MINOR (PDF page size, ADRs): built. A PDF is rasterised at 200 dpi with a page-size check and the original is not kept (`app/domain/pdf.py:15-47`, `tests/integration/api/test_documents.py` `test_only_the_first_page_of_a_pdf_is_kept_as_a_jpeg_and_the_pdf_itself_is_not`). ADR-0006 and ADR-0007 exist; the session times are still assumptions.
+> - MINOR (import constraints, savepoint per row): built differently. Row checks and the reason codes `duplicate_application_ref` and `out_of_range` are in `app/domain/importing.py:150-161`, but there is no savepoint per row. An import is one transaction under a single advisory lock, which serialises imports, and it looks up the references already stored before it parses (`app/db/repositories/applications.py:25` and `run_import`), so a raced duplicate cannot reach the database. Tests: `tests/test_import_csv.py` `test_an_application_id_already_in_the_database_is_refused`, `tests/integration/api/test_import.py` `test_valid_rows_are_created_and_malformed_rows_listed_in_one_import`. Processing rule 5 above describes savepoints and is out of date on this point.
+> - MINOR (`schema.sql` pastable): built. `docs/design/schema.sql` differs from `0002_core_schema.sql` only by the three 0003 columns, their constraints and comments, and one index (`diff` run on 2026-10-16).
+> - MINOR (personal data nobody reads): built. Neither `documents.original_name` nor `extracted_fields.engine_value` exists in `0002_core_schema.sql`.
+> - NIT (counts): the headline counts were right for 0002; see the note under the headline for the current numbers.
 
 ### MAJOR: the document type is unknown at upload, so "newest current document" had no defined sequence (`documents`)
 
@@ -243,6 +260,18 @@ An application can have a name on several documents. **Fix:** `decisions.extract
 The headline now says the 17 indexes exclude primary keys; "about eight rows per document" is corrected; the migration table header is fixed. Status: fixed in this version.
 
 ## 12. Open concerns
+
+> Update 2026-10-16 (NOTASK-29): checked against the code, in the order of the list below. The list itself is kept as written.
+>
+> 1. Erase function and sweeper: still open, and narrower. `git grep erase_application` finds nothing in `app/` or `alembic/`, and `erased_at` is only read, never set (filters listed under section 11, MAJOR 4). One sweeper exists, for documents stuck in `processing` (`app/jobs/worker.py:178-206`, `app/db/repositories/documents.py:129`). There is none for stale `pending` calls (no `pending` rows are written, see section 11, MAJOR 2) or for expired sessions (`git grep "DELETE FROM" -- app` finds nothing; `app/db/repositories/auth.py:26-28` only ignores expired rows).
+> 2. REQ-008 reading: still open as a question. In code a call is one row written after the engine returns (`app/db/repositories/gateway_calls.py:21-25`) with no `document_id`, so neither "exactly one call per document" nor a retry limit is enforced; the cap counts rows (`:15-20`). The worker has no retry loop (`git grep -i retry -- app/jobs app/gateway app/db` finds nothing).
+> 3. `MIGRATION_DATABASE_URL`: still true. `git grep MIGRATION_DATABASE_URL` finds nothing, `alembic/env.py:22-24` reads `DATABASE_URL`, and the app connects with the same URL. It no longer blocks "migration 0003", because 0003 shipped as the document read mode.
+> 4. Erasure versus the append-only log: still open and unbuilt. The trigger still permits only the erase marker and the field-link null (`alembic/versions/0002_core_schema.sql:397-417`), and no code path uses that allowance.
+> 5. Retention: still open. `git grep -i "retention\|purge" -- app` finds nothing.
+> 6. The 8 MiB cap and the session times: still unconfirmed assumptions, now written as defaults in `app/core/config.py:56` (`upload_max_bytes`), `:59` (`session_idle_minutes` 30) and `:60` (`session_absolute_hours` 8); `docs/security/AUTH.md` lists the confirmation as an open item.
+> 7. `bytea` volume: still open. Each stored image is re-encoded to at most 2000 px on its long side as JPEG quality 85 or PNG (`app/domain/uploads.py:19-20`, `:119`), which bounds one row, but no measurement of total size at 15,000 documents exists. The owner now hosts on 1 GB (ADR-0018).
+> 8. "Retried up to N times": the same as item 2; there is no retry in code, so N does not exist yet.
+> 9. Status history: still true, no such table in `alembic/versions/0002_core_schema.sql`, and the decision log is the only history (`app/db/repositories/decisions.py`).
 
 - **[gap]** No story owns `erase_application(id)` or the sweeper for stale `pending` calls and expired sessions. Owner: product owner and engineering lead, by 2026-10-31. Blocks development: no, blocks real data.
 - **[ambiguity]** REQ-008 says "exactly one call per document"; the model allows a retry after an `error`. Which reading is meant? Owner: product owner, by 2026-10-31. Blocks development: no.
