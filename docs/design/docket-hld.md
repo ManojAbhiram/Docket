@@ -4,7 +4,7 @@
 - Author: draft, unreviewed. 2026-10-05. Version v1.
 - Status: Draft (open conflicts and findings below keep it from Approved)
 
-> Update 2026-10-16 (NOTASK-23), checked against the code. Still true: no `MIGRATION_DATABASE_URL`, no roles or `erase_application` migration (migration 0003 is the document read mode, not the roles migration this design describes), no `reprocessDocument` route, retention and backups undefined, the append-only trigger on `decisions` exists. Out of date: `WEB_CONCURRENCY` is 1 in `Dockerfile` and `docker-compose.prod.yml` (section 8 still says 2); `docker-compose.prod.yml` sets `restart: unless-stopped` (section 7 says undefined); a login limiter exists (`app/api/auth/router.py`), so "26 planned" threats is too high; the API has handlers beyond health. Hosting: ADR-0018 replaces the 400 MB bar. The text below is kept as written on 2026-10-05.
+> Update 2026-10-16 (NOTASK-23), checked against the code. Still true: no `MIGRATION_DATABASE_URL`, no roles or `erase_application` migration (migration 0003 is the document read mode, not the roles migration this design describes), `reprocessDocument` is built since NOTASK-30 (see section 16), retention and backups undefined, the append-only trigger on `decisions` exists. Out of date: `WEB_CONCURRENCY` is 1 in `Dockerfile` and `docker-compose.prod.yml` (section 8 still says 2); `docker-compose.prod.yml` sets `restart: unless-stopped` (section 7 says undefined); a login limiter exists (`app/api/auth/router.py`), so "26 planned" threats is too high; the API has handlers beyond health. Hosting: ADR-0018 replaces the 400 MB bar. The text below is kept as written on 2026-10-05.
 - PRD: docs/product/PRD.md
 - ADRs: docs/architecture/decisions.md
 - Tenets: docs/architecture/tenets.md
@@ -159,7 +159,7 @@ Provider facts for the future hosted variant (Render, Neon, Cloudflare Pages) ar
 | Session and roles | stolen cookie, expired session | 401, `sessions.last_seen_at` | redirect to sign in | sign in again, revoke by `session_version` |
 | Import | malformed or duplicate rows | per-row reason codes in the response | refused rows listed, valid rows created | fix the CSV and re-import (duplicate ref is refused, not overwritten) |
 | Upload route | oversize, wrong type, client disconnect | 413 and 415 envelopes, no row written | message naming the accepted formats | upload again, nothing was stored |
-| Processing loop | crash, restart or a read that hangs | sweeper finds `processing` older than 5 minutes (the read timeout is UNDEFINED, see section 16) | document `failed`, application Needs review | a reprocess operation (proposed, not built, section 16) or a new upload with different bytes: identical bytes return the existing document, so a plain re-upload does not recover. A late result cannot overwrite the sweeper because the completion write checks `status = 'processing'` |
+| Processing loop | crash, restart or a read that hangs | sweeper finds `processing` older than 5 minutes (the read timeout is UNDEFINED, see section 16) | document `failed`, application Needs review | the reprocess operation (`POST /api/documents/{id}/reprocess`, built in NOTASK-30) or a new upload with different bytes: identical bytes still return the existing document, so a plain re-upload does not recover. A late result cannot overwrite the sweeper or a reprocessed attempt because the completion and failure writes check `status = 'processing'` and the claim's `updated_at` |
 | OCR gateway | engine error, timeout or call cap reached | `gateway_calls` outcome `error` or `refused` | Needs review with the reason | verifier decides, or the cap is raised by configuration |
 | OCR engine | out of memory on a large image or after many pages | process killed, UNDEFINED alert | API unavailable | restart, pixel caps (PS-04) reduce the risk, growth past 30 pages is unmeasured |
 | PostgreSQL | down or full | `/readyz` returns 503 (`app/api/health/router.py:40`) | 503 envelope | restart or free space, nothing is half written because rows commit together |
@@ -243,7 +243,7 @@ Phases, each with a way back. There is no production yet, only a local demo.
 5. **Compose demo.** Add the API and frontend services and the nginx proxy (PS-11). Back out by removing the services; the database volume is untouched.
 6. **Hosted variant, later.** Only when the engine fits at or below about 400 MB (ADR-0004). Back out by returning to the local compose demo; the data moves with `pg_dump`, a step not yet written.
 
-The call cap is a configured value (US-02-001). A call refused at the cap marks the document `failed` with reason `cap_reached` (the same in `docs/design/uploads-pattern.md` and the C4 sequence), so lowering the cap to zero is not a pause: it fails every queued document permanently, and raising it later reprocesses nothing until a reprocess operation exists. `PROCESSING_ENABLED` is the only pause.
+The call cap is a configured value (US-02-001). A call refused at the cap marks the document `failed` with reason `cap_reached` (the same in `docs/design/uploads-pattern.md` and the C4 sequence), so lowering the cap to zero is not a pause: it fails every queued document permanently, and raising it later reprocesses nothing by itself: staff use the reprocess operation on each failed document. `PROCESSING_ENABLED` is the only pause.
 
 **Risks this leaves open**
 
@@ -326,7 +326,7 @@ Conflicts with: sections 7 and 12, `api/openapi.yaml` uploadDocument, data model
 
 Fix: add a reprocess operation, exclude failed documents from the sha256 check, make rule 3 ignore a superseded failed document, name `PROCESSING_ENABLED` as the only pause, and settle cap_reached as failed everywhere.
 
-Status: fixed for the reprocess operation (`reprocessDocument` in `api/openapi.yaml`, a failed document becomes uploaded with a new gateway call row) and the dedup exclusion (`uploads-pattern.md`). open: the story for the reprocess operation (PS-12 in `docs/product/proposed-stories.md`) and its screen control on S-05 (flows question 6). Also fixed: rule 3 ignores a superseded failed document, `PROCESSING_ENABLED` is the only pause and cap_reached is `failed` in section 12, `uploads-pattern.md` and the C4 sequence.
+Status: fixed for the reprocess operation (built in NOTASK-30: `POST /api/documents/{id}/reprocess`, a failed document becomes uploaded with a new gateway call row, the application status is recomputed in the same transaction, the Reprocess button on the upload screen calls it). Decided against the dedup exclusion: identical bytes still return the existing document, and the explicit route is the way to retry (`uploads-pattern.md`). Also fixed: rule 3 ignores a superseded failed document, `PROCESSING_ENABLED` is the only pause and cap_reached is `failed` in section 12, `uploads-pattern.md` and the C4 sequence.
 
 ### MAJOR: A read that hangs has no stop, and its late result overwrites the sweeper
 

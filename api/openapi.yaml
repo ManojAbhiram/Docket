@@ -500,10 +500,11 @@ paths:
       operationId: reprocessDocument
       summary: Queue a failed document to be read again
       description: >-
-        Staff role only. A document that is failed becomes uploaded and is read again with a new gateway call row.
-        Any other status is refused with 409, so a document that is already being read is never read twice at once.
+        Staff role only, with the CSRF token and a same-origin Origin header. No request body and no Idempotency-Key: the failed-status check is the guard.
+        A document that is failed becomes uploaded, its failure reason, engine, fallback reason, detected type and extracted fields are cleared, it keeps its place in the queue (created_at) and its requested mode, and it is read again with a new gateway call row. The application status is recomputed in the same transaction.
+        Any other status is refused with 409 code document_not_failed, so a document that is already being read is never read twice at once. A result from a read that started before the reprocess is discarded.
       tags: [documents]
-      x-story-ids: [US-00-003]
+      x-story-ids: [US-00-003, PS-12]
       parameters:
         - $ref: '#/components/parameters/ApiVersion'
         - $ref: '#/components/parameters/CsrfToken'
@@ -518,7 +519,8 @@ paths:
         '401': { $ref: '#/components/responses/Unauthorized' }
         '403': { $ref: '#/components/responses/Forbidden' }
         '404': { $ref: '#/components/responses/NotFound' }
-        '409': { $ref: '#/components/responses/IdempotencyConflict' }
+        '409': { $ref: '#/components/responses/DocumentNotFailed' }
+        '422': { $ref: '#/components/responses/ValidationFailed' }
         '500': { $ref: '#/components/responses/InternalError' }
 
   /documents/{id}/image:
@@ -963,7 +965,10 @@ components:
       description: No such record
       content: { application/json: { schema: { $ref: '#/components/schemas/Error' } } }
     IdempotencyConflict:
-      description: Conflict. The Idempotency-Key was reused with a different body (code idempotency_conflict), or the record is not in the state this call needs, for example an application that changed since the If-Match version or a document that is not failed (code conflict)
+      description: Conflict. The Idempotency-Key was reused with a different body (code idempotency_conflict), or the record is not in the state this call needs, for example an application that changed since the If-Match version (code conflict)
+      content: { application/json: { schema: { $ref: '#/components/schemas/Error' } } }
+    DocumentNotFailed:
+      description: Conflict. The document is not failed (code document_not_failed), so there is nothing to reprocess
       content: { application/json: { schema: { $ref: '#/components/schemas/Error' } } }
     PayloadTooLarge:
       description: The file is over the size cap
