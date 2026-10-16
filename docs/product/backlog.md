@@ -377,6 +377,7 @@ Covers: REQ-021, REQ-022   Judgement: merged from REQ-021, REQ-022
 **Acceptance criteria.**
 
 - AC-US-00-006-1. Given applications with all statuses, when a verifier opens the queue, then only the flagged applications are listed.
+  - Implementation note 2026-10-16 (NOTASK-32, not an acceptance change): the queue is `needs_review` with `rejected=false`. `GET /api/applications` is open to any signed-in user, so staff can list applications too; only verifiers can decide. Engineer chose to keep this as built. Product to confirm.
   Covers: REQ-021
 - AC-US-00-006-2. Given a flagged application, when the verifier opens it, then each field shows the document and the application value side by side.
   Covers: REQ-022
@@ -537,6 +538,7 @@ Covers: REQ-029   Judgement: story
 - AC-US-00-009-1. Given Verified and other applications, when staff export, then the CSV holds one row for each Verified application and none for others.
   Covers: REQ-029
 - AC-US-00-009-2. Given no Verified application, when staff export, then the CSV holds the header row only.
+  - Implementation note 2026-10-16 (NOTASK-32, not an acceptance change): the API returns the header row only. The export page shows "No applications are Verified yet." and offers no download when the count is zero. Engineer chose to keep this as built. Product to confirm.
   Covers: REQ-029
 
 **Not in this story.**
