@@ -5,6 +5,7 @@ The worker is two background tasks: one claims and reads documents, one fails do
 """
 
 import asyncio
+from datetime import datetime
 from uuid import UUID
 
 from app.domain.extract import extract_fields
@@ -29,10 +30,14 @@ class IdleStore:
         self._note()
         return None
 
-    async def complete(self, document_id: UUID, result: ProcessedDocument) -> bool:
+    async def complete(
+        self, document_id: UUID, result: ProcessedDocument, claimed_at: datetime | None = None
+    ) -> bool:
         return True
 
-    async def fail(self, document_id: UUID, reason: str) -> bool:
+    async def fail(
+        self, document_id: UUID, reason: str, claimed_at: datetime | None = None
+    ) -> bool:
         return True
 
     async def sweep_stale(self, older_than_seconds: int) -> int:

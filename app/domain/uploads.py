@@ -12,7 +12,7 @@ from typing import Literal, Protocol
 import cv2
 import numpy as np
 
-from app.core.errors import DomainError
+from app.core.errors import ConflictError, DomainError
 
 MAX_BYTES = 8 * 1024 * 1024
 MAX_PIXELS = 25_000_000
@@ -53,6 +53,12 @@ class ImageUnreadableError(DomainError):
 
     status_code = 422
     code = "validation_error"
+
+
+class DocumentNotFailedError(ConflictError):
+    """Only a failed document can be reprocessed; this one is waiting, being read, or read."""
+
+    code = "document_not_failed"
 
 
 @dataclass(frozen=True)

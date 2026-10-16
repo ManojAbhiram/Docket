@@ -6,6 +6,7 @@ of the two interfaces the worker owns; the claim query itself is covered by the 
 
 import asyncio
 from dataclasses import dataclass, field
+from datetime import UTC, datetime
 from uuid import UUID, uuid4
 
 import pytest
@@ -52,20 +53,27 @@ class MemoryStore:
     failed: dict[UUID, str] = field(default_factory=dict)
     still_processing: bool = True
     swept_with: list[int] = field(default_factory=list)
+    claims_seen: list[datetime | None] = field(default_factory=list)
 
     async def claim_next(self) -> ClaimedDocument | None:
         return self.queue.pop(0) if self.queue else None
 
-    async def complete(self, document_id: UUID, result: ProcessedDocument) -> bool:
+    async def complete(
+        self, document_id: UUID, result: ProcessedDocument, claimed_at: datetime | None = None
+    ) -> bool:
         if not self.still_processing:
             return False
         self.completed[document_id] = result
+        self.claims_seen.append(claimed_at)
         return True
 
-    async def fail(self, document_id: UUID, reason: str) -> bool:
+    async def fail(
+        self, document_id: UUID, reason: str, claimed_at: datetime | None = None
+    ) -> bool:
         if not self.still_processing:
             return False
         self.failed[document_id] = reason
+        self.claims_seen.append(claimed_at)
         return True
 
     async def sweep_stale(self, older_than_seconds: int) -> int:
@@ -124,6 +132,25 @@ def one_document(store: MemoryStore) -> UUID:
     document_id = uuid4()
     store.queue.append(ClaimedDocument(id=document_id, image=b"page"))
     return document_id
+
+
+# NOTASK-30: the result is stored only against the claim that produced it.
+async def test_the_result_and_the_failure_carry_the_claim_they_came_from() -> None:
+    claimed_at = datetime(2026, 10, 6, 9, 0, tzinfo=UTC)
+    store = MemoryStore(
+        queue=[
+            ClaimedDocument(uuid4(), b"page", claimed_at=claimed_at),
+            ClaimedDocument(uuid4(), b"page", claimed_at=claimed_at),
+        ]
+    )
+
+    read = await process_next(store, FakeReader(ID_CARD), confidence_cutoff=CUTOFF)
+    failed = await process_next(
+        store, FakeReader(error=EngineError("engine broke")), confidence_cutoff=CUTOFF
+    )
+
+    assert (read, failed) == ("read", "failed")
+    assert store.claims_seen == [claimed_at, claimed_at]
 
 
 async def test_an_empty_queue_is_idle_and_reads_nothing() -> None:

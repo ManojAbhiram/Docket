@@ -6,6 +6,7 @@ local OCR and the safe reason is kept, so an upload is never lost to the provide
 
 import threading
 from dataclasses import dataclass, field
+from datetime import datetime
 from uuid import UUID, uuid4
 
 import pytest
@@ -43,11 +44,15 @@ class Store:
     async def claim_next(self) -> ClaimedDocument | None:
         return self.queue.pop(0) if self.queue else None
 
-    async def complete(self, document_id: UUID, result: ProcessedDocument) -> bool:
+    async def complete(
+        self, document_id: UUID, result: ProcessedDocument, claimed_at: datetime | None = None
+    ) -> bool:
         self.completed[document_id] = result
         return True
 
-    async def fail(self, document_id: UUID, reason: str) -> bool:
+    async def fail(
+        self, document_id: UUID, reason: str, claimed_at: datetime | None = None
+    ) -> bool:
         self.failed[document_id] = reason
         return True
 

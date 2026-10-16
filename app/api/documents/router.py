@@ -107,6 +107,26 @@ async def upload_document(
     return DocumentOut.model_validate(asdict(record))
 
 
+@router.post(
+    "/documents/{document_id}/reprocess",
+    status_code=202,
+    response_model=DocumentOut,
+    dependencies=[Depends(require_role("staff")), Depends(verify_csrf)],
+    responses={code: {"model": ErrorEnvelope} for code in (401, 403, 404, 409, 422)},
+)
+async def reprocess_document(
+    document_id: UUID, store: Annotated[SqlUploadStore, Depends(get_upload_store)]
+) -> DocumentOut:
+    """Queue a failed document to be read again. Any other state is a 409."""
+    record = await store.reprocess_document(document_id)
+    log.info(
+        "document.reprocessed",
+        document_id=str(record.id),
+        application_id=str(record.application_id),
+    )
+    return DocumentOut.model_validate(asdict(record))
+
+
 @router.get(
     "/applications/{application_id}/documents",
     response_model=DocumentListOut,

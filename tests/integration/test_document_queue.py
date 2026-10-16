@@ -176,6 +176,72 @@ async def test_a_failed_read_records_its_reason_code(
     assert row.scalar_one() == "timeout"
 
 
+# NOTASK-30: a read that outlives its claim must not overwrite the attempt that replaced it.
+async def reclaim_after_a_sweep(
+    connection: AsyncConnection, store: SqlDocumentStore, document: UUID
+) -> None:
+    """Sweep the first claim, requeue the document and claim it again, a moment later."""
+    await connection.execute(
+        text("UPDATE documents SET updated_at = now() - interval '10 minutes' WHERE id = :id"),
+        {"id": document},
+    )
+    await store.sweep_stale(300)
+    await connection.execute(
+        text("UPDATE documents SET status = 'uploaded', failure_reason = NULL WHERE id = :id"),
+        {"id": document},
+    )
+    await store.claim_next()
+    # The whole test is one transaction, so now() does not move; a real claim gets a later one.
+    await connection.execute(
+        text("UPDATE documents SET updated_at = now() + interval '1 second' WHERE id = :id"),
+        {"id": document},
+    )
+
+
+async def test_a_late_result_cannot_overwrite_the_attempt_that_replaced_its_claim(
+    connection: AsyncConnection, factory: async_sessionmaker[AsyncSession]
+) -> None:
+    user, application = await seed_user(connection), await seed_application(connection)
+    document = await seed_document(connection, user, application)
+    store = SqlDocumentStore(factory)
+    old_claim = await store.claim_next()
+    assert old_claim is not None
+    await reclaim_after_a_sweep(connection, store, document)
+
+    stored = await store.complete(document, processed(), claimed_at=old_claim.claimed_at)
+
+    assert stored is False
+    assert await status_of(connection, document) == "processing"
+
+
+async def test_a_late_failure_cannot_overwrite_the_attempt_that_replaced_its_claim(
+    connection: AsyncConnection, factory: async_sessionmaker[AsyncSession]
+) -> None:
+    user, application = await seed_user(connection), await seed_application(connection)
+    document = await seed_document(connection, user, application)
+    store = SqlDocumentStore(factory)
+    old_claim = await store.claim_next()
+    assert old_claim is not None
+    await reclaim_after_a_sweep(connection, store, document)
+
+    stored = await store.fail(document, "timeout", claimed_at=old_claim.claimed_at)
+
+    assert stored is False
+    assert await status_of(connection, document) == "processing"
+
+
+async def test_the_current_claim_still_completes_with_its_own_claimed_at(
+    connection: AsyncConnection, factory: async_sessionmaker[AsyncSession]
+) -> None:
+    user, application = await seed_user(connection), await seed_application(connection)
+    document = await seed_document(connection, user, application)
+    store = SqlDocumentStore(factory)
+    claim = await store.claim_next()
+    assert claim is not None
+
+    assert await store.complete(document, processed(), claimed_at=claim.claimed_at) is True
+
+
 # The decision log is append-only in the database, not only in the application.
 
 
