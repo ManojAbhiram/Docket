@@ -3,6 +3,8 @@
 - Task: US-02-002
 - Author: draft, unreviewed. 2026-10-05. Version v1.
 - Status: Draft (open conflicts and findings below keep it from Approved)
+
+> Update 2026-10-16 (NOTASK-23), checked against the code. Still true: no `MIGRATION_DATABASE_URL`, no roles or `erase_application` migration (migration 0003 is the document read mode, not the roles migration this design describes), no `reprocessDocument` route, retention and backups undefined, the append-only trigger on `decisions` exists. Out of date: `WEB_CONCURRENCY` is 1 in `Dockerfile` and `docker-compose.prod.yml` (section 8 still says 2); `docker-compose.prod.yml` sets `restart: unless-stopped` (section 7 says undefined); a login limiter exists (`app/api/auth/router.py`), so "26 planned" threats is too high; the API has handlers beyond health. Hosting: ADR-0018 replaces the 400 MB bar. The text below is kept as written on 2026-10-05.
 - PRD: docs/product/PRD.md
 - ADRs: docs/architecture/decisions.md
 - Tenets: docs/architecture/tenets.md

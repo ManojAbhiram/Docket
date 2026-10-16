@@ -18,6 +18,7 @@
 - architecture/decisions.md lists ADR-0001 to 0018 with current statuses
 - ADR-0018: host on at least 1 GB on Oracle Cloud, no-card rule waived by the owner; decisions.md and free-hosting.md updated
 - Dated notes on the stale scaffold-only claims in the C4, backlog, flows, threat model and test cases
+- HLD and backlog notes from a code check; UI QA run (login, applications, review, reject, dashboard) found no defect
 - Progress files for US-00-009, US-00-010, US-02-002, US-02-003, US-02-004
 
 ## Blockers

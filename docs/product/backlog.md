@@ -425,6 +425,7 @@ Covers: REQ-023, REQ-024, REQ-025, REQ-026, REQ-027   Judgement: merged from REQ
 - AC-US-00-007-3. Given a rejection with no reason, when the verifier submits it, then the service refuses it.
   Covers: REQ-026
 - AC-US-00-007-4. Given a rejection with a reason, when the verifier submits it, then the application is not Verified, leaves the flagged queue and the decision is logged.
+  - Implementation note 2026-10-16 (NOTASK-23, not an acceptance change): "leaves the flagged queue" is built as `rejected_at` set. The status stays `needs_review`, the queue is `needs_review` with `rejected=false`, and the dashboard's Needs review count includes rejected applications ("of which N rejected"). Product to confirm this reading.
   Covers: REQ-025, REQ-027
 - AC-US-00-007-5. Given any decision, when the log is read, then the entry holds who, when, what was decided and the reason, and staff and verifiers can read it but not edit it.
   Covers: REQ-027
