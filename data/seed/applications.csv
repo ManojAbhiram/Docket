@@ -1,0 +1,21 @@
+application_id,name,father_name,date_of_birth,board,roll_number,marks_by_subject,category
+SYN-APP-001,Latha Sharma,Salim Sharma,2006-12-10,Karnataka State Board,SYN0945957,"{""English"": 59, ""Hindi"": 77, ""Mathematics"": 87, ""Science"": 74, ""Social Science"": 56}",SC
+SYN-APP-002,Diya Gupta,Naveen Gupta,2007-02-25,Maharashtra State Board,SYN3300452,"{""English"": 83, ""Hindi"": 90, ""Mathematics"": 81, ""Science"": 78, ""Social Science"": 41}",General
+SYN-APP-003,Vivaan Gupta,Ramesh Gupta,2008-11-14,ICSE,SYN8023293,"{""English"": 41, ""Hindi"": 91, ""Mathematics"": 50, ""Science"": 56, ""Social Science"": 43}",General
+SYN-APP-004,Anjali Gupta,Suresh Gupta,2006-06-29,CBSE,SYN8137170,"{""English"": 97, ""Hindi"": 59, ""Mathematics"": 47, ""Science"": 63, ""Social Science"": 77}",OBC
+SYN-APP-005,Dev Gupta,Suresh Gupta,2007-06-13,CBSE,SYN9190260,"{""English"": 85, ""Hindi"": 38, ""Mathematics"": 38, ""Science"": 35, ""Social Science"": 59}",ST
+SYN-APP-006,Karan Sharma,Anil Sharma,2008-06-30,CBSE,SYN8681729,"{""English"": 40, ""Hindi"": 95, ""Mathematics"": 51, ""Science"": 45, ""Social Science"": 90}",General
+SYN-APP-007,Karan Reddy,Thomas Reddy,2008-07-04,Maharashtra State Board,SYN3686922,"{""English"": 77, ""Hindi"": 73, ""Mathematics"": 50, ""Science"": 44, ""Social Science"": 56}",SC
+SYN-APP-008,Latha Das,Salim Das,2007-02-21,CBSE,SYN0646790,"{""English"": 41, ""Hindi"": 74, ""Mathematics"": 71, ""Science"": 92, ""Social Science"": 50}",SC
+SYN-APP-009,Anjali Nair,Suresh Nair,2006-01-08,CBSE,SYN9337710,"{""English"": 52, ""Hindi"": 65, ""Mathematics"": 93, ""Science"": 41, ""Social Science"": 53}",OBC
+SYN-APP-010,Ritesh Reddy,Ramesh Reddy,2006-10-28,Karnataka State Board,SYN4507463,"{""English"": 37, ""Hindi"": 56, ""Mathematics"": 86, ""Science"": 91, ""Social Science"": 85}",SC
+SYN-APP-011,Anjali Khan,Naveen Khan,2007-09-24,Karnataka State Board,SYN9485227,"{""English"": 84, ""Hindi"": 43, ""Mathematics"": 48, ""Science"": 87, ""Social Science"": 81}",ST
+SYN-APP-012,Aarav Reddy,Mahesh Reddy,2008-06-02,Maharashtra State Board,SYN4378775,"{""English"": 65, ""Hindi"": 38, ""Mathematics"": 48, ""Science"": 91, ""Social Science"": 75}",General
+SYN-APP-013,Farah Iyer,Mahesh Iyer,2008-03-23,ICSE,SYN0440332,"{""English"": 97, ""Hindi"": 80, ""Mathematics"": 51, ""Science"": 91, ""Social Science"": 72}",SC
+SYN-APP-014,Nisha Nair,Ramesh Nair,2007-02-24,Karnataka State Board,SYN2930786,"{""English"": 62, ""Hindi"": 36, ""Mathematics"": 67, ""Science"": 63, ""Social Science"": 42}",OBC
+SYN-APP-015,Imran Rao,Mahesh Rao,2008-10-06,CBSE,SYN4656773,"{""English"": 35, ""Hindi"": 87, ""Mathematics"": 40, ""Science"": 62, ""Social Science"": 42}",General
+SYN-APP-016,Tanvi Gupta,Suresh Gupta,2007-08-21,Maharashtra State Board,SYN9586625,"{""English"": 54, ""Hindi"": 54, ""Mathematics"": 88, ""Science"": 75, ""Social Science"": 88}",ST
+SYN-APP-017,Arjun Patel,Salim Patel,2007-02-10,CBSE,SYN3496096,"{""English"": 40, ""Hindi"": 94, ""Mathematics"": 45, ""Science"": 81, ""Social Science"": 71}",OBC
+SYN-APP-018,Kabir Rao,Vijay Rao,2006-06-06,ICSE,SYN5527747,"{""English"": 72, ""Hindi"": 38, ""Mathematics"": 70, ""Science"": 79, ""Social Science"": 61}",ST
+SYN-APP-019,Tanvi Reddy,Ramesh Reddy,2008-07-21,ICSE,SYN6006921,"{""English"": 94, ""Hindi"": 59, ""Mathematics"": 86, ""Science"": 91, ""Social Science"": 44}",OBC
+SYN-APP-020,Latha Patel,Anil Patel,2007-06-03,Karnataka State Board,SYN0952138,"{""English"": 45, ""Hindi"": 47, ""Mathematics"": 36, ""Science"": 95, ""Social Science"": 48}",General

@@ -140,6 +140,9 @@ jobs:
           cache-dependency-glob: uv.lock
       - name: install
         run: if [ -f uv.lock ]; then uv sync --locked --all-groups; else echo "lockfile:none committed, resolving now (run uv lock and commit uv.lock)"; uv sync --all-groups; fi
+      # pdf2image shells out to poppler; the app image installs the same package (ADR-0008).
+      - name: poppler
+        run: sudo apt-get update && sudo apt-get install -y --no-install-recommends poppler-utils
       - run: uv run alembic upgrade head
       - run: make migrate-verify
       - run: make test-integration
