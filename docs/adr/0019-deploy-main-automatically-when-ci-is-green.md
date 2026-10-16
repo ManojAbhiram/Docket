@@ -54,7 +54,7 @@ How it is guarded:
 
 ## Implementation
 
-The `deploy` job was prepared but the agent's write to `ci.yml` was refused by the session's permission classifier ("Production Deploy"). The engineer adds the job. Until then this ADR describes the intent and nothing deploys automatically. The first runs should be made with a required reviewer on the `production` environment.
+The `deploy` job is the last job in `.github/workflows/ci.yml` (NOTASK-37). The session's permission classifier refused the first two attempts to write it; the engineer then granted the edit permission and it was written. It was validated by parsing the YAML, checking that every `needs` entry exists and a `make -n deploy` dry run that shows the `SSH_OPTS` override reaching the `ssh` call. It has not run in CI: that needs a push, the `production` environment and the variables. The job does nothing until `DEPLOY_ENABLED` is `true`. The first runs should be made with a required reviewer on the `production` environment.
 
 ## Commits us to
 

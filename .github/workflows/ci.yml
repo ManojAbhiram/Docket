@@ -236,3 +236,70 @@ jobs:
           cache-from: type=gha
           cache-to: type=gha,mode=max
       - run: 'echo "build: 1 image built (${{ steps.tags.outputs.tags }})"'
+
+  # Continuous deployment (ADR-0019). Runs `make deploy` on a push to main once every required job
+  # above has passed. It does nothing until the repository variable DEPLOY_ENABLED is "true", and the
+  # `production` environment can require a reviewer (Settings > Environments). e2e-live is not in
+  # `needs` until it has been green for a week. The secrets and variables are listed in
+  # docs/runbooks/deploy.md.
+  deploy:
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main' && vars.DEPLOY_ENABLED == 'true'
+    needs: [validate, lint, unit, eval-gate, integration, dependency-scan, build]
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    environment:
+      name: production
+      url: https://${{ vars.DEPLOY_DOMAIN }}
+    concurrency:
+      group: deploy-production
+      cancel-in-progress: false
+    permissions:
+      contents: read
+    env:
+      DEPLOY_HOST: ${{ vars.DEPLOY_HOST }}
+      DEPLOY_DOMAIN: ${{ vars.DEPLOY_DOMAIN }}
+    steps:
+      - uses: actions/checkout@v4
+        with: { ref: main, fetch-depth: 0 }
+      - name: skip when a newer commit is already on main
+        id: fresh
+        run: |
+          git fetch -q origin main
+          if [ "$(git rev-parse HEAD)" != "$(git rev-parse origin/main)" ]; then
+            echo "A newer commit is on main; its own run deploys it. Nothing to do here."
+            echo "skip=true" >> "$GITHUB_OUTPUT"
+          fi
+      - name: server key and pinned host key
+        if: steps.fresh.outputs.skip != 'true'
+        env:
+          DEPLOY_SSH_KEY: ${{ secrets.DEPLOY_SSH_KEY }}
+          DEPLOY_KNOWN_HOSTS: ${{ vars.DEPLOY_KNOWN_HOSTS }}
+        run: |
+          umask 077
+          printf '%s\n' "$DEPLOY_SSH_KEY" > "$RUNNER_TEMP/deploy_key"
+          printf '%s\n' "$DEPLOY_KNOWN_HOSTS" > "$RUNNER_TEMP/known_hosts"
+          [ -s "$RUNNER_TEMP/deploy_key" ] && [ -s "$RUNNER_TEMP/known_hosts" ] || { echo "deploy: DEPLOY_SSH_KEY and DEPLOY_KNOWN_HOSTS must be set" >&2; exit 1; }
+          echo "SSH_OPTS=-i $RUNNER_TEMP/deploy_key -o StrictHostKeyChecking=yes -o UserKnownHostsFile=$RUNNER_TEMP/known_hosts -o ServerAliveInterval=30" >> "$GITHUB_ENV"
+      - name: remember the version now running
+        if: steps.fresh.outputs.skip != 'true'
+        id: previous
+        run: |
+          prev=$(ssh $SSH_OPTS "$DEPLOY_HOST" "grep '^DOCKET_VERSION=' Docket/deploy/production.env | cut -d= -f2" || true)
+          echo "version=$prev" >> "$GITHUB_OUTPUT"
+          echo "Running now: ${prev:-unknown}"
+      - name: deploy
+        if: steps.fresh.outputs.skip != 'true'
+        run: make deploy DEPLOY_HOST="$DEPLOY_HOST" DEPLOY_DOMAIN="$DEPLOY_DOMAIN" DEPLOY_KEY="$RUNNER_TEMP/deploy_key" SSH_OPTS="$SSH_OPTS"
+      - name: roll back to the previous version
+        if: failure() && steps.previous.outputs.version != ''
+        run: make deploy-rollback VERSION="${{ steps.previous.outputs.version }}" DEPLOY_HOST="$DEPLOY_HOST" DEPLOY_DOMAIN="$DEPLOY_DOMAIN" DEPLOY_KEY="$RUNNER_TEMP/deploy_key" SSH_OPTS="$SSH_OPTS"
+      - name: summary
+        if: always() && steps.fresh.outputs.skip != 'true'
+        run: |
+          {
+            echo "### Deploy"
+            echo "- commit: $(git rev-parse --short HEAD)"
+            echo "- previous: ${{ steps.previous.outputs.version }}"
+            echo "- site: https://$DEPLOY_DOMAIN"
+            echo "- result: ${{ job.status }}"
+          } >> "$GITHUB_STEP_SUMMARY"
