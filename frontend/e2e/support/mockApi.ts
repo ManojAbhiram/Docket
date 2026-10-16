@@ -31,12 +31,21 @@ export interface MockOptions {
   importOutcome?: ImportOutcome;
   /** When set, the next decision answers 409 once, as if another verifier decided first. */
   conflictOnNextDecision?: boolean;
+  /** The application's document list holds one failed document that Reprocess can retry. */
+  failedDocument?: boolean;
+  /**
+   * With failedDocument: the first list still shows the document as failed, but the server has
+   * already read it, so Reprocess answers 409 document_not_failed and the next list says read.
+   */
+  failedDocumentSettlesFirst?: boolean;
 }
 
 export interface MockApi {
   decisions: { action: string; reason?: string }[];
   uploads: number;
   imports: number;
+  /** Ids of the documents a reprocess request was sent for, in order. */
+  reprocesses: string[];
   /** Where the signed-in session stands now. */
   session: () => Role | null;
 }
@@ -45,6 +54,7 @@ const ID_FLAGGED = "0192b1c2-7f3a-7c4e-9a1b-2c3d4e5f6a7b";
 const ID_MISSING = "0192b1c2-7f3a-7c4e-9a1b-2c3d4e5f6a7c";
 const ID_VERIFIED = "0192b1c2-7f3a-7c4e-9a1b-2c3d4e5f6a7d";
 const DOCUMENT_ID = "0192b1c3-1a2b-7c4e-9a1b-2c3d4e5f6a7c";
+export const FAILED_DOCUMENT_ID = "0192b1c3-1a2b-7c4e-9a1b-2c3d4e5f6a7e";
 
 // A one pixel PNG, the page image the compare screen asks for.
 const PIXEL = Buffer.from(
@@ -113,6 +123,21 @@ function detailOf(app: MockApplication) {
   };
 }
 
+function failedDocumentBody(appId: string, status: "failed" | "uploaded" | "read") {
+  return {
+    id: FAILED_DOCUMENT_ID,
+    application_id: appId,
+    detected_type: status === "read" ? "10th_marksheet" : null,
+    status,
+    failure_reason: status === "failed" ? "timeout" : null,
+    is_current: true,
+    created_at: "2026-10-05T09:05:00Z",
+    requested_mode: "free",
+    read_engine: status === "read" ? "rapidocr" : null,
+    fallback_reason: null,
+  };
+}
+
 function listItem(app: MockApplication) {
   return {
     id: app.id,
@@ -154,10 +179,15 @@ export async function mockApi(page: Page, options: MockOptions = {}): Promise<Mo
       version: 1,
     },
   ];
+  let failedStatus: "failed" | "uploaded" | "read" = options.failedDocumentSettlesFirst
+    ? "read"
+    : "failed";
+  let showStaleFailure = options.failedDocumentSettlesFirst ?? false;
   const seen: MockApi = {
     decisions: [],
     uploads: 0,
     imports: 0,
+    reprocesses: [],
     session: () => session,
   };
 
@@ -227,6 +257,23 @@ export async function mockApi(page: Page, options: MockOptions = {}): Promise<Mo
         .map(listItem);
       return json(route, 200, { data: rows, page: { next_cursor: null, has_more: false } });
     }
+    const reprocess = /^\/api\/documents\/([^/]+)\/reprocess$/.exec(path);
+    if (reprocess && method === "POST" && options.failedDocument) {
+      if (session !== "staff") {
+        return json(route, 403, { error: { code: "forbidden", message: "staff only" } });
+      }
+      if (reprocess[1] !== FAILED_DOCUMENT_ID) {
+        return json(route, 404, { error: { code: "not_found", message: "no such document" } });
+      }
+      seen.reprocesses.push(reprocess[1]);
+      if (failedStatus !== "failed") {
+        return json(route, 409, {
+          error: { code: "document_not_failed", message: "the document is not failed" },
+        });
+      }
+      failedStatus = "uploaded";
+      return json(route, 202, failedDocumentBody(ID_MISSING, "uploaded"));
+    }
     const documentImage = /^\/api\/documents\/[^/]+\/image$/.exec(path);
     if (documentImage) {
       return route.fulfill({ status: 200, contentType: "image/png", body: PIXEL });
@@ -240,6 +287,17 @@ export async function mockApi(page: Page, options: MockOptions = {}): Promise<Mo
       const tail = inApplication[2];
       if (!tail && method === "GET") {
         return json(route, 200, detailOf(app), { ETag: `"v${String(app.version)}"` });
+      }
+      if (tail === "/documents" && method === "GET" && options.failedDocument) {
+        const shown = showStaleFailure ? "failed" : failedStatus;
+        showStaleFailure = false;
+        if (failedStatus === "uploaded") {
+          failedStatus = "read"; // the worker finishes before the next poll
+        }
+        return json(route, 200, {
+          data: [failedDocumentBody(app.id, shown)],
+          page: { next_cursor: null, has_more: false },
+        });
       }
       if (tail === "/documents" && method === "GET") {
         return json(route, 200, { data: [], page: { next_cursor: null, has_more: false } });
