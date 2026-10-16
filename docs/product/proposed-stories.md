@@ -20,7 +20,7 @@ Also proposed, from the data model, the design and the critic review (PS-12 and 
 | --- | --- | --- | --- |
 | PS-10 | Erase an applicant in place (`erase_application`) | No story owns it (`docs/design/data-model.md` section 12); the DPIA needs it before real data | US-00-001 |
 | PS-11 | Run the API and frontend in `docker compose` | ADR-0004 chose a local compose demo, but `docker-compose.yml` starts only Postgres | none |
-| PS-12 | Reprocess a failed document | A failed document cannot be recovered by re-uploading identical bytes (HLD section 16); `reprocessDocument` is in `api/openapi.yaml` | US-00-003 |
+| PS-12 | Reprocess a failed document (built, NOTASK-30) | A failed document cannot be recovered by re-uploading identical bytes (HLD section 16); `reprocessDocument` is in `api/openapi.yaml` and the route and the Reprocess button exist | US-00-003 |
 | PS-13 | Sweepers for stale work | Nothing owns marking old `processing` documents failed, old `pending` gateway calls errored, and deleting expired sessions and idempotency keys (data model section 12) | US-02-001, US-00-011 |
 
 ## Status against the code (2026-10-16)

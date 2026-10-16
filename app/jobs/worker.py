@@ -10,6 +10,7 @@ import asyncio
 import contextlib
 from collections.abc import Awaitable, Callable
 from dataclasses import dataclass, replace
+from datetime import datetime
 from functools import partial
 from typing import Literal, Protocol
 from uuid import UUID
@@ -38,6 +39,10 @@ class ClaimedDocument:
     image: bytes
     # What the uploader asked for: "free" (local OCR) or "vision" (OpenRouter, ADR-0015).
     mode: str = "free"
+    # `updated_at` as the claim set it. A result is stored only while it is still this value, so a
+    # read that outlives its claim (swept, reprocessed, claimed again) cannot overwrite the newer
+    # attempt. None skips the check.
+    claimed_at: datetime | None = None
 
 
 class ReadTimeoutError(DomainError):
@@ -49,13 +54,18 @@ class ReadTimeoutError(DomainError):
 
 class DocumentStore(Protocol):
     """The queue in the database. `complete` and `fail` return False if the document is no longer
-    `processing`, which is how a late result is kept from overwriting the sweeper."""
+    `processing` under the same claim, which is how a late result is kept from overwriting the
+    sweeper or a reprocessed attempt."""
 
     async def claim_next(self) -> ClaimedDocument | None: ...
 
-    async def complete(self, document_id: UUID, result: ProcessedDocument) -> bool: ...
+    async def complete(
+        self, document_id: UUID, result: ProcessedDocument, claimed_at: datetime | None = None
+    ) -> bool: ...
 
-    async def fail(self, document_id: UUID, reason: str) -> bool: ...
+    async def fail(
+        self, document_id: UUID, reason: str, claimed_at: datetime | None = None
+    ) -> bool: ...
 
     async def sweep_stale(self, older_than_seconds: int) -> int: ...
 
@@ -90,13 +100,13 @@ async def process_next(
             document, reader, vision_reader, confidence_cutoff, compute_slots, vision_grace_seconds
         )
     except CallCapReachedError:
-        return await _failed(store, document.id, "cap_reached", settle)
+        return await _failed(store, document, "cap_reached", settle)
     except ReadTimeoutError:
-        return await _failed(store, document.id, "timeout", settle)
+        return await _failed(store, document, "timeout", settle)
     except EngineError as exc:
         reason = "timeout" if isinstance(exc.__cause__, EngineTimeoutError) else "engine_error"
-        return await _failed(store, document.id, reason, settle)
-    if not await store.complete(document.id, result):
+        return await _failed(store, document, reason, settle)
+    if not await store.complete(document.id, result, claimed_at=document.claimed_at):
         log.warning("worker.result_discarded", document_id=str(document.id))
         return "stale"
     log.info("document.read", document_id=str(document.id), doc_type=result.doc_type)
@@ -210,14 +220,14 @@ async def sweep_loop(store: DocumentStore, *, interval_seconds: float, stop: asy
 
 async def _failed(
     store: DocumentStore,
-    document_id: UUID,
+    document: ClaimedDocument,
     reason: str,
     settle: Callable[[UUID], Awaitable[None]] | None,
 ) -> Outcome:
-    if not await store.fail(document_id, reason):
+    if not await store.fail(document.id, reason, claimed_at=document.claimed_at):
         return "stale"
-    log.warning("document.failed", document_id=str(document_id), reason_code=reason)
-    await _settle(settle, document_id)
+    log.warning("document.failed", document_id=str(document.id), reason_code=reason)
+    await _settle(settle, document.id)
     return "failed"
 
 

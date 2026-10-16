@@ -13,9 +13,10 @@ from uuid import UUID
 from sqlalchemy import Row, text
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
-from app.db.repositories.statuses import recompute_status
+from app.core.errors import NotFoundError
+from app.db.repositories.statuses import recompute_in_session, recompute_status
 from app.domain.paging import decode_cursor, encode_cursor
-from app.domain.uploads import StoredImage
+from app.domain.uploads import DocumentNotFailedError, StoredImage
 
 _APPLICATION_EXISTS = text("SELECT 1 FROM applications WHERE id = :id AND erased_at IS NULL")
 _LOCK = text("SELECT pg_advisory_xact_lock(hashtextextended(CAST(:id AS text), 0))")
@@ -35,6 +36,19 @@ _INSERT_BLOB = text(
     "INSERT INTO document_blobs (document_id, content_type, content) "
     "VALUES (:document_id, :content_type, :content)"
 )
+_LOCK_FOR_REPROCESS = text(
+    "SELECT d.application_id, d.status::text FROM documents d "
+    "JOIN applications a ON a.id = d.application_id "
+    "WHERE d.id = :id AND a.erased_at IS NULL FOR UPDATE OF d"
+)
+# `created_at` is kept so the document keeps its place in the queue and in the newest-first list.
+_REQUEUE = text(
+    "UPDATE documents SET status = 'uploaded', failure_reason = NULL, read_engine = NULL, "
+    "fallback_reason = NULL, detected_type = NULL, updated_at = now() WHERE id = :id "
+    "RETURNING id, application_id, detected_type::text, status::text, failure_reason, "
+    "is_current, created_at, requested_mode, read_engine, fallback_reason"
+)
+_CLEAR_FIELDS = text("DELETE FROM extracted_fields WHERE document_id = :id")
 _LIST = text(
     "SELECT id, application_id, detected_type::text, status::text, failure_reason, is_current, "
     "created_at, requested_mode, read_engine, fallback_reason FROM documents "
@@ -139,6 +153,25 @@ class SqlUploadStore:
     async def recompute_status(self, application_id: UUID) -> str:
         """Set the application's status again from its documents, now that one more exists."""
         return await recompute_status(self._factory, application_id)
+
+    async def reprocess_document(self, document_id: UUID) -> DocumentRecord:
+        """Put a failed document back in the queue and recompute its application, in one commit.
+
+        The row lock serialises two callers, so the second sees `uploaded` and is refused. Raises
+        `NotFoundError` for an unknown document or an erased application, and
+        `DocumentNotFailedError` for any other state.
+        """
+        async with self._factory.begin() as session:
+            row = (await session.execute(_LOCK_FOR_REPROCESS, {"id": document_id})).first()
+            if row is None:
+                raise NotFoundError("no such document")
+            application_id, status = row
+            if status != "failed":
+                raise DocumentNotFailedError("only a failed document can be reprocessed")
+            await session.execute(_CLEAR_FIELDS, {"id": document_id})
+            record = _record((await session.execute(_REQUEUE, {"id": document_id})).one())
+            await recompute_in_session(session, application_id)
+        return record
 
     async def list_documents(
         self, application_id: UUID, *, limit: int, cursor: str | None

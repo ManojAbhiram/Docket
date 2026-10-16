@@ -56,6 +56,10 @@ interface UploadViewProps {
   mode?: ReadMode;
   onModeChange?: (mode: ReadMode) => void;
   onFiles?: (files: File[]) => void;
+  /** Queue a failed document to be read again. Without it the button is inert, as in the gallery. */
+  onReprocess?: (documentId: string) => void;
+  /** The document whose reprocess request is running. */
+  reprocessingId?: string | undefined;
   onNoticeAction?: () => void;
 }
 
@@ -169,6 +173,8 @@ export function UploadView({
   mode = "free",
   onModeChange,
   onFiles,
+  onReprocess,
+  reprocessingId,
   onNoticeAction,
 }: UploadViewProps) {
   const sendsOut = visionAvailable && mode === "vision";
@@ -279,8 +285,16 @@ export function UploadView({
                 {document.problem && (
                   <div className="space-y-2">
                     <p>{document.problem}</p>
-                    {document.status === "failed" && !readOnly && onFiles === undefined && (
-                      <Button variant="outline" size="sm" className="min-h-11 sm:min-h-8">
+                    {document.status === "failed" && !readOnly && (
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="min-h-11 sm:min-h-8"
+                        disabled={reprocessingId !== undefined}
+                        onClick={() => {
+                          onReprocess?.(document.id);
+                        }}
+                      >
                         Reprocess
                       </Button>
                     )}

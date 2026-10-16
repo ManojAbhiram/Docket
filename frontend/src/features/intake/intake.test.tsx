@@ -370,8 +370,112 @@ describe("upload", () => {
       await screen.findByRole("heading", { name: "Documents for SYN-APP-007" }),
     ).toBeInTheDocument();
     expect(await screen.findByText("Read: 10th marksheet")).toBeInTheDocument();
-    expect(screen.getByText(/Reading took too long\. Upload the file again\./)).toBeInTheDocument();
+    expect(
+      screen.getByText(/Reading took too long\. Reprocess it to try again\./),
+    ).toBeInTheDocument();
     expect(screen.getByText("1 read, 0 reading, 1 failed.")).toBeInTheDocument();
+  });
+
+  it("offers Reprocess only on a failed document", async () => {
+    server.use(
+      knownApplication(),
+      http.get(`*/api/applications/${APP_ID}/documents`, () =>
+        documentList(doc("d1", "read", "10th_marksheet"), doc("d2", "failed", null, "timeout")),
+      ),
+    );
+    renderAt(`/applications/${APP_ID}/upload`);
+
+    await screen.findByText("Read: 10th marksheet");
+
+    expect(screen.getAllByRole("button", { name: "Reprocess" })).toHaveLength(1);
+  });
+
+  it("sends the reprocess with the CSRF token and shows the document waiting again", async () => {
+    document.cookie = "docket_csrf=token-1";
+    const sent: { url: string; token: string | null }[] = [];
+    let failed = true;
+    server.use(
+      knownApplication(),
+      http.get(`*/api/applications/${APP_ID}/documents`, () =>
+        documentList(failed ? doc("d2", "failed", null, "timeout") : doc("d2", "uploaded")),
+      ),
+      http.post("*/api/documents/d2/reprocess", ({ request }) => {
+        sent.push({
+          url: new URL(request.url).pathname,
+          token: request.headers.get("X-CSRF-Token"),
+        });
+        failed = false;
+        return HttpResponse.json(doc("d2", "uploaded"), { status: 202 });
+      }),
+    );
+    renderAt(`/applications/${APP_ID}/upload`);
+
+    await userEvent.setup().click(await screen.findByRole("button", { name: "Reprocess" }));
+
+    expect(await screen.findByText("Uploaded")).toBeInTheDocument();
+    expect(sent).toEqual([{ url: "/api/documents/d2/reprocess", token: "token-1" }]);
+    expect(screen.queryByRole("button", { name: "Reprocess" })).not.toBeInTheDocument();
+  });
+
+  it("disables Reprocess while the request is running so it is sent once", async () => {
+    let posts = 0;
+    server.use(
+      knownApplication(),
+      http.get(`*/api/applications/${APP_ID}/documents`, () =>
+        documentList(doc("d2", "failed", null, "timeout")),
+      ),
+      http.post("*/api/documents/d2/reprocess", async () => {
+        posts += 1;
+        await delay(150);
+        return HttpResponse.json(doc("d2", "uploaded"), { status: 202 });
+      }),
+    );
+    renderAt(`/applications/${APP_ID}/upload`);
+    const user = userEvent.setup();
+
+    await user.click(await screen.findByRole("button", { name: "Reprocess" }));
+
+    expect(screen.getByRole("button", { name: "Reprocess" })).toBeDisabled();
+    await user.click(screen.getByRole("button", { name: "Reprocess" }));
+    await waitFor(() => {
+      expect(posts).toBe(1);
+    });
+  });
+
+  it("says the document is no longer failed on a 409 and shows its current state", async () => {
+    let reads = 0;
+    server.use(
+      knownApplication(),
+      http.get(`*/api/applications/${APP_ID}/documents`, () => {
+        reads += 1;
+        return documentList(
+          reads === 1 ? doc("d2", "failed", null, "timeout") : doc("d2", "processing"),
+        );
+      }),
+      http.post("*/api/documents/d2/reprocess", () => failure(409, "document_not_failed")),
+    );
+    renderAt(`/applications/${APP_ID}/upload`);
+
+    await userEvent.setup().click(await screen.findByRole("button", { name: "Reprocess" }));
+
+    expect(await screen.findByText("That document is no longer failed.")).toBeInTheDocument();
+    expect(await screen.findByText("Reading")).toBeInTheDocument();
+  });
+
+  it("says reprocessing did not start on any other error", async () => {
+    server.use(
+      knownApplication(),
+      http.get(`*/api/applications/${APP_ID}/documents`, () =>
+        documentList(doc("d2", "failed", null, "timeout")),
+      ),
+      http.post("*/api/documents/d2/reprocess", () => failure(500, "internal_error")),
+    );
+    renderAt(`/applications/${APP_ID}/upload`);
+
+    await userEvent.setup().click(await screen.findByRole("button", { name: "Reprocess" }));
+
+    expect(await screen.findByText("Reprocessing did not start.")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Reprocess" })).toBeEnabled();
   });
 
   it("uploads files one at a time and a refused file does not stop the rest", async () => {

@@ -1,11 +1,13 @@
 """The document queue in Postgres (ADR-0011). SQL lives here and nowhere else.
 
 A claim takes the oldest `uploaded` document with `FOR UPDATE SKIP LOCKED`. Every later write is
-conditional on `status = 'processing'`, so a read that finishes after the sweeper gave up changes
+conditional on `status = 'processing'` and on the claim's `updated_at`, so a read that finishes
+after the sweeper gave up, or after the document was reprocessed and claimed again, changes
 nothing. Comparing fields with the application and recomputing its status is the next service.
 """
 
 import json
+from datetime import datetime
 from uuid import UUID
 
 from sqlalchemy import text
@@ -23,13 +25,14 @@ _CLAIM = text(
         SELECT id FROM documents WHERE status = 'uploaded'
         ORDER BY created_at FOR UPDATE SKIP LOCKED LIMIT 1
     )
-    RETURNING id, requested_mode
+    RETURNING id, requested_mode, updated_at
     """
 )
 _IMAGE = text("SELECT content FROM document_blobs WHERE document_id = :id")
 _LOCK_DOCUMENT = text(
     "SELECT application_id, created_at FROM documents "
-    "WHERE id = :id AND status = 'processing' FOR UPDATE"
+    "WHERE id = :id AND status = 'processing' "
+    "AND (CAST(:claimed_at AS timestamptz) IS NULL OR updated_at = :claimed_at) FOR UPDATE"
 )
 _LOCK_APPLICATION = text("SELECT marks FROM applications WHERE id = :id FOR UPDATE")
 _NEWER_CURRENT = text(
@@ -52,7 +55,8 @@ _INSERT_FIELD = text(
 )
 _FAIL = text(
     "UPDATE documents SET status = 'failed', failure_reason = :reason, updated_at = now() "
-    "WHERE id = :id AND status = 'processing' RETURNING id"
+    "WHERE id = :id AND status = 'processing' "
+    "AND (CAST(:claimed_at AS timestamptz) IS NULL OR updated_at = :claimed_at) RETURNING id"
 )
 _SWEEP = text(
     "UPDATE documents SET status = 'failed', failure_reason = 'interrupted', updated_at = now() "
@@ -72,13 +76,19 @@ class SqlDocumentStore:
             claimed = (await session.execute(_CLAIM)).first()
             if claimed is None:
                 return None
-            document_id, mode = claimed
+            document_id, mode, claimed_at = claimed
             image = (await session.execute(_IMAGE, {"id": document_id})).scalar_one()
-            return ClaimedDocument(id=document_id, image=bytes(image), mode=mode)
+            return ClaimedDocument(
+                id=document_id, image=bytes(image), mode=mode, claimed_at=claimed_at
+            )
 
-    async def complete(self, document_id: UUID, result: ProcessedDocument) -> bool:
+    async def complete(
+        self, document_id: UUID, result: ProcessedDocument, claimed_at: datetime | None = None
+    ) -> bool:
         async with self._factory.begin() as session:
-            row = (await session.execute(_LOCK_DOCUMENT, {"id": document_id})).first()
+            row = (
+                await session.execute(_LOCK_DOCUMENT, {"id": document_id, "claimed_at": claimed_at})
+            ).first()
             if row is None:
                 return False
             application_id, created_at = row
@@ -121,9 +131,13 @@ class SqlDocumentStore:
                 )
             return True
 
-    async def fail(self, document_id: UUID, reason: str) -> bool:
+    async def fail(
+        self, document_id: UUID, reason: str, claimed_at: datetime | None = None
+    ) -> bool:
         async with self._factory.begin() as session:
-            result = await session.execute(_FAIL, {"id": document_id, "reason": reason})
+            result = await session.execute(
+                _FAIL, {"id": document_id, "reason": reason, "claimed_at": claimed_at}
+            )
             return result.first() is not None
 
     async def sweep_stale(self, older_than_seconds: int) -> int:

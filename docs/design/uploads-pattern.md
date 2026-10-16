@@ -48,11 +48,11 @@ The loop runs inside the API process because ADR-0004 gives one instance. A seco
 | declared type and first bytes disagree, or type unsupported | 415, nothing stored |
 | decompression bomb or huge pixel size | refused before decoding fully; if it slips through, the processing timeout marks the document `failed` |
 | decoder or rasteriser crashes or times out | document `failed` with a reason code, application becomes Needs review; the process is not the only copy of any state |
-| process restarts during processing | the sweeper marks stale `processing` rows `failed` (`interrupted`); the staff member re-uploads |
-| identical bytes uploaded twice for one application | 200 with the existing document id, no second row, unless the existing document is `failed`: failed documents are excluded from this check so a re-upload is processed (proposed, HLD section 16). Two identical concurrent uploads are made safe by the `idempotency_keys` primary key, not by the sha256 check alone |
+| process restarts during processing | the sweeper marks stale `processing` rows `failed` (`interrupted`); the staff member uses Reprocess |
+| identical bytes uploaded twice for one application | 200 with the existing document id, no second row, and that includes a `failed` document: the check is unchanged, so a plain re-upload of a failed file does not retry it. Use the reprocess route (`POST /api/documents/{id}/reprocess`, staff only) instead. Two identical concurrent uploads are made safe by the `idempotency_keys` primary key, not by the sha256 check alone |
 | same type uploaded again (different bytes) | both kept; the newer one becomes current (data model processing rule 1) |
 | database full or unavailable | upload returns 503; nothing is half stored because the two rows commit together |
-| gateway cap reached | the document becomes `failed` with `cap_reached` and the application is Needs review (AC-US-02-001-4); it never stays `uploaded`, because the loop would claim it again and log a refused call without end. Raising the cap reprocesses nothing until a reprocess operation exists (HLD section 16) |
+| gateway cap reached | the document becomes `failed` with `cap_reached` and the application is Needs review (AC-US-02-001-4); it never stays `uploaded`, because the loop would claim it again and log a refused call without end. Raising the cap reprocesses nothing by itself; staff reprocess each failed document with the reprocess route |
 
 ## Tests to write
 

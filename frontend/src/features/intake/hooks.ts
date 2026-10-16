@@ -20,6 +20,7 @@ import {
   importApplications,
   listApplications,
   listDocuments,
+  reprocessDocument,
   uploadDocument,
   type ApplicationFilter,
 } from "./api";
@@ -109,6 +110,21 @@ export function useCapabilities() {
       staleTime: 5 * 60 * 1000,
     }),
   );
+}
+
+/**
+ * Reprocess one failed document. Afterwards the document list and every status are asked for
+ * again, also after a 409, because then the document is no longer in the state the screen showed.
+ */
+export function useReprocess(applicationId: string) {
+  const client = useQueryClient();
+  return useMutation({
+    mutationFn: reprocessDocument,
+    onSettled: async () => {
+      await client.invalidateQueries({ queryKey: intakeKeys.documents(applicationId) });
+      await refreshStatuses(client);
+    },
+  });
 }
 
 export function useImport() {
