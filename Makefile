@@ -2,12 +2,17 @@
 SHELL := /bin/bash
 .DEFAULT_GOAL := help
 UV ?= uv
+PNPM ?= pnpm
 STATE := .bearing/state
 SKIPPED := $(STATE)/.skipped
 # The gates `make check` runs, in order. test-integration needs Postgres, so
 # it is a CI job and a manual target, not part of check.
 GATES := format-check lint typecheck test vuln
 POSTGRES_PORT ?= 5432
+# The live e2e suite (NOTASK-31) owns its own compose project and port, so it never touches the dev database.
+E2E_LIVE_PROJECT ?= docket-e2e
+E2E_LIVE_DB_PORT ?= 55432
+E2E_LIVE_DB_URL ?= postgresql+asyncpg://postgres:postgres@localhost:$(E2E_LIVE_DB_PORT)/docket
 MEMORY_OUT ?= .scratch/NOTASK-17/memory.json
 MEMORY_COMMAND ?= -m evals.memory_bench --out $(MEMORY_OUT)
 SEED_API_URL ?= http://localhost:8080
@@ -29,9 +34,10 @@ endef
 .PHONY: help setup dev seed-accounts check check-file fix test test-integration lint typecheck format format-check migrate migrate-verify migrate-down migrate-new vuln eval-extract eval-record eval-gate eval-report doctor db db-reset clean
 .PHONY: test-memory bench-memory bench-memory-repeat bench-memory-runtime
 .PHONY: test-seed-load seed-load
+.PHONY: e2e-live-up e2e-live-down test-e2e-live
 
 help: ## List targets
-	@grep -E '^[a-zA-Z_-]+:.*?## ' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*?## "}; {printf "  %-18s %s\n", $$1, $$2}'
+	@grep -E '^[a-zA-Z0-9_-]+:.*?## ' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*?## "}; {printf "  %-18s %s\n", $$1, $$2}'
 
 setup: ## Install Python 3.14, dependencies (writes uv.lock) and git hooks
 	$(UV) python install 3.14
@@ -136,6 +142,22 @@ db: ## Start Postgres in Docker (host port POSTGRES_PORT, default 5432)
 
 db-reset: ## Drop and recreate the local database (destructive)
 	POSTGRES_PORT=$(POSTGRES_PORT) docker compose down -v && POSTGRES_PORT=$(POSTGRES_PORT) docker compose up -d --wait postgres
+
+e2e-live-up: ## Start the throwaway Postgres for the live e2e suite (project docket-e2e, port 55432) and migrate it
+	@if [ -n "$(E2E_LIVE_DATABASE_URL)" ]; then echo "e2e-live-up: using E2E_LIVE_DATABASE_URL, no container started"; DATABASE_URL=$(E2E_LIVE_DATABASE_URL) $(UV) run alembic upgrade head; \
+	else POSTGRES_PORT=$(E2E_LIVE_DB_PORT) docker compose -p $(E2E_LIVE_PROJECT) up -d --wait postgres && DATABASE_URL=$(E2E_LIVE_DB_URL) $(UV) run alembic upgrade head; fi
+
+e2e-live-down: ## Remove the live e2e Postgres and its volume (safe to run twice; leaves any E2E_LIVE_DATABASE_URL database alone)
+	@if [ -n "$(E2E_LIVE_DATABASE_URL)" ]; then echo "e2e-live-down: external database, nothing to remove"; \
+	else POSTGRES_PORT=$(E2E_LIVE_DB_PORT) docker compose -p $(E2E_LIVE_PROJECT) down -v --remove-orphans; fi
+
+test-e2e-live: ## Real API + Postgres + RapidOCR behind the built UI, Chromium only (needs Docker; not part of check, a non-required CI job)
+	@trap '$(MAKE) --no-print-directory e2e-live-down >/dev/null 2>&1; exit 130' INT TERM; \
+	$(MAKE) --no-print-directory e2e-live-down >/dev/null 2>&1; \
+	rc=0; $(MAKE) --no-print-directory e2e-live-up || rc=$$?; \
+	if [ "$$rc" -eq 0 ]; then (cd frontend && $(PNPM) exec playwright test -c playwright.live.config.ts) || rc=$$?; fi; \
+	$(MAKE) --no-print-directory e2e-live-down || true; \
+	[ "$$rc" -eq 0 ] && echo "test-e2e-live: passed" || echo "test-e2e-live: FAILED (exit $$rc)" >&2; exit $$rc
 
 migrate: ## alembic upgrade head
 	DATABASE_URL=$(DATABASE_URL) $(UV) run alembic upgrade head
