@@ -8,6 +8,8 @@
 
 The code today is a scaffold: `app/main.py:58` mounts only the health router, `app/domain/` is empty, and `docker-compose.yml` runs only PostgreSQL. Everything else below is the design in the HLD, so every element or edge that no code backs is on the unconfirmed list and the sequences are design traces, not code traces.
 
+> Update 2026-10-16 (NOTASK-23): The scaffold statement is out of date: the API now has applications, auth, capabilities, decisions, documents, imports and reports routers, and `app/domain/` holds the working rules. The text below is kept as written on its date. Current state of the code and its evidence: `docs/testing/NOTASK-17-acceptance-audit.md`.
+
 ## 1. Context
 
 ```mermaid

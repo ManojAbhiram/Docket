@@ -9,6 +9,8 @@
 
 Scope: the planned system as designed in `docs/design/data-model.md` and the backlog. Application code does not exist yet (`app/domain/` is empty), so every mitigation that depends on it is `planned` and points to a story. Routes are the planned set that `api/openapi.yaml` will carry.
 
+> Update 2026-10-16 (NOTASK-23): Application code now exists. Mitigations marked `planned` below were not re-checked in this pass; see `docs/security/NOTASK-17-vision-upload.md` and `docs/security/AUTH.md` for what was built and reviewed. The text below is kept as written on its date. Current state of the code and its evidence: `docs/testing/NOTASK-17-acceptance-audit.md`.
+
 ## 1. Assets
 
 | Asset | Where it lives | Owner | Why an attacker wants it |

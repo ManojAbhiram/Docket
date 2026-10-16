@@ -15,6 +15,8 @@ invariant. Every row has one; a P1 row has two categories, one `not:`.
 
 The comparison does not exist yet (`app/domain/` is empty). The cases state what the code must do; they are not derived from code. Names are written "given surname" as in the application.
 
+> Update 2026-10-16 (NOTASK-23): `app/domain/compare.py` and `match.py` now exist. The cases still cover only US-00-004. The text below is kept as written on its date. Current state of the code and its evidence: `docs/testing/NOTASK-17-acceptance-audit.md`.
+
 | TC | Story | ACs | Title | Preconditions | Steps | Test data | Expected result | Oracles | Type | Priority | Automation |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
 | TC-0001 | US-00-004 | AC-US-00-004-1 | Identical name matches | none | 1. Compare extracted name with application name | extracted `Aarav Rao`, application `Aarav Rao` | name is a match | data: name result is match; not: no mismatch recorded for name | unit | P2 | planned |
