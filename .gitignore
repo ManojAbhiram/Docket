@@ -32,8 +32,14 @@ dist/
 build/
 .env
 
-# generated synthetic dataset (python -m seed); rebuilt from a fixed seed
-data/seed/
+# generated synthetic dataset (python -m seed). The rest is rebuilt from a fixed seed. The files below
+# are committed because CI needs the exact bytes: the eval replay is keyed by the SHA-256 of each page
+# image, and screenshots are not byte-identical across machines (NOTASK-33).
+data/seed/*
+!data/seed/png/
+!data/seed/labels.json
+!data/seed/applications.csv
+!data/seed/cases.jsonl
 
 # Filled-in production settings hold secrets.
 deploy/production.env
