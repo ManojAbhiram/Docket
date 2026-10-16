@@ -114,10 +114,9 @@ jobs:
           cache-dependency-glob: uv.lock
       - name: install
         run: if [ -f uv.lock ]; then uv sync --locked --all-groups; else echo "lockfile:none committed, resolving now (run uv lock and commit uv.lock)"; uv sync --all-groups; fi
-      # EVAL_ALLOW_NO_BASELINE=1 lets the job pass while evals/ocr/gate.yaml has no accepted
-      # baseline, so nothing is gated yet. Once a person accepts one, drop the flag: a plain
-      # `make eval-gate` then fails the pipeline when the score falls.
-      - run: make eval-gate EVAL_ALLOW_NO_BASELINE=1
+      # evals/ocr/gate.yaml holds an accepted baseline (2026-10-16), so this fails the pipeline
+      # when the replayed score falls by more than the delta.
+      - run: make eval-gate
 
   # Needs Postgres, so it is a job here and not part of make check.
   integration:

@@ -1,6 +1,6 @@
 # Data map
 
-Regime: both (GDPR terms with the DPDP equivalents in brackets: data principal, data fiduciary). Controller (data fiduciary): unconfirmed, the organisation that runs Docket. Privacy contact: unconfirmed.
+Regime: both (GDPR terms with the DPDP equivalents in brackets: data principal, data fiduciary). Controller (data fiduciary): the organisation that runs Docket, still unconfirmed. Interim owner and privacy contact: Manoj Abhiram (recorded 2026-10-16). Privacy contact: unconfirmed.
 Source: `docs/design/data-model.md` (95 columns, 14 personal-data columns), `docs/design/schema.sql`, `app/` as of 2026-10-05. Last reviewed: 2026-10-05, Proposed, no reviewer named.
 
 Status of everything below: **Proposed.** No privacy notice, retention schedule, processor contract or accepted privacy ADR exists, so no promise could be tested against the system. The application does not store anything yet: the tables are designed, not migrated.
@@ -21,22 +21,22 @@ Retention and deletion are `UNDEFINED` because nobody has decided them; erasure 
 
 | # | Kind | Store.table.column | Purpose | Lawful basis | Collected from | Shared with | Retention | Deletion mechanism | Owner |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| 1 | username (staff identity) | `postgres.users.username` | sign-in | UNDEFINED | seed script | none | UNDEFINED | deactivate, never delete | unconfirmed |
-| 2 | name (staff) | `postgres.users.display_name` | name in the decision log | UNDEFINED | seed script | none | UNDEFINED | deactivate, never delete | unconfirmed |
-| 3 | application id | `postgres.applications.application_ref` | key of the imported record | UNDEFINED | admissions CSV | none by design | UNDEFINED | erase in place | unconfirmed |
-| 4 | name (child) | `postgres.applications.full_name` | compare with documents | UNDEFINED | CSV | none | UNDEFINED | erase in place | unconfirmed |
-| 5 | name (father) | `postgres.applications.father_name` | compare with documents | UNDEFINED | CSV | none | UNDEFINED | erase in place | unconfirmed |
-| 6 | date of birth | `postgres.applications.date_of_birth` | compare with documents | UNDEFINED | CSV | none | UNDEFINED | erase in place | unconfirmed |
-| 7 | roll number | `postgres.applications.roll_number` | compare with marksheets | UNDEFINED | CSV | none | UNDEFINED | erase in place | unconfirmed |
-| 8 | academic marks | `postgres.applications.marks` | compare with marksheets | UNDEFINED | CSV | none | UNDEFINED | erase in place | unconfirmed |
-| 9 | community category | `postgres.applications.category` | admission record | UNDEFINED | CSV | none | UNDEFINED | erase in place | unconfirmed |
-| 10 | document image (holds rows 4 to 9 on the page) | `postgres.document_blobs.content` | verification evidence | UNDEFINED | staff upload | the OCR engine in process | UNDEFINED | cascade with the document | unconfirmed |
-| 11 | extracted field value | `postgres.extracted_fields.value` | stored evidence (REQ-018) | UNDEFINED | OCR output | none | UNDEFINED | cascade with the document | unconfirmed |
-| 12 | verifier reason | `postgres.decisions.reason` | accountability, free text | UNDEFINED | verifier | none | UNDEFINED | replace with `[erased]` | unconfirmed |
-| 13 | corrected old value | `postgres.decisions.old_value` | audit of a correction, holds what the engine read | UNDEFINED | verifier | none | UNDEFINED | replace with `[erased]` | unconfirmed |
-| 14 | corrected new value | `postgres.decisions.new_value` | audit of a correction | UNDEFINED | verifier | none | UNDEFINED | replace with `[erased]` | unconfirmed |
-| 15 | request logs | stdout from `app/core/middleware.py:60` (method, path, status, duration) | operations | UNDEFINED | requests | the host's log store (unconfirmed) | UNDEFINED | host default | unconfirmed |
-| 16 | exported verified list | CSV downloaded by staff (copies outside the system) | hand the result on | UNDEFINED | `GET /api/exports/verified.csv` | whoever receives it | UNDEFINED | none: a file on a laptop is outside the system | unconfirmed |
+| 1 | username (staff identity) | `postgres.users.username` | sign-in | UNDEFINED | seed script | none | UNDEFINED | deactivate, never delete | Manoj Abhiram (interim) |
+| 2 | name (staff) | `postgres.users.display_name` | name in the decision log | UNDEFINED | seed script | none | UNDEFINED | deactivate, never delete | Manoj Abhiram (interim) |
+| 3 | application id | `postgres.applications.application_ref` | key of the imported record | UNDEFINED | admissions CSV | none by design | UNDEFINED | erase in place | Manoj Abhiram (interim) |
+| 4 | name (child) | `postgres.applications.full_name` | compare with documents | UNDEFINED | CSV | none | UNDEFINED | erase in place | Manoj Abhiram (interim) |
+| 5 | name (father) | `postgres.applications.father_name` | compare with documents | UNDEFINED | CSV | none | UNDEFINED | erase in place | Manoj Abhiram (interim) |
+| 6 | date of birth | `postgres.applications.date_of_birth` | compare with documents | UNDEFINED | CSV | none | UNDEFINED | erase in place | Manoj Abhiram (interim) |
+| 7 | roll number | `postgres.applications.roll_number` | compare with marksheets | UNDEFINED | CSV | none | UNDEFINED | erase in place | Manoj Abhiram (interim) |
+| 8 | academic marks | `postgres.applications.marks` | compare with marksheets | UNDEFINED | CSV | none | UNDEFINED | erase in place | Manoj Abhiram (interim) |
+| 9 | community category | `postgres.applications.category` | admission record | UNDEFINED | CSV | none | UNDEFINED | erase in place | Manoj Abhiram (interim) |
+| 10 | document image (holds rows 4 to 9 on the page) | `postgres.document_blobs.content` | verification evidence | UNDEFINED | staff upload | the OCR engine in process | UNDEFINED | cascade with the document | Manoj Abhiram (interim) |
+| 11 | extracted field value | `postgres.extracted_fields.value` | stored evidence (REQ-018) | UNDEFINED | OCR output | none | UNDEFINED | cascade with the document | Manoj Abhiram (interim) |
+| 12 | verifier reason | `postgres.decisions.reason` | accountability, free text | UNDEFINED | verifier | none | UNDEFINED | replace with `[erased]` | Manoj Abhiram (interim) |
+| 13 | corrected old value | `postgres.decisions.old_value` | audit of a correction, holds what the engine read | UNDEFINED | verifier | none | UNDEFINED | replace with `[erased]` | Manoj Abhiram (interim) |
+| 14 | corrected new value | `postgres.decisions.new_value` | audit of a correction | UNDEFINED | verifier | none | UNDEFINED | replace with `[erased]` | Manoj Abhiram (interim) |
+| 15 | request logs | stdout from `app/core/middleware.py:60` (method, path, status, duration) | operations | UNDEFINED | requests | the host's log store (unconfirmed) | UNDEFINED | host default | Manoj Abhiram (interim) |
+| 16 | exported verified list | CSV downloaded by staff (copies outside the system) | hand the result on | UNDEFINED | `GET /api/exports/verified.csv` | whoever receives it | UNDEFINED | none: a file on a laptop is outside the system | Manoj Abhiram (interim) |
 
 map: 16 elements, UNDEFINED retention 16.
 

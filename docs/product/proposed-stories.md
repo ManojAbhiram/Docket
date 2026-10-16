@@ -23,6 +23,24 @@ Also proposed, from the data model, the design and the critic review (PS-12 and 
 | PS-12 | Reprocess a failed document | A failed document cannot be recovered by re-uploading identical bytes (HLD section 16); `reprocessDocument` is in `api/openapi.yaml` | US-00-003 |
 | PS-13 | Sweepers for stale work | Nothing owns marking old `processing` documents failed, old `pending` gateway calls errored, and deleting expired sessions and idempotency keys (data model section 12) | US-02-001, US-00-011 |
 
+## Status against the code (2026-10-16)
+
+Checked by reading the code and tests, not by running them. PS-01 to PS-08 were proposed as stories and then built under other task ids.
+
+| Placeholder | Status | Evidence | Gap |
+| --- | --- | --- | --- |
+| PS-01 | built | login limiter and uniform failure path with a dummy hash (`app/api/auth/router.py:65-72`) | none found |
+| PS-02 | built | ADR-0012, `verify_csrf` (`app/api/auth/deps.py:72`), 403 on a bad Origin | none found |
+| PS-03 | partly | `app/db/seed_accounts.py` generates one-time passwords with `secrets` | "first sign-in forces a change" not found |
+| PS-04 | built | `sniff_type`, 8 MiB cap, `MAX_PIXELS` (`app/domain/uploads.py`), first PDF page only with a time limit (`app/domain/pdf.py`) | none found |
+| PS-05 | partly | log redaction with `tests/test_logging_redaction.py` | no test found that imports, uploads and decides with known values and scans logs and URLs |
+| PS-06 | built | `IMPORT_MAX_BYTES` and `IMPORT_MAX_ROWS`, formula-safe export (`app/domain/export.py`) | none found |
+| PS-07 | partly | `export_audit` table with an insert on export | append-only enforcement not checked |
+| PS-08 | partly | models ship inside the wheel and are never downloaded (`app/gateway/rapidocr_engine.py:6`); `uv.lock` carries hashes | no build-time checksum failure found |
+| PS-09 | not built | no `MIGRATION_DATABASE_URL`, no roles migration | all of it |
+| PS-10 | not built | no `erase_application` | all of it |
+| PS-12 | not built | no reprocess route | all of it |
+
 ## Acceptance criteria
 
 - **PS-01.** (The limit is keyed on account plus the forwarded source, and gunicorn runs with `--forwarded-allow-ips` set to the nginx address, or the whole office behind nginx counts as one source.) Given five failed sign-ins in a minute from one source, when a sixth is made, then it is refused with the same message as a wrong password. Given an unknown user and a known user with a wrong password, when each signs in, then the response and its time are comparable.

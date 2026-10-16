@@ -3,8 +3,8 @@
 | Field | Value |
 | --- | --- |
 | Date | 2026-10-05 |
-| Owner | unconfirmed: the product owner |
-| Reviewed by | unconfirmed: no privacy contact named |
+| Owner | Manoj Abhiram (recorded 2026-10-16, interim) |
+| Reviewed by | not reviewed: the owner is the interim privacy contact, a separate reviewer is not named |
 | Regime | both (GDPR, DPDP) |
 | Trigger | children's data; a community category; processing at admission scale |
 
