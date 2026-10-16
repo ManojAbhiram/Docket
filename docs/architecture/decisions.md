@@ -15,9 +15,9 @@ Statuses were checked against the ADR files on 2026-10-16. The "Conflicts that w
 | ADR-0005 | Route reviews by validators plus a configured confidence cutoff, initially 0.9804 | review routing | Accepted | cheap: the cutoff is a setting |
 | ADR-0006 | Use server-side cookie sessions | auth | Accepted | awkward: every client call and the session table would change |
 | ADR-0007 | Store document images in Postgres behind a storage interface | database | Accepted | awkward: bytes must be copied and one read path switched |
-| ADR-0008 | Receive uploads through the API with streaming size caps and a fixed set of types | object storage | Proposed | cheap: one route and one limit |
-| ADR-0009 | No malware scan in v1, mitigate with limits and fixed serving headers | object storage | Proposed | cheap: a scan step is added later |
-| ADR-0010 | Re-encode uploaded images to strip metadata and cap size | object storage | Proposed | irreversible for stored documents: originals are not kept |
+| ADR-0008 | Receive uploads through the API with streaming size caps and a fixed set of types | object storage | Accepted | cheap: one route and one limit |
+| ADR-0009 | No malware scan in v1, mitigate with limits and fixed serving headers | object storage | Accepted | cheap: a scan step is added later |
+| ADR-0010 | Re-encode uploaded images to strip metadata and cap size | object storage | Accepted | irreversible for stored documents: originals are not kept |
 | ADR-0011 | Run document processing inside one API process | compute | Accepted | cheap: the loop moves to its own container |
 | ADR-0012 | Hash passwords with argon2id and guard state changes with a session-bound CSRF token | auth | Accepted | awkward: every state-changing route lists the CSRF check |
 | ADR-0013 | Open sign up with a self-chosen role | auth | Accepted | cheap: add an access code or invite step; revisit before real data |

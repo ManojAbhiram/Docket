@@ -48,3 +48,19 @@ We will host the demo on a machine with at least 1 GB of RAM, using Oracle Cloud
 ## Commits us to
 
 An Oracle Cloud account with a card on file, held by the owner.
+
+## Verified facts (added 2026-10-16, not a new decision)
+
+From Oracle's Always Free compute page (docs.oracle.com, fetched 2026-10-16):
+- The AMD micro shape (`VM.Standard.E2.1.Micro`) has 1 GB of memory and **1/8 of an OCPU**, with the ability to use additional CPU resources. Up to 2 per tenancy.
+- The Arm A1 allowance is equivalent to 2 OCPUs and 12 GB. Our dependencies' Arm builds are unchecked.
+- Idle Always Free instances may be reclaimed: 95th percentile CPU under 20% and network under 20% over 7 days (memory under 20% applies to A1 only).
+- Boot volumes are at least 47 GB each against 200 GB of free block storage.
+
+Not from Oracle (third-party guides only, Oracle's marketing page returned 403): a card is needed at sign-up for identity verification, with a temporary $1 hold, prepaid cards refused, and the home region permanent.
+
+Consequences for this ADR:
+- 1/8 OCPU is a hard CPU limit. OCR measured 1.4 s per page on a multi-core laptop, so page reads on this shape will be much slower. Measure on the host before relying on it.
+- Memory still has to be measured with Postgres, nginx and the API on the same 1 GB machine (449 MB API peak alone).
+- A demo that sits idle risks reclamation.
+- The no-card waiver stands as decided.

@@ -1,6 +1,6 @@
 # ADR-0010: Re-encode uploaded images to strip metadata and cap size
 
-- Status: Proposed (awaiting the engineer; not yet decided by a person)
+- Status: Accepted (2026-10-16, Manoj Abhiram; the code does what this ADR says: `app/domain/uploads.py`, `app/api/documents/router.py`)
 - Date: 2026-10-05
 - Task: US-02-002
 - Deciders: none yet
