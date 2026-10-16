@@ -46,14 +46,17 @@ function json(body: Record<string, unknown>, status = 200): Response {
 }
 
 describe("the dashboard", () => {
-  it("shows staff the four counts, with the rejected ones named as part of needs review", async () => {
+  it("shows staff the work still waiting for review and the rejected ones apart from it", async () => {
     fakeSession({ startAs: "staff" });
     dashboardAnswers(json(counts()));
 
     renderAt("/dashboard");
 
     expect(await screen.findByText("20 applications")).toBeInTheDocument();
-    expect(screen.getByText("of which 1 rejected")).toBeInTheDocument();
+    // 3 needs_review from the API includes 1 rejected, so 2 are still waiting.
+    expect(screen.getByText("1 rejected")).toBeInTheDocument();
+    expect(screen.queryByText(/of which/)).not.toBeInTheDocument();
+    expect(screen.getByText("2")).toBeInTheDocument();
     expect(screen.getByText("12")).toBeInTheDocument();
     expect(screen.getByText("5")).toBeInTheDocument();
     expect(screen.getByRole("link", { name: "See applications" })).toHaveClass(

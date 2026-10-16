@@ -10,7 +10,7 @@ test.describe("reports", () => {
 
     await expect(page.getByRole("heading", { name: "Overview" })).toBeVisible();
     await expect(page.getByText("3 applications")).toBeVisible();
-    await expect(page.getByText("of which 0 rejected")).toBeVisible();
+    await expect(page.getByText("0 rejected")).toBeVisible();
   });
 
   test("the verified list downloads as a CSV file", async ({ page }) => {
