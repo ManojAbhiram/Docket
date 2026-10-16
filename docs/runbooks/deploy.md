@@ -124,6 +124,30 @@ Leave `OPENROUTER_API_KEY` and `OPENROUTER_MODEL` empty to keep it off. To turn 
 go to OpenRouter when staff choose it on upload, and only synthetic data is allowed. Free models are intermittent; a failed
 call is read locally and the reason is shown. At most 40 Vision calls in 24 hours. Turn it off by emptying both values.
 
+## Automatic deploy from CI (ADR-0019)
+
+Once the engineer has added the `deploy` job to `.github/workflows/ci.yml`, a push to `main` deploys
+by itself when the required jobs pass. Manual `make deploy` still works.
+
+### Set up once (GitHub settings, not in the repository)
+1. Create a deploy user on the server and a key pair used only by CI. Add the public key to that user's `authorized_keys`. Run `ssh-keyscan -H <host>` from a trusted machine to get the host key line.
+2. Settings > Environments > New environment named `production`. Add environment secret `DEPLOY_SSH_KEY` (the private key) and variables `DEPLOY_HOST` (for example `ubuntu@1.2.3.4`), `DEPLOY_DOMAIN` and `DEPLOY_KNOWN_HOSTS` (the `ssh-keyscan` line).
+3. Optional but recommended for the first releases: tick "Required reviewers" on that environment. Each release then waits for one click.
+4. Settings > Secrets and variables > Actions > Variables: set `DEPLOY_ENABLED` to `true`. Until you do, the job is skipped.
+
+### Check a deploy
+Open the run in the Actions tab: the `deploy` job prints the version that was running, then the new one, and its summary lists commit, previous version, site and result. Then `make deploy-status` from your laptop.
+
+### Switch it off, or go back
+- Stop automatic deploys: set `DEPLOY_ENABLED` to anything but `true` (or delete the variable). Nothing else changes.
+- A failed deploy rolls itself back to the version that was running, and the run is red.
+- To go back by hand: `make deploy-status` lists the versions on the server, then `make deploy-rollback VERSION=<short commit>`.
+
+### Things to know
+- A run that finds a newer commit already on `main` skips itself and says so; the newer commit's own run deploys it.
+- `e2e-live` is not required for a deploy until it has been green for a week. Add it to the job's `needs` then.
+- Rotate `DEPLOY_SSH_KEY` if the environment secret may have been exposed. The key is effectively root on the server through Docker.
+
 ## Update and roll back
 
 - Update: `git pull`, set `DOCKET_VERSION` to the new short commit id, `docker compose ... up -d --build`. Migrations run automatically.
