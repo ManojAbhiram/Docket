@@ -285,7 +285,7 @@ test.describe("reports", () => {
 
     await expect(page.getByRole("heading", { name: "Overview" })).toBeVisible();
     await expect(page.getByText("2 applications")).toBeVisible();
-    await expect(page.getByText("of which 1 rejected")).toBeVisible();
+    await expect(page.getByText("1 rejected")).toBeVisible();
   });
 
   test("the export page says nothing is Verified yet and offers no file", async ({ page }) => {
